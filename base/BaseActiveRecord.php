@@ -9,38 +9,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 {
     public function load($data,$formName = '')
     {
+        if (!$this->isNewRecord) {
+            unset($data['user_id']);
+        }
         return parent::load($data,$formName);
     }
-
-    /*public function beforeSave($insert)
-    {
-        if (!parent::beforeSave($insert)) {
-            return false;
-        }
-
-        if (!$this->isNewRecord && $this->hasAttribute('user_id')) {
-            $uid = Yii::$app->getUser()->getId();
-            if ($uid && $this->user_id && $this->user_id != $uid) {
-                Tools::breakOff(Yii::t('messages',40003));
-            }
-        }
-        return true;
-    }
-
-    public function beforeDelete()
-    {
-        if (!parent::beforeDelete()) {
-            return false;
-        }
-
-        if ($this->hasAttribute('user_id')) {
-            $uid = Yii::$app->getUser()->getId();
-            if ($this->user_id && $this->user_id != $uid) {
-                Tools::breakOff(Yii::t('messages',40003));
-            }
-        }
-        return true;
-    }*/
 
     /**
      * 关联数据排序

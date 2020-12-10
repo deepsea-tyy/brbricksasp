@@ -123,7 +123,7 @@ class NavMenuController extends BackendController
         $model = new NavMenu();
         $params = $this->queryMapPost();
 
-        if ($model->load($params) && $model->save()) {
+        if ($model->saveData($params)) {
             return $this->success();
         }
 
@@ -172,7 +172,7 @@ class NavMenuController extends BackendController
         $params = $this->queryMapPost();
         $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
 
-        if ($model->load($params) && $model->save()) {
+        if ($model->saveData($params)) {
             return $this->success();
         }
 

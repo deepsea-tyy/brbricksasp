@@ -49,10 +49,17 @@ class CategoryController extends BackendController
         $query->orderBy(['sort' => SORT_ASC]);
 
         $dataProvider = new ActiveDataProvider([
-            'query' => $query,
+            'query' => $query->with(['file']),
         ]);
+
+        $list = [];
+        foreach ($dataProvider->models as $item) {
+            $row = $item->toArray();
+            $row['file'] = $item->file ?? [];
+            $list[] = $row;
+        }
         return $this->success([
-          'list' => $dataProvider->models,
+          'list' => $list,
           'pageCount' => $dataProvider->pagination->pageCount,
           'totalCount' => $dataProvider->pagination->totalCount,
           'page' => $dataProvider->pagination->page + 1,

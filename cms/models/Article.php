@@ -4,7 +4,7 @@ namespace bricksasp\cms\models;
 use Yii;
 use bricksasp\models\File;
 use bricksasp\models\Label;
-use bricksasp\models\UserMessage;
+use bricksasp\models\LabelRelation;
 
 /**
  * This is the model class for table "{{%article}}".
@@ -123,7 +123,7 @@ class Article extends \bricksasp\base\BaseActiveRecord
 
     public function getLabelItems()
     {
-        return $this->hasMany(ArticleLabel::className(), ['article_id' => 'id']);
+        return $this->hasMany(LabelRelation::className(), ['object_id' => 'id'])->andWhere(['type'=>LabelRelation::TYPT_ARTICLE]);
     }
 
     public function getLabels()
@@ -139,11 +139,6 @@ class Article extends \bricksasp\base\BaseActiveRecord
     public function getCommentItems()
     {
         return $this->hasMany(ArticleComment::className(), ['article_id' => 'id'])/*->onCondition(['cat_id' => 1])*/;
-    }
-
-    public function getReadStatus()
-    {
-        return $this->hasOne(UserMessage::className(), ['content' => 'id'])->select(['status', 'content']);
     }
 
     public function saveData($data)

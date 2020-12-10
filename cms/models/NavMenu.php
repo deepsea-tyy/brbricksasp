@@ -10,7 +10,7 @@ use Yii;
  * @property int $id
  * @property int|null $nav_id 导航 id
  * @property int|null $parent_id 父 id
- * @property int|null $status 状态;1:显示;0:隐藏
+ * @property int|null $status 1显示2不显示
  * @property int|null $sort 排序
  * @property string|null $name 菜单名称
  * @property string|null $target 打开方式
@@ -71,5 +71,11 @@ class NavMenu extends \bricksasp\base\BaseActiveRecord
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
+    }
+
+    public function saveData($data)
+    {
+        $this->load($this->formatData($data));
+        return $this->save();
     }
 }

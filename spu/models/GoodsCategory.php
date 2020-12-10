@@ -1,38 +1,34 @@
 <?php
-
-namespace bricksasp\cms\models;
+namespace bricksasp\spu\models;
 
 use Yii;
-use bricksasp\base\Tools;
 use bricksasp\models\File;
 
 /**
- * This is the model class for table "{{%article_category}}".
+ * This is the model class for table "{{%goods_category}}".
  *
  * @property int $id
  * @property int|null $user_id
- * @property int|null $owner_id
  * @property int|null $parent_id
  * @property string|null $name
+ * @property int|null $type_id
  * @property int|null $status
  * @property int|null $sort
- * @property int|null $version
  * @property string|null $image_id
- * @property string|null $code
  * @property int|null $is_delete
+ * @property int|null $owner_id
+ * @property int|null $version
  * @property int|null $created_at
  * @property int|null $updated_at
  */
-class ArticleCategory extends \bricksasp\base\BaseActiveRecord
+class GoodsCategory extends \bricksasp\base\BaseActiveRecord
 {
-    const STATUS_ON = 1; //启用
-    const STATUS_OFF = 0;//关闭
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return '{{%article_category}}';
+        return '{{%goods_category}}';
     }
 
     public function behaviors()
@@ -42,21 +38,16 @@ class ArticleCategory extends \bricksasp\base\BaseActiveRecord
             \bricksasp\common\VersionBehavior::className(),
         ];
     }
-    
+
     /**
      * {@inheritdoc}
      */
     public function rules()
     {
         return [
-            [['name'], 'required'],
-            [['user_id', 'owner_id', 'parent_id', 'status', 'version', 'sort', 'is_delete', 'created_at', 'updated_at'], 'integer'],
+            [['user_id', 'parent_id', 'type_id', 'status', 'sort', 'is_delete', 'owner_id', 'version', 'created_at', 'updated_at'], 'integer'],
             [['name', 'image_id'], 'string', 'max' => 64],
-            [['code'], 'string', 'max' => 32],
-            [['code'], 'unique'],
-            [['parent_id', 'version'], 'default', 'value' => 0],
-            [['status'], 'default', 'value' => self::STATUS_ON],
-            [['code'], 'default', 'value' => Tools::random_str(Yii::$app->security->generateRandomString(),6)]
+            [['status', 'sort'], 'default', 'value' => 1],
         ];
     }
 
@@ -68,23 +59,30 @@ class ArticleCategory extends \bricksasp\base\BaseActiveRecord
         return [
             'id' => 'ID',
             'user_id' => 'User ID',
-            'owner_id' => 'Owner ID',
             'parent_id' => 'Parent ID',
             'name' => 'Name',
+            'type_id' => 'Type ID',
             'status' => 'Status',
             'sort' => 'Sort',
-            'image_id' => 'Image_id',
-            'code' => 'Code',
+            'image_id' => 'Image ID',
+            'is_delete' => 'Is Delete',
+            'owner_id' => 'Owner ID',
+            'version' => 'Version',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
     }
-    
+
+    public function getType()
+    {
+        return $this->hasOne(Type::className(), ['id' => 'type_id'])->select(['name', 'id']);
+    }
+
     public function getFile()
     {
         return $this->hasOne(File::className(), ['id' => 'image_id'])->select(['id', 'file_url']);
     }
-
+    
     /**
      * 级联详情
      * @param  intger $id 分类id
@@ -92,10 +90,9 @@ class ArticleCategory extends \bricksasp\base\BaseActiveRecord
      */
     public function cascader(int $id)
     {
+
         $row = [];
         $model = self::findOne($id);
-        if (!$model) return $row;
-        
         if ($model->parent_id) {
             $row[] = $model->toArray();
             $row = array_merge($this->cascader($model->parent_id), $row);
@@ -107,7 +104,6 @@ class ArticleCategory extends \bricksasp\base\BaseActiveRecord
 
     public function saveData($data)
     {
-        
         $this->load($this->formatData($data));
         return $this->save();
     }
