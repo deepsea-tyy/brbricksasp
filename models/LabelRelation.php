@@ -9,13 +9,14 @@ use Yii;
  *
  * @property int|null $object_id
  * @property int|null $label_id
- * @property int|null $type 1文章表情2商品标签
+ * @property int|null $type 1文章标签2商品标签
  * @property int|null $sort
  */
 class LabelRelation extends \bricksasp\base\BaseActiveRecord
 {
-    const TYPT_ARTICLE = 1;
-    const TYPT_GOODS = 2;
+    const TYPE_ARTICLE = 1;
+    const TYPE_GOODS = 2;
+
     /**
      * {@inheritdoc}
      */

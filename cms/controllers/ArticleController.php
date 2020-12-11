@@ -120,7 +120,7 @@ class ArticleController extends BackendController
         $params = $this->queryMapGet();
         $model = $this->findModel($params['id'] ?? 0);
         $data = $model->toArray();
-        Article::updateAllCounters(['view_count'=>1],['id'=>$params['id']]);
+        Article::updateAllCounters(['view_num'=>1],['id'=>$params['id']]);
         if ($this->current_user_id && $this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
             $m = new ArticleUserLog();
             $m->load(['user_id'=>$this->current_user_id,'article_id'=>$params['id'],'created_at'=>time()]);
@@ -170,9 +170,9 @@ class ArticleController extends BackendController
      *   @OA\Property(property="keywords", type="string", description="关键字"),
      *   @OA\Property(property="brief", type="string", description="文章摘要"),
      *   @OA\Property(property="content", type="string", description="文章内容"),
-     *   @OA\Property(property="comments_count", type="integer", description="评论数"),
-     *   @OA\Property(property="view_count", type="integer", description="浏览数"),
-     *   @OA\Property(property="like_count", type="integer", description="关注数"),
+     *   @OA\Property(property="comments_num", type="integer", description="评论数"),
+     *   @OA\Property(property="view_num", type="integer", description="浏览数"),
+     *   @OA\Property(property="like_num", type="integer", description="点赞数"),
      *   @OA\Property(property="is_comment", type="integer", description="评论 1允许 2不允许"),
      *   @OA\Property(property="is_recommend", type="integer", description="推荐 1是 2否"),
      *   @OA\Property(property="status", type="integer", description="1正常 2未通过审核"),

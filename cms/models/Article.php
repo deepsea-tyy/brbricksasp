@@ -24,9 +24,9 @@ use bricksasp\models\LabelRelation;
  * @property string|null $content 文章内容
  * @property int|null $parent_id 文章的父级文章 id,表示文章层级关系
  * @property int|null $type 文章类型，1文章,2页面
- * @property int|null $comments_count 评论数
- * @property int|null $view_count 浏览数
- * @property int|null $like_count 文章赞数
+ * @property int|null $comments_num 评论数
+ * @property int|null $view_num 浏览数
+ * @property int|null $like_num 文章赞数
  * @property int|null $is_comment 评论1允许，2不允许
  * @property int|null $is_top 1置顶 2不置顶
  * @property int|null $is_recommend 推荐 1推荐 2不推荐
@@ -64,7 +64,7 @@ class Article extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['title', 'content'], 'required'],
-            [['user_id', 'owner_id', 'version', 'parent_id', 'type', 'comments_count', 'view_count', 'like_count', 'is_comment', 'is_top', 'is_recommend', 'release_at', 'status', 'is_delete', 'created_at', 'updated_at'], 'integer'],
+            [['user_id', 'owner_id', 'version', 'parent_id', 'type', 'comments_num', 'view_num', 'like_num', 'is_comment', 'is_top', 'is_recommend', 'release_at', 'status', 'is_delete', 'created_at', 'updated_at'], 'integer'],
             [['brief', 'content'], 'string'],
             [['keywords', 'title', 'subtitle', 'image'], 'string', 'max' => 255],
             [['reprint_info'], 'string', 'max' => 150],
@@ -72,7 +72,7 @@ class Article extends \bricksasp\base\BaseActiveRecord
             [['cat_id'], 'validCatid'],
             [['title'], 'unique', 'message' => '已存在该标题的文章'],
 
-            [['status', 'comments_count', 'view_count', 'like_count'], 'default', 'value'=>0],
+            [['status', 'comments_num', 'view_num', 'like_num'], 'default', 'value'=>0],
             [['is_comment', 'type'], 'default', 'value'=>1],
             [['cat_id'], 'default', 'value'=>self::CAT_DEFAULT],
             [['release_at'], 'default', 'value'=>time()],
@@ -100,9 +100,9 @@ class Article extends \bricksasp\base\BaseActiveRecord
             'content' => 'Content',
             'parent_id' => 'Parent ID',
             'type' => 'Type',
-            'comments_count' => 'Comments Count',
-            'view_count' => 'View Count',
-            'like_count' => 'Like Count',
+            'comments_num' => 'Comments num',
+            'view_num' => 'View num',
+            'like_num' => 'Like num',
             'is_comment' => 'Is Comment',
             'is_top' => 'Is Top',
             'is_recommend' => 'Is Recommend',
@@ -123,7 +123,7 @@ class Article extends \bricksasp\base\BaseActiveRecord
 
     public function getLabelItems()
     {
-        return $this->hasMany(LabelRelation::className(), ['object_id' => 'id'])->andWhere(['type'=>LabelRelation::TYPT_ARTICLE]);
+        return $this->hasMany(LabelRelation::className(), ['object_id' => 'id'])->andWhere(['type'=>LabelRelation::TYPE_ARTICLE]);
     }
 
     public function getLabels()

@@ -1,13 +1,14 @@
 <?php
+
 namespace bricksasp\spu\models;
 
-
-
-use bricksasp\rbac\models\redis\Token;
 use Yii;
 use bricksasp\base\Tools;
 use bricksasp\models\Brand;
 use bricksasp\models\Label;
+use bricksasp\models\LabelRelation;
+use bricksasp\models\File;
+use bricksasp\models\FileRelation;
 
 /**
  * This is the model class for table "{{%goods}}".
@@ -16,50 +17,50 @@ use bricksasp\models\Label;
  * @property int|null $owner_id
  * @property int|null $user_id
  * @property int|null $version
- * @property string|null $gcode 商品编码
+ * @property string|null $code 商品编码
  * @property string|null $barcode 商品条码
  * @property string|null $name 商品名称
  * @property string $subtitle 副标题
  * @property string|null $subtitle_short 短标题
  * @property string|null $brief 简介
  * @property string|null $keywords
- * @property int|null $check_stock 1拍下减库存2付款减库存3不减库存
- * @property int|null $show_stock 1显示库存
  * @property int|null $brand_id 品牌
  * @property int|null $cat_id 分类
  * @property int|null $spec_id 启用规格/规格id
  * @property int|null $type 1实体商品2虚拟商品3虚拟物品4批发商品5计次/时商品
- * @property int|null $pre_sale 1预售
- * @property int|null $is_on_shelves 1上架2下架
- * @property int|null $on_shelves_at 上架时间
- * @property int|null $off_shelves_at 下架时间
  * @property string|null $image_id 封面图
  * @property string|null $video 视频
- * @property int|null $comments_count 评论数
- * @property int|null $browse_count 浏览数
- * @property int|null $buy_count 购买数
- * @property int|null $return_count 退货数量
- * @property int|null $sort
- * @property int|null $is_recommend
- * @property int|null $is_hot
- * @property int|null $status 1显示
  * @property string|null $content
  * @property string|null $specs
- * @property int|null $sell_count 已收数量
- * @property int|null $show_sell_count 1显示已售数量
  * @property string|null $params
+ * @property int|null $sort
+ * @property int|null $is_hot
+ * @property int|null $is_recommend
+ * @property int|null $status
+ * @property int|null $is_delete
+ * @property int|null $check_stock 1拍下减库存2付款减库存3不减库存
+ * @property int|null $show_stock 1显示库存
+ * @property int|null $pre_sale 1预售
+ * @property int|null $on_shelves 0未上架1上架2下架
+ * @property int|null $on_shelves_at 上架时间
+ * @property int|null $off_shelves_at 下架时间
+ * @property int|null $sell_num 已售数量
+ * @property int|null $buy_num 购买数
+ * @property int|null $show_buy_num 1显示购买数量
+ * @property int|null $return_num 退货数量
+ * @property int|null $view_num 浏览数
+ * @property int|null $comments_num 评论数
  * @property string|null $stock_unit 库存单位
  * @property string|null $weight_unit
  * @property string|null $volume_unit
  * @property float|null $price 售价
  * @property float|null $costprice 成本
  * @property float|null $mktprice 市场价
- * @property int|null $is_delete
  * @property float|null $distprice 分销价格
  * @property int|null $is_vip_discount 1参与会员折扣
  * @property string|null $vip_discount 折扣0.1-10
  * @property float|null $vip_price 会员价格
- * @property int|null $vip 会员等级
+ * @property int|null $vip 会员限购等级
  * @property string|null $share_title 分享标题
  * @property string|null $share_image_id 分享图片
  * @property string|null $share_desc 分享描述
@@ -76,17 +77,21 @@ use bricksasp\models\Label;
  */
 class Goods extends \bricksasp\base\BaseActiveRecord
 {
-    const GOODS_ON_SHELVES_NOT = 0; //未上架
-    const GOODS_ON_SHELVES_YES = 1; //上架
-    const GOODS_ON_SHELVES_NO = 2; //下架
-    const GOODS_ON_SHELVES_WAIT = 3; //待审核
-    const GOODS_ON_SHELVES_REFUSE = 4; //已拒绝
+    const ONSHELVES_DEF = 0; //未上架
+    const ONSHELVES_ON = 1; //上架
+    const ONSHELVES_OFF = 2; //下架
+    const ONSHELVES_WAIT = 3; //待审核
+    const ONSHELVES_REFUSE = 4; //已拒绝
 
-    const GOODS_IS_NORMAL = 1; //实体商品
-    const GOODS_IS_VIRTUAL = 2; //虚拟商品
+    const TYPE_GOODS_NORMAL = 1; //实体商品
+    const TYPE_GOODS_VIRTUAL = 2; //虚拟商品
+    const TYPE_VIRTUAL = 3; //虚拟物品
+    const TYPE_GOODS_WHOLESALE = 4; //批发商品
+    const TYPE_GOODS_TIMER = 5; //计次/时商品
 
-    const IS_ONLINE_YES = 1;//是否支持线上发货 1支持
-    const IS_ONLINE_NO = 2; //是否支持线上发货 2不支持
+    const TYPE_CHECK_STOCK_ORDER = 1; //拍下减库存
+    const TYPE_CHECK_STOCK_PAY = 2; //付款减库存
+    const TYPE_CHECK_STOCK_NOT = 3; //不减库存
 
     /**
      * {@inheritdoc}
@@ -101,11 +106,11 @@ class Goods extends \bricksasp\base\BaseActiveRecord
         return [
             \yii\behaviors\TimestampBehavior::className(),
             \bricksasp\common\VersionBehavior::className(),
-            [
-                'class' => \bricksasp\common\SnBehavior::className(),
-                'attribute' => 'gn',
-                'type' => \bricksasp\common\SnBehavior::SN_GOODS,
-            ],
+            // [
+            //     'class' => \bricksasp\common\SnBehavior::className(),
+            //     'attribute' => 'gn',
+            //     'type' => \bricksasp\common\SnBehavior::SN_GOODS,
+            // ],
         ];
     }
 
@@ -115,22 +120,24 @@ class Goods extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['owner_id', 'user_id', 'version', 'check_stock', 'show_stock', 'brand_id', 'cat_id', 'spec_id', 'type', 'pre_sale', 'is_on_shelves', 'on_shelves_at', 'off_shelves_at', 'comments_count', 'browse_count', 'buy_count', 'return_count', 'sort', 'is_recommend', 'is_hot', 'status', 'sell_count', 'show_sell_count', 'is_delete', 'is_vip_discount', 'vip', 'follow_force', 'offline_write_off', 'store_force', 'write_off_at_type', 'created_at', 'updated_at'], 'integer'],
+            [['owner_id', 'user_id', 'version', 'brand_id', 'cat_id', 'spec_id', 'type', 'sort', 'is_hot', 'is_recommend', 'status', 'is_delete', 'check_stock', 'show_stock', 'pre_sale', 'on_shelves', 'on_shelves_at', 'off_shelves_at', 'sell_num', 'buy_num', 'show_buy_num', 'return_num', 'view_num', 'comments_num', 'is_vip_discount', 'vip', 'follow_force', 'offline_write_off', 'store_force', 'write_off_at_type', 'created_at', 'updated_at'], 'integer'],
             [['subtitle'], 'required'],
             [['content', 'specs', 'params'], 'string'],
             [['price', 'costprice', 'mktprice', 'distprice', 'vip_price'], 'number'],
-            [['gcode', 'barcode'], 'string', 'max' => 30],
+            [['code', 'barcode'], 'string', 'max' => 30],
             [['name', 'subtitle', 'brief', 'keywords', 'share_desc', 'follow_guide', 'store_id'], 'string', 'max' => 255],
             [['subtitle_short', 'write_off_at'], 'string', 'max' => 32],
-            [['image_id', 'video', 'share_title', 'share_image_id', 'follow_tip'], 'string', 'max' => 64],
+            [['video', 'share_title', 'share_image_id', 'follow_tip'], 'string', 'max' => 64],
             [['stock_unit', 'weight_unit', 'volume_unit', 'vip_discount'], 'string', 'max' => 8],
 
+            [['image_id'], 'safe'],
+
             [['name', 'cat_id'],'required'],
-            [['comments_count', 'browse_count', 'buy_count', 'return_count', 'sort'], 'default', 'value' => 0],
+            [['sell_num', 'buy_num', 'show_buy_num', 'return_num', 'view_num', 'comments_num', 'price', 'costprice', 'mktprice', 'distprice', 'vip_price', 'show_stock', 'on_shelves', 'sort'], 'default', 'value' => 0],
 
-            [['is_nomal_virtual', 'status'], 'default', 'value' => 1],
+            [['type', 'status'], 'default', 'value' => 1],
 
-            [['is_stock_check', 'is_on_shelves'], 'default', 'value' => 1],
+            [['check_stock'], 'default', 'value' => 1],
             [['price','costprice','mktprice'], 'compare', 'compareValue' => 0, 'operator' => '>='],
         ];
     }
@@ -145,45 +152,45 @@ class Goods extends \bricksasp\base\BaseActiveRecord
             'owner_id' => 'Owner ID',
             'user_id' => 'User ID',
             'version' => 'Version',
-            'gcode' => 'Gcode',
+            'code' => 'Code',
             'barcode' => 'Barcode',
             'name' => 'Name',
             'subtitle' => 'Subtitle',
             'subtitle_short' => 'Subtitle Short',
             'brief' => 'Brief',
             'keywords' => 'Keywords',
-            'check_stock' => 'Check Stock',
-            'show_stock' => 'Show Stock',
             'brand_id' => 'Brand ID',
             'cat_id' => 'Cat ID',
             'spec_id' => 'Spec ID',
             'type' => 'Type',
-            'pre_sale' => 'Pre Sale',
-            'is_on_shelves' => 'Is On Shelves',
-            'on_shelves_at' => 'On Shelves At',
-            'off_shelves_at' => 'Off Shelves At',
             'image_id' => 'Image ID',
             'video' => 'Video',
-            'comments_count' => 'Comments Count',
-            'browse_count' => 'Browse Count',
-            'buy_count' => 'Buy Count',
-            'return_count' => 'Return Count',
-            'sort' => 'Sort',
-            'is_recommend' => 'Is Recommend',
-            'is_hot' => 'Is Hot',
-            'status' => 'Status',
             'content' => 'Content',
             'specs' => 'Specs',
-            'sell_count' => 'Sell Count',
-            'show_sell_count' => 'Show Sell Count',
             'params' => 'Params',
+            'sort' => 'Sort',
+            'is_hot' => 'Is Hot',
+            'is_recommend' => 'Is Recommend',
+            'status' => 'Status',
+            'is_delete' => 'Is Delete',
+            'check_stock' => 'Check Stock',
+            'show_stock' => 'Show Stock',
+            'pre_sale' => 'Pre Sale',
+            'on_shelves' => 'On Shelves',
+            'on_shelves_at' => 'On Shelves At',
+            'off_shelves_at' => 'Off Shelves At',
+            'sell_num' => 'Sell Num',
+            'buy_num' => 'Buy Num',
+            'show_buy_num' => 'Show Buy Num',
+            'return_num' => 'Return Num',
+            'view_num' => 'View Num',
+            'comments_num' => 'Comments Num',
             'stock_unit' => 'Stock Unit',
             'weight_unit' => 'Weight Unit',
             'volume_unit' => 'Volume Unit',
             'price' => 'Price',
             'costprice' => 'Costprice',
             'mktprice' => 'Mktprice',
-            'is_delete' => 'Is Delete',
             'distprice' => 'Distprice',
             'is_vip_discount' => 'Is Vip Discount',
             'vip_discount' => 'Vip Discount',
@@ -205,9 +212,14 @@ class Goods extends \bricksasp\base\BaseActiveRecord
         ];
     }
 
+    public function getCategory()
+    {
+        return $this->hasMany(GoodsCategory::className(), ['id' => 'cat_id']);
+    }
+
     public function getProduct()
     {
-        return $this->hasMany(Product::className(), ['goods_id' => 'id']);
+        return $this->hasMany(GoodsProduct::className(), ['goods_id' => 'id']);
     }
 
     public function getBrand()
@@ -215,26 +227,31 @@ class Goods extends \bricksasp\base\BaseActiveRecord
         return $this->hasOne(Brand::className(), ['id' => 'brand_id'])->select(['id', 'name', 'logo']);
     }
 
-    /**
-     * 商品图片
-     */
-    public function getImageRelation()
+    public function getFileRelation()
     {
-        return $this->hasMany(GoodsImage::className(), ['goods_id' => 'id']);
+        return $this->hasMany(FileRelation::className(), ['object_id' => 'id']);
     }
 
-    public function getFile(){
-        return $this->hasMany(File::className(),['id'=>'image_id'])->via('imageRelation');
+    public function getImages(){
+        return $this->hasMany(File::className(),['id'=>'file_id'])->via('fileRelation');
+    }
+
+    public function getCover(){
+        return $this->hasMany(File::className(),['id'=>'image_id']);
+    }
+
+    public function getVideo(){
+        return $this->hasMany(File::className(),['id'=>'video']);
     }
 
     public function getLabels()
     {
-        return $this->hasMany(GoodsLabel::className(), ['goods_id' => 'id']);
+        return $this->hasMany(Label::className(), ['id' => 'object_id'])->via('labelRelation')->select(['id', 'name', 'style']);
     }
 
-    public function getLabelItems()
+    public function getLabelRelation()
     {
-        return $this->hasMany(Label::className(), ['id' => 'lable_id'])->via('labels')->select(['id', 'name', 'style']);
+        return $this->hasMany(LabelRelation::className(), ['object_id' => 'lable_id'])->andWhere(['type'=>LabelRelation::TYPE_GOODS]);
     }
 
     public function getCommentItems()
@@ -242,28 +259,19 @@ class Goods extends \bricksasp\base\BaseActiveRecord
         return $this->hasMany(GoodsComment::className(), ['goods_id' => 'id'])/*->onCondition(['cat_id' => 1])*/;
     }
 
-    /**
-     * 添加商品
-     * @param  array  $data 
-     * @return bool
-     */
-    public function saveGoods($data=[])
+    public function saveData($data=[])
     {
-        list($data, $productItems, $imageItems) = $this->formatData($data);
-        if($data['login_type'] == Token::TOKEN_TYPE_FRONTEND){
-            $data['is_on_shelves'] = self::GOODS_ON_SHELVES_NOT;
+        if (!$this->checkArray($data,['imageItems','labelItems','productItems'])) {
+            return false;
         }
-        $this->load($data,'');
-        if(empty($imageItems)){
-            Tools::breakOff('商品图片不能为空');
-        }
-        if(empty($productItems)){
-            Tools::breakOff('商品规格不能为空');
-        }
+        $data = $this->formatData($data);
+        // print_r($data);
+        // exit();
+
+        $this->load($data);
+        
         $transaction = self::getDb()->beginTransaction();
         try {
-            $this->specs = json_encode($this->getGoodsSpec($this->type_id, 2),JSON_UNESCAPED_UNICODE);
-            $this->params = json_encode($this->getParams($this->type_id),JSON_UNESCAPED_UNICODE);
 
             $this->save();
             if (!$this->id) {
@@ -272,149 +280,116 @@ class Goods extends \bricksasp\base\BaseActiveRecord
             }
 
             $images = [];
-            foreach ($imageItems as $k => $v) {
-                $image['goods_id'] = $this->id;
-                $image['image'] = $v['id'];
-                $image['file_url'] = $v['file_url'];
+            foreach ($data['imageItems'] as $k => $v) {
+                $image['object_id'] = $this->id;
+                $image['file_id'] = $v;
+                $image['type'] = FileRelation::TYPE_GOODS;
                 $image['sort'] = $k + 1;
                 $images[] = $image;
             }
-
+            FileRelation::deleteAll(['object_id'=>$this->id,'type'=>FileRelation::TYPE_GOODS]);
             self::getDb()->createCommand()
-            ->batchInsert(GoodsImage::tableName(),['goods_id','image','file_url','sort'],$images)
+            ->batchInsert(FileRelation::tableName(),array_keys(end($images)??[]),$images)
             ->execute();
 
-            foreach ($productItems as $k => $product) {
+            $labels = [];
+            foreach ($data['labelItems'] as $k => $v) {
+                $label['object_id'] = $this->id;
+                $label['label_id'] = $v;
+                $label['type'] = LabelRelation::TYPE_GOODS;
+                $label['sort'] = $k + 1;
+                $labels[] = $label;
+            }
+
+            LabelRelation::deleteAll(['object_id'=>$this->id,'type'=>LabelRelation::TYPE_GOODS]);
+            self::getDb()->createCommand()
+            ->batchInsert(LabelRelation::tableName(),array_keys(end($labels)??[]),$labels)
+            ->execute();
+
+            foreach ($data['productItems'] as $product) {
                 $product['goods_id']    = $this->id;
-                $product['is_on_shelves']    = $this->is_on_shelves;
-                $model = new Product();
-                $model->load($product,'');
-                $model->save();
-            }
-            $transaction->commit();
-            return true;
-        } catch(\Throwable $e) {
-            $transaction->rollBack();
-            Yii::error($e->getMessage());
-            Tools::breakOff($e->getMessage());
-            return false;
-        }
-    }
-
-    /**
-     * 更新视频
-     * @param  array  $data 
-     * @return bool
-     */
-    public function updateGoods($data=[])
-    {
-        $oldAttributes = $this->oldAttributes;
-        list($data, $productItems, $imageItems) = $this->formatData($data);
-        $this->load($data,'');
-        if(empty($imageItems)){
-            Tools::breakOff('商品图片不能为空');
-        }
-        if(empty($productItems)){
-            Tools::breakOff('商品规格不能为空');
-        }
-        $transaction = self::getDb()->beginTransaction();
-        try {
-            if ($this->type == self::SPEC_PRODUCT && $oldAttributes['type_id'] != $this->type_id) {
-                $this->specs = json_encode($this->getGoodsSpec($this->type_id, 2),JSON_UNESCAPED_UNICODE);
-                $this->params = json_encode($this->getParams($this->type_id),JSON_UNESCAPED_UNICODE);
-            }
-            // 更改类型删除所有单品
-            Product::deleteAll(['goods_id'=>$this->id]);
-            // 保存商品
-            if ($this->save() === false) {
-                $transaction->rollBack();
-                return false;
-            }
-            $images = [];
-            foreach ($imageItems as $k => $v) {
-                $image['goods_id'] = $this->id;
-                $image['image'] = $v['id'];
-                $image['file_url'] = $v['file_url'];
-                $image['sort'] = $k + 1;
-                $images[] = $image;
-            }
-
-            GoodsImage::deleteAll(['goods_id'=>$this->id]);
-            self::getDb()->createCommand()
-            ->batchInsert(GoodsImage::tableName(),['goods_id','image','file_url','sort'],$images)
-            ->execute();
-            // 保存单品
-            foreach ($productItems as $product) {
+                $product['on_shelves']    = $product['on_shelves']??$this->on_shelves;
                 if (empty($product['id'])) {
-                    $product['goods_id']    = $this->id;
-                    $product['is_on_shelves']    = $this->is_on_shelves;
-                    $model = new Product();
-                    $model->load($product,'');
-                    $model->save();
+                    $model = new GoodsProduct();
                 }else{
-                    $model = Product::findOne($product['id']);
-                    if($model){
-                        $model->load($product, '');
-                        $model->save();
+                    $model = GoodsProduct::findOne($product['id']);
+                }
+                $model->load($product);
+                $model->save();
+                if ($product['imageItems']??false) {
+                    $pimages = [];
+                    foreach ($data['imageItems'] as $k => $v) {
+                        $pimage['object_id'] = $model->id;
+                        $pimage['file_id'] = $v;
+                        $pimage['type'] = FileRelation::TYPE_PRODUCT;
+                        $pimage['sort'] = $k + 1;
+                        $pimages[] = $pimage;
                     }
+                    FileRelation::deleteAll(['object_id'=>$model->id,'type'=>FileRelation::TYPE_PRODUCT]);
+                    self::getDb()->createCommand()
+                    ->batchInsert(FileRelation::tableName(),array_keys(end($pimages)??[]),$pimages)
+                    ->execute();
                 }
             }
+                // $transaction->rollBack();
             $transaction->commit();
             return true;
         } catch(\Throwable $e) {
             $transaction->rollBack();
-            Yii::error($e->getMessage());
             Tools::breakOff($e->getMessage());
         }
-        return false;
     }
 
     public function formatData($data)
     {
-        $productItems = $data['productItems'];
-        $imageItems = $data['imageItems'];
-        $videoItem = $data['videoItem'];
-        if(empty($imageItems)){
-            Tools::breakOff('商品图片不能为空');
-        }
-        if(empty($productItems)){
-            Tools::breakOff('商品规格不能为空');
-        }
-        if(isset($data['cat_id']) && is_array($data['cat_id'])){
-            $data['cat_id'] = end($data['cat_id']);
-        }
-        unset($data['productItems'], $data['imageItems'], $data['videoItem']);
+        $data = parent::formatData($data);
 
-        if ($data['is_on_shelves'] == 1 && $this->is_on_shelves != 1) {
-            $data['on_shelves_time']= time();
-        }elseif ($data['is_on_shelves'] == 2 && $this->is_on_shelves != 2) {
-            $data['off_shelves_time'] = time();
+        if ($this->isNewRecord) {
+            if (isset($data['on_shelves']) && $data['on_shelves'] == 1) {
+                $data['on_shelves_at']= time();
+            }
+        }else {
+            if ($data['on_shelves'] == 1 && $this->on_shelves == 0){
+                $data['on_shelves_at']= time();
+            }elseif ($data['on_shelves'] == 0 && $this->on_shelves == 1) {
+                $data['off_shelves_at']= time();
+            }
         }
-        
+        $defProd = [];
+        foreach ($data['productItems'] as $k => $item) {
+            if ($item['is_default']??false) {
+                $defProd = $item;
+            }
+            $item['name'] = $data['name'];
+            $item['code'] = $item['code']??Tools::get_sn(4);
+        }
+
         // 设置默认单品
-        $is_default = array_column($productItems, 'is_default');
-        if (!in_array(1, $is_default)) {
-            $productItems[0]['is_default'] = 1;
-            $k = 0;
-        }else{
-            $k = array_search(1, $is_default);
+        if (!$defProd) {
+            $defProd = $data['productItems']??0;
+            $data['productItems'][0]['is_default'] = 1;
         }
-        $data['price'] = $productItems[$k]['price'];
-        $data['costprice'] = $productItems[$k]['costprice'];
-        $data['mktprice'] = $productItems[$k]['mktprice'];
-        $data['image'] = (isset($data['image']) && !empty($data['image'])) ?$data['image']:($imageItems[0]['id'] ??'') ;
-        return [$data, $productItems, $imageItems];
+
+        $data['price'] = $defProd['price']??0;
+        $data['costprice'] = $defProd['costprice']??0;
+        $data['mktprice'] = $defProd['mktprice']??0;
+        $data['distprice'] = $defProd['distprice']??0;
+        $data['vip_price'] = $defProd['vip_price']??0;
+        $data['code'] = $defProd['code']??0;
+
+        $data['image_id'] = $data['imageItems'][0]??'';
+        return $data;
     }
 
     /**
      * 商品规格属性
-     * @param  integer $type_id 类型id
+     * @param  integer $spec_id 类型id
      * @param  integer $sence 1 product 2 goods
      * @return array           
      */
-    public static function getGoodsSpec($type_id=0 , $sence=1)
+    public static function goodsSpec($spec_id=0 , $sence=1)
     {
-        $item_spec = Type::find()->where(['id'=> $type_id])->one();
+        $item_spec = Type::find()->where(['id'=> $spec_id])->one();
         if (!$item_spec) return null;
         $input = [];
         $specValues = Spec::find()->with(['items'])->where(['id'=>explode(',',$item_spec->spec)])->all();
@@ -450,12 +425,12 @@ class Goods extends \bricksasp\base\BaseActiveRecord
 
     /**
      * 商品参数
-     * @param  integer $type_id 类型id
+     * @param  integer $spec_id 类型id
      * @return array           
      */
-    public static function getParams($type_id=0)
+    public static function goodsParams($spec_id=0)
     {
-        $item_parmas = Type::find()->where(['id'=> $type_id])->one();
+        $item_parmas = Type::find()->where(['id'=> $spec_id])->one();
         $params = Params::find()->where(['id'=>explode(',',$item_parmas['params'])])->all();
         $output = [];
         foreach ($params as $v) {
@@ -472,7 +447,7 @@ class Goods extends \bricksasp\base\BaseActiveRecord
      *  @OA\Property(property="name", type="string", description="商品名称"),
      *  @OA\Property(property="brief", type="string", description="商品简介" ),
      *  @OA\Property(property="content", type="string", description="商品内容" ),
-     *  @OA\Property(property="comments_count", type="integer", description="评论数" ),
+     *  @OA\Property(property="comments_num", type="integer", description="评论数" ),
      *  @OA\Property(property="view_count", type="integer", description="浏览数" ),
      *  @OA\Property(property="stock_unit", type="integer", description="库存单位" ),
      *  @OA\Property(property="weight_unit", type="integer", description="重量单位" ),
@@ -484,52 +459,31 @@ class Goods extends \bricksasp\base\BaseActiveRecord
      *  @OA\Property(property="labelItems", type="array", description="商品标签", @OA\Items(ref="#/components/schemas/label")),
      *  @OA\Property(property="brandItem", description="品牌", ref="#/components/schemas/brandUpdate"),
      *  @OA\Property(property="videoItem", description="视频介绍", ),
-     *  @OA\Property(property="default_product", description="默认单品", ref="#/components/schemas/product"),
+     *  @OA\Property(property="default_product", description="默认单品", ref="#/components/schemas/goodsProduct"),
      * )
-     *  @1OA\Property(property="params", description="商品 参数名称-值", ref="#/components/schemas/params"),
-     *  @1OA\Property(property="specs", description="商品 属性名称-值", ref="#/components/schemas/specs"),
      */
     public static function goodsDetail($map,$product_id=0, $all=2)
     {
         $goods = Goods::find()
-            ->with(['productItems', 'labelItems', 'brandItem', 'imageItems', 'videoItem'])
-            ->select(['id','type', 'type_id', 'brand_id', 'name', 'brief', 'content', 'params', 'comments_count', 'view_count', 'comments_count','video','image', 'stock_unit', 'weight_unit', 'volume_unit'])
+            ->with(['product', 'labels', 'brand', 'images', 'cover', 'video'])
+            ->select(['id','type', 'spec_id', 'brand_id', 'name', 'brief', 'content', 'params', 'comments_num', 'view_count', 'comments_num','video','image_id', 'stock_unit', 'weight_unit', 'volume_unit'])
             ->where($map)
             ->one();
-        if (!$goods) Tools::exceptionBreak(Yii::t('base',930003));
+        if (!$goods) Tools::breakOff(Yii::t('base',930003));
 
-        if ($goods->type == self::SPEC_PRODUCT) {
-            if ($product_id) {
-                $k = array_search($product_id, array_column($goods->productItems, 'id'));
-            }else {
-                $k = array_search(1, array_column($goods->productItems, 'is_default'));
-            }
-            $default_product = $goods->productItems[$k];
-            $data['default_product'] = $default_product;
-            $data['specs'] = self::defaultSpec($goods->productItems,$default_product->specs);
+        $data = $goods->toArray();
+        if ($goods->specs) {//是否为多规格
+            $data['is_spec'] = 1;
         }else{
-            $data['default_product'] = $goods->productItems[0];
-            $data['specs'] = [];
-        }
-        $data = array_merge($goods->toArray(), $data);
-        $data['params'] = self::getParams($goods->type_id);
-        $data['labelItems'] = $goods->labelItems;
-        $data['brandItem'] = $goods->brandItem;
-        $data['videoItem'] = $goods->videoItem ? Tools::format_array($goods->videoItem, ['file_url'=>['implode',['',[Config::instance()->web_url,'###']],'array']]) : (object)[];
-        $imageItems = Tools::format_array($goods->imageItems, ['file_url'=>['implode',['',[Config::instance()->web_url,'###']],'array']], 2);
-
-        $imgs = array_column($imageItems, 'id');
-        $sort = array_column($goods->imageRelation, 'sort', 'image');
-        $k = [];
-
-        foreach ($imgs as $v) {
-            $k[] = $sort[$v];
+            $data['is_spec'] = 0;
         }
 
-        $imageItems = array_combine($k, $imageItems);
-        ksort($imageItems);
-        $data['imageItems'] = array_values($imageItems);
-        $data['content'] = str_replace('src="file', 'src="' . Config::instance()->web_url . '/file', $data['content']);
+        $data['labels'] = $goods->labels ? $goods->labels : [];
+        $data['brand'] = $goods->brand ? $goods->brand : [];
+        $data['images'] = $goods->images ? $goods->images : [];
+        $data['cover'] = $goods->cover ? $goods->cover : [];
+        $data['video'] = $goods->video ? $goods->video : [];
+
         if ($all == 1) {
             $data['product_list'] = $goods->productItems;
         }
