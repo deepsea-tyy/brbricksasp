@@ -68,8 +68,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
     public function checkArray($data=[], $fields=[])
     {
         foreach ($fields as $f) {
-            if (!is_array($data[$f]??false)) {
-                $this->addError($f,'只能是数组');
+            if (!is_array($data[$f]??[])) {
+                $this->addError($f,'只能是数组且不能为空');
                 return false;
             }
         }

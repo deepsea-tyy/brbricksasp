@@ -119,7 +119,7 @@ class AttrController extends BackendController
      *   schema="goodsAttrCreate",
      *   description="属性/参数",
      *   @OA\Property(property="name", type="string", description="属性/参数名称"),
-     *   @OA\Property(property="type", type="string", description="类型1属性2参数"),
+     *   @OA\Property(property="type", type="integer", description="类型1属性2参数", example="1"),
      *   @OA\Property(property="text_type", type="string", description="checkbox|radio|text"),
      *   @OA\Property(property="sort", type="integer", description="排序"),
      *   @OA\Property(property="value", type="array", description="属性/参数值", items={}),

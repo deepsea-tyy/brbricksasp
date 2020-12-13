@@ -106,11 +106,6 @@ class Goods extends \bricksasp\base\BaseActiveRecord
         return [
             \yii\behaviors\TimestampBehavior::className(),
             \bricksasp\common\VersionBehavior::className(),
-            // [
-            //     'class' => \bricksasp\common\SnBehavior::className(),
-            //     'attribute' => 'gn',
-            //     'type' => \bricksasp\common\SnBehavior::SN_GOODS,
-            // ],
         ];
     }
 
@@ -246,12 +241,12 @@ class Goods extends \bricksasp\base\BaseActiveRecord
 
     public function getLabels()
     {
-        return $this->hasMany(Label::className(), ['id' => 'object_id'])->via('labelRelation')->select(['id', 'name', 'style']);
+        return $this->hasMany(Label::className(), ['id' => 'label_id'])->via('labelRelation')->select(['id', 'name', 'style', 'type']);
     }
 
     public function getLabelRelation()
     {
-        return $this->hasMany(LabelRelation::className(), ['object_id' => 'lable_id'])->andWhere(['type'=>LabelRelation::TYPE_GOODS]);
+        return $this->hasMany(LabelRelation::className(), ['object_id' => 'id'])->andWhere(['type'=>LabelRelation::TYPE_GOODS]);
     }
 
     public function getCommentItems()
@@ -261,20 +256,17 @@ class Goods extends \bricksasp\base\BaseActiveRecord
 
     public function saveData($data=[])
     {
-        if (!$this->checkArray($data,['imageItems','labelItems','productItems'])) {
+        if (!$this->checkArray($data,['imageItems','labelItems','productItems','specItems','paramItems'])) {
             return false;
         }
         $data = $this->formatData($data);
-        // print_r($data);
-        // exit();
 
         $this->load($data);
         
         $transaction = self::getDb()->beginTransaction();
         try {
 
-            $this->save();
-            if (!$this->id) {
+            if (!$this->save()) {
                 $transaction->rollBack();
                 return false;
             }
@@ -289,7 +281,7 @@ class Goods extends \bricksasp\base\BaseActiveRecord
             }
             FileRelation::deleteAll(['object_id'=>$this->id,'type'=>FileRelation::TYPE_GOODS]);
             self::getDb()->createCommand()
-            ->batchInsert(FileRelation::tableName(),array_keys(end($images)??[]),$images)
+            ->batchInsert(FileRelation::tableName(),array_keys(end($images)?end($images):[]),$images)
             ->execute();
 
             $labels = [];
@@ -303,17 +295,15 @@ class Goods extends \bricksasp\base\BaseActiveRecord
 
             LabelRelation::deleteAll(['object_id'=>$this->id,'type'=>LabelRelation::TYPE_GOODS]);
             self::getDb()->createCommand()
-            ->batchInsert(LabelRelation::tableName(),array_keys(end($labels)??[]),$labels)
+            ->batchInsert(LabelRelation::tableName(),array_keys(end($labels)?end($labels):[]),$labels)
             ->execute();
 
+            GoodsProduct::deleteAll(['goods_id'=>$this->id]);
             foreach ($data['productItems'] as $product) {
                 $product['goods_id']    = $this->id;
                 $product['on_shelves']    = $product['on_shelves']??$this->on_shelves;
-                if (empty($product['id'])) {
-                    $model = new GoodsProduct();
-                }else{
-                    $model = GoodsProduct::findOne($product['id']);
-                }
+                $model = new GoodsProduct();
+
                 $model->load($product);
                 $model->save();
                 if ($product['imageItems']??false) {
@@ -327,7 +317,7 @@ class Goods extends \bricksasp\base\BaseActiveRecord
                     }
                     FileRelation::deleteAll(['object_id'=>$model->id,'type'=>FileRelation::TYPE_PRODUCT]);
                     self::getDb()->createCommand()
-                    ->batchInsert(FileRelation::tableName(),array_keys(end($pimages)??[]),$pimages)
+                    ->batchInsert(FileRelation::tableName(),array_keys(end($pimages)?$pimages:[]),$pimages)
                     ->execute();
                 }
             }
@@ -362,6 +352,7 @@ class Goods extends \bricksasp\base\BaseActiveRecord
             }
             $item['name'] = $data['name'];
             $item['code'] = $item['code']??Tools::get_sn(4);
+            $data['productItems'][$k] = $item;
         }
 
         // 设置默认单品
@@ -370,144 +361,21 @@ class Goods extends \bricksasp\base\BaseActiveRecord
             $data['productItems'][0]['is_default'] = 1;
         }
 
+        if (isset($data['specItems'])) {
+            $data['specs'] = json_encode($data['specItems'],JSON_UNESCAPED_UNICODE);
+        }
+        if (isset($data['paramItems'])) {
+            $data['params'] = json_encode($data['paramItems'],JSON_UNESCAPED_UNICODE);
+        }
+
         $data['price'] = $defProd['price']??0;
         $data['costprice'] = $defProd['costprice']??0;
         $data['mktprice'] = $defProd['mktprice']??0;
         $data['distprice'] = $defProd['distprice']??0;
         $data['vip_price'] = $defProd['vip_price']??0;
-        $data['code'] = $defProd['code']??0;
+        $data['code'] = $defProd['code']??'';
 
         $data['image_id'] = $data['imageItems'][0]??'';
         return $data;
-    }
-
-    /**
-     * 商品规格属性
-     * @param  integer $spec_id 类型id
-     * @param  integer $sence 1 product 2 goods
-     * @return array           
-     */
-    public static function goodsSpec($spec_id=0 , $sence=1)
-    {
-        $item_spec = Type::find()->where(['id'=> $spec_id])->one();
-        if (!$item_spec) return null;
-        $input = [];
-        $specValues = Spec::find()->with(['items'])->where(['id'=>explode(',',$item_spec->spec)])->all();
-
-        if ($sence == 2) {
-            foreach ($specValues as $spec) {
-                foreach ($spec->items as $val) {
-                    $input[$spec['name']][] = $val['value'];
-                }
-            }
-            return $input;
-        }
-
-        foreach ($specValues as $spec) {
-            $spec_v = [];
-            foreach ($spec->items as $val) {
-                $spec_v[$val['value']] = $spec['name'];
-            }
-            $input[] = $spec_v;
-        }
-        $input = array_filter($input);
-        if (empty($input)) Tools::breakOff('类型数据不全');
-        // 拼接格式
-        $spec_product = Tools::cartesian($input,function ($v,$v2=[])
-        {
-            if ($v2) {
-                return $v[1] . ',' . $v2[1] . ':' . $v2[0];
-            }
-            return $v[1] . ':' . $v[0];
-        });
-        return $spec_product;
-    }
-
-    /**
-     * 商品参数
-     * @param  integer $spec_id 类型id
-     * @return array           
-     */
-    public static function goodsParams($spec_id=0)
-    {
-        $item_parmas = Type::find()->where(['id'=> $spec_id])->one();
-        $params = Params::find()->where(['id'=>explode(',',$item_parmas['params'])])->all();
-        $output = [];
-        foreach ($params as $v) {
-            $output[$v['name']] = json_decode($v['value'],true);
-        }
-        return $output;
-    }
-
-    /**
-     * 商品详情
-     * @OA\Schema(
-     *  schema="goodsDetail",
-     *  description="商品详情结构",
-     *  @OA\Property(property="name", type="string", description="商品名称"),
-     *  @OA\Property(property="brief", type="string", description="商品简介" ),
-     *  @OA\Property(property="content", type="string", description="商品内容" ),
-     *  @OA\Property(property="comments_num", type="integer", description="评论数" ),
-     *  @OA\Property(property="view_count", type="integer", description="浏览数" ),
-     *  @OA\Property(property="stock_unit", type="integer", description="库存单位" ),
-     *  @OA\Property(property="weight_unit", type="integer", description="重量单位" ),
-     *  @OA\Property(property="volume_unit", type="integer", description="体积单位" ),
-     *  @OA\Property(property="price", type="string", description="售价"),
-     *  @OA\Property(property="costprice", type="string", description="成本价" ),
-     *  @OA\Property(property="mktprice", type="string", description="原价" ),
-     *  @OA\Property(property="imageItems", type="array", description="商品图片", @OA\Items()),
-     *  @OA\Property(property="labelItems", type="array", description="商品标签", @OA\Items(ref="#/components/schemas/label")),
-     *  @OA\Property(property="brandItem", description="品牌", ref="#/components/schemas/brandUpdate"),
-     *  @OA\Property(property="videoItem", description="视频介绍", ),
-     *  @OA\Property(property="default_product", description="默认单品", ref="#/components/schemas/goodsProduct"),
-     * )
-     */
-    public static function goodsDetail($map,$product_id=0, $all=2)
-    {
-        $goods = Goods::find()
-            ->with(['product', 'labels', 'brand', 'images', 'cover', 'video'])
-            ->select(['id','type', 'spec_id', 'brand_id', 'name', 'brief', 'content', 'params', 'comments_num', 'view_count', 'comments_num','video','image_id', 'stock_unit', 'weight_unit', 'volume_unit'])
-            ->where($map)
-            ->one();
-        if (!$goods) Tools::breakOff(Yii::t('base',930003));
-
-        $data = $goods->toArray();
-        if ($goods->specs) {//是否为多规格
-            $data['is_spec'] = 1;
-        }else{
-            $data['is_spec'] = 0;
-        }
-
-        $data['labels'] = $goods->labels ? $goods->labels : [];
-        $data['brand'] = $goods->brand ? $goods->brand : [];
-        $data['images'] = $goods->images ? $goods->images : [];
-        $data['cover'] = $goods->cover ? $goods->cover : [];
-        $data['video'] = $goods->video ? $goods->video : [];
-
-        if ($all == 1) {
-            $data['product_list'] = $goods->productItems;
-        }
-        return $data;
-    }
-
-    /**
-     * 商品默认属性
-     * @param  array $products 
-     * @return array 
-     */
-    public static function defaultSpec($data=[],$default_specs=[])
-    {
-        $spes = [];
-        foreach ($data as $product) {
-            $item = explode(',', $product->specs);
-            foreach ($item as $v) {
-                $kv = explode(':', $v);
-                $spec['product_id'] = $product->id;
-                $spec['spec'] = $kv[1];
-                if ($default_specs == $product->specs) $spec['default'] = 1; else $spec['default'] = 0;
-                $spes[$kv[0]][] = $spec;
-            }
-        }
-        return $spes;
     }
 }

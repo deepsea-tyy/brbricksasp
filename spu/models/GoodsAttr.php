@@ -63,7 +63,7 @@ class GoodsAttr extends \bricksasp\base\BaseActiveRecord
     
     public function validValue()
     {
-        $this->value = json_encode($this->value);
+        $this->value = json_encode($this->value,JSON_UNESCAPED_UNICODE);
     }
 
     public function saveData($data)

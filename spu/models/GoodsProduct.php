@@ -45,7 +45,7 @@ class GoodsProduct extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['goods_id', 'on_shelves', 'stock', 'freeze_stock', 'is_default', 'is_vip_discount', 'vip', 'is_delete'], 'integer'],
+            [['id', 'goods_id', 'on_shelves', 'stock', 'freeze_stock', 'is_default', 'is_vip_discount', 'vip', 'is_delete'], 'integer'],
             [['price', 'costprice', 'mktprice', 'distprice', 'vip_price', 'weight', 'volume'], 'number'],
             [['name', 'spec'], 'string', 'max' => 255],
             [['code'], 'string', 'max' => 30],

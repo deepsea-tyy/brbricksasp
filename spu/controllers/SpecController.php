@@ -2,9 +2,11 @@
 namespace bricksasp\spu\controllers;
 
 use Yii;
+use bricksasp\base\Tools;
 use yii\data\ActiveDataProvider;
 use bricksasp\base\BackendController;
 use bricksasp\spu\models\GoodsSpec;
+use bricksasp\spu\models\GoodsAttr;
 
 /**
  * SpecController implements the CRUD actions for Spec model.
@@ -228,5 +230,56 @@ class SpecController extends BackendController
             return $model;
         }
         Tools::breakOff(40001);
+    }
+
+    /**
+     * @OA\Get(path="/spu/spec/detail",
+     *   summary="商品规格详情",
+     *   tags={"spu模块"},
+     *   
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
+     *
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/goodsAttrUpdate"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionDetail()
+    {
+        $model = $this->findModel(Yii::$app->request->get('id'));
+
+        $aids = json_decode(trim($model->attr_id, '"'),true);
+        $pids = json_decode(trim($model->param_id, '"'),true);
+        $attr = GoodsAttr::find()->where(['id'=>$aids?$aids:0])->all();
+        $param = GoodsAttr::find()->where(['id'=>$pids?$pids:0])->all();
+        
+        $attrData=$paramData=[];
+        foreach ($attr as $item) {
+            foreach (json_decode($item->value) as $v) {
+                $attrData[$item->name][] = $item->name . ':' .$v;
+            }
+        }
+        foreach ($param as $item) {
+            $item->value = json_decode($item->value);
+            $paramData[] = $item;
+        }
+        
+        if (!$attrData && !$paramData) {
+            return $this->fail('规格数据不全');
+        }
+        $spec_product = Tools::cartesian($attrData/*,function ($v,$v2=[])
+        {
+            if ($v2) {
+                return $v[1] . ',' . $v2[1];
+            }
+            return $v[1];
+        }*/);
+        return $this->success(['attr'=>$spec_product,'param'=>$paramData]);
     }
 }

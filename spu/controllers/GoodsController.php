@@ -6,7 +6,10 @@ use bricksasp\base\Tools;
 use bricksasp\spu\models\Goods;
 use yii\data\ActiveDataProvider;
 use bricksasp\models\redis\Token;
+use bricksasp\models\FileRelation;
+use bricksasp\models\LabelRelation;
 use bricksasp\base\BackendController;
+use bricksasp\spu\models\GoodsProduct;
 use bricksasp\spu\models\GoodsComment;
 
 /**
@@ -17,14 +20,16 @@ class GoodsController extends BackendController
     public function noLoginAction()
     {
         return [
-            'index'
+            'index',
+            'view'
         ];
     }
 
     public function checkLoginAction()
     {
         return [
-            'index'
+            'index',
+            'view'
         ];
     }
 
@@ -61,7 +66,7 @@ class GoodsController extends BackendController
         $query->orFilterWhere(['like', 'keywords', $params['keywords']??null]);
 
         if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
-            $query->select(['id', 'name', 'brief', 'cover', 'video', 'price', 'costprice', 'mktprice','view_num','buy_num','on_shelves','is_virtual']);
+            $query->select(['id', 'name', 'brief', 'video', 'price', 'costprice', 'mktprice','view_num','buy_num','on_shelves']);
         }
         $with= ['labels','cover'];
         $query->with($with);
@@ -87,9 +92,9 @@ class GoodsController extends BackendController
     }
 
     /**
-     * @OA\Get(path="/cms/Goods/view",
-     *   summary="文章详情",
-     *   tags={"cms模块"},
+     * @OA\Get(path="/spu/goods/view",
+     *   summary="商品详情",
+     *   tags={"spu模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
@@ -99,45 +104,47 @@ class GoodsController extends BackendController
      *     description="返回数据",
      *     @OA\MediaType(
      *       mediaType="application/json",
-     *       
      *       @OA\Schema(ref="#/components/schemas/goodsUpdate"),
      *     ),
      *   ),
      * )
-     * 
-     * @OA\Schema(
-     *   schema="GoodsView",
-     *   description="文章数据详情",
-     *   allOf={
-     *     @OA\Schema(
-     *       @OA\Property(property="labels", type="array", description="封面", @OA\Items(ref="#/components/schemas/label")),
-     *     ),
-     *     @OA\Schema(ref="#/components/schemas/goodsUpdate"),
-     *   }
-     * )
      */
     public function actionView()
     {
-        $params = $this->queryMapGet();
-        $model = $this->findModel($params['id'] ?? 0);
-        $data = $model->toArray();
-        Goods::updateAllCounters(['view_num'=>1],['id'=>$params['id']]);
-        if ($this->current_user_id && $this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
-            $m = new GoodsUserLog();
-            $m->load(['user_id'=>$this->current_user_id,'Goods_id'=>$params['id'],'created_at'=>time()]);
-            $m->save();
+        $field = ['id','type', 'spec_id', 'brand_id', 'name', 'brief', 'content', 'params', 'specs', 'comments_num', 'view_num', 'comments_num','video','image_id', 'stock_unit', 'weight_unit', 'volume_unit'];
+        $goods = Goods::find()
+            ->with(['product', 'labels', 'brand', 'images', 'cover', 'video'])
+            ->select($this->current_login_type == Token::TOKEN_TYPE_FRONTEND ? $field : [])
+            ->where(['id'=>Yii::$app->request->get('id')])
+            ->one();
+        if (!$goods) Tools::breakOff(40001);
+
+        $data = $goods->toArray();
+        if ($goods->specs) {//是否为多规格
+            $data['is_spec'] = 1;
+            $data['specs'] = $goods->specs ? json_decode($goods->specs, true) : [];
+
+            foreach ($goods->product as $k => $v) {
+                $data['product'][$v->spec?$v->spec:$k] = $v->toArray();
+            }
+        }else{
+            $data['is_spec'] = 0;
         }
-        $amodel = new Goodsgoods();
-        $cascader = $amodel->cascader($model->cat_id);
-        $data['cat_id'] = array_column($cascader, 'id');
-        $data['file'] = $model->file??[];
-        $data['labels'] = $model->labels;
+
+        $data['labels'] = $goods->labels ? $goods->labels : [];
+        $data['brand'] = $goods->brand ? $goods->brand : [];
+        $data['images'] = $goods->images ? $goods->images : [];
+        $data['cover'] = $goods->cover ? $goods->cover : [];
+        $data['video'] = $goods->video ? $goods->video : [];
+        $data['params'] = $goods->params ? json_decode($goods->params, true) : [];
+
         return $this->success($data);
     }
 
     /**
      * @OA\Post(path="/spu/goods/create",
      *   summary="添加商品",
+     *   description="数据结构goodsCreate",
      *   tags={"spu模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *
@@ -177,6 +184,8 @@ class GoodsController extends BackendController
      *   @OA\Property(property="image_id", type="string", description="封面图"),
      *   @OA\Property(property="video", type="string", description="商品视频介绍id"),
      *   @OA\Property(property="content", type="string", description="商品详情"),
+     *   @OA\Property(property="specs", type="string", description="规格详情"),
+     *   @OA\Property(property="params", type="string", description="参数详情"),
      *   @OA\Property(property="sort", type="integer", description="排序"),
      *   @OA\Property(property="is_hot", type="integer", description="是否热门"),
      *   @OA\Property(property="is_recommend", type="integer", description="是否推荐"),
@@ -218,6 +227,8 @@ class GoodsController extends BackendController
      *   @OA\Property(property="imageItems", type="array", description="图片数组",items={}),
      *   @OA\Property(property="labelItems", type="array", description="标签数组",items={}),
      *   @OA\Property(property="productItems", type="array", description="单品数组 查看goodsProduct单品结构",items={}),
+     *   @OA\Property(property="specItems", type="array", description="规格详情",items={}),
+     *   @OA\Property(property="paramItems", type="array", description="参数详情",items={}),
      * )
      *
      * 
@@ -260,6 +271,7 @@ class GoodsController extends BackendController
     /**
      * @OA\Post(path="/spu/goods/update",
      *   summary="更新商品",
+     *   description="数据结构 goodsUpdate",
      *   tags={"spu模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *
@@ -306,7 +318,7 @@ class GoodsController extends BackendController
 
     /**
      * @OA\Post(path="/spu/goods/delete",
-     *   summary="分类删除",
+     *   summary="商品删除",
      *   tags={"spu模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *  
@@ -333,36 +345,30 @@ class GoodsController extends BackendController
     public function actionDelete()
     {
         $params = $this->queryMapPost();
-        if (Goodsgoods::updateAll(['is_delete'=>1, 'updated_at'=>time()],$this->updateCondition(['id'=>$params['ids']??0, 'is_delete'=>0]))) {
+        if (Goods::updateAll(['is_delete'=>1, 'updated_at'=>time()],$this->updateCondition(['id'=>$params['ids']??0, 'is_delete'=>0]))) {
             return $this->success();
         }
-        return Goodsgoods::deleteAll($this->updateCondition(['id'=>$params['ids']??0])) ? $this->success() : Tools::breakOff(40001);
+
+        $pids = GoodsProduct::find()->select(['id'])->where(['goods_id'=>$params['ids']??0])->asArray()->all();
+        GoodsProduct::deleteAll(['goods_id'=>$params['ids']??0]);
+        FileRelation::deleteAll(['object_id'=>$params['ids']??0, 'type'=>FileRelation::TYPE_GOODS]);
+        FileRelation::deleteAll(['object_id'=>array_column($pids,'id'), 'type'=>FileRelation::TYPE_PRODUCT]);
+        return Goods::deleteAll($this->updateCondition(['id'=>$params['ids']??0])) ? $this->success() : Tools::breakOff(40001);
     }
 
     /**
-     * @OA\Get(path="/spu/goods/spec",
-     *   summary="商品类型对应的规格",
-     *   tags={"spu模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
-     *
-     *   @OA\Parameter(description="类型的id",name="type_id",in="query",@OA\Schema(type="integer")),
-     *
-     *   @OA\Response(
-     *     response=200,
-     *     description="返回数据",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *
-     *       @OA\Schema(ref="#/components/schemas/response"),
-     *     ),
-     *   ),
-     * )
+     * Finds the Goods model based on its primary key value.
+     * If the model is not found, a 404 HTTP exception will be thrown.
+     * @param integer $id
+     * @return Goods the loaded model
+     * @throws HttpException if the model cannot be found
      */
-    public function actionSpec()
+    protected function findModel($id)
     {
-        $params = unserialize($params);
-        $spec_product = Goods::getGoods($params['type_id']);
-        return $this->success($spec_product);
+        if (($model = Goods::findOne($id)) !== null) {
+            return $model;
+        }
+        Tools::breakOff(40001);
     }
 
     /**
@@ -420,28 +426,6 @@ class GoodsController extends BackendController
     }
 
     /**
-     * Finds the Goods model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param integer $id
-     * @return Goods the loaded model
-     * @throws HttpException if the model cannot be found
-     */
-    protected function findModel($id)
-    {
-        if (($model = Goods::findOne($id)) !== null) {
-            return $model;
-        }
-        Tools::breakOff(40001);
-    }
-
-    public function actionDetail()
-    {
-        $params = Yii::$app->request->get();
-        $goods = Goods::goodsDetail(['id'=>$params['id']],$params['product_id'],$params['all']);
-        return $this->success($goods);
-    }
-
-    /**
      * @OA\Post(path="/spu/goods/user-comment",
      *   summary="商品评价",
      *   tags={"spu模块"},
@@ -489,7 +473,7 @@ class GoodsController extends BackendController
      *
      *
      */
-    public function actionUserComment($params)
+    public function actionUserComment()
     {
         $params = unserialize($params);
         $params['status'] = GoodsComment::COMMENT_STATUS_NO;
@@ -511,13 +495,12 @@ class GoodsController extends BackendController
         return $this->fail($validator->errors);
     }
 
-
     /**
      * 商品评论列表
      * @param $params
      * @return array
      */
-    public function actionComment($params)
+    public function actionComment()
     {
         $params = unserialize($params);
         $goods_id = $params['goods_id'];
@@ -576,7 +559,7 @@ class GoodsController extends BackendController
      *
      *
      */
-    public function actionCommentExamine($params){
+    public function actionCommentExamine(){
         $params = unserialize($params);
         if(!isset($params['created_at'])){
             $params['created_at'] = time();
@@ -616,7 +599,7 @@ class GoodsController extends BackendController
      *
      *
      */
-    public function actionCommentDisplay($params){
+    public function actionCommentDisplay(){
         $params = unserialize($params);
         $comment = GoodsComment::findOne(['id'=>$params['id']]);
         if(!$comment){
@@ -656,7 +639,7 @@ class GoodsController extends BackendController
      *
      *
      */
-    public function actionGetBuyUser($params){
+    public function actionGetBuyUser(){
         $params = unserialize($params);
         $list = OrderItem::find()->select(['goods_id','user_id','created_at','id'])->with(['connect','userWx','userInfo'])->where(['goods_id'=>$params['goods_id']])->groupBy('user_id')->orderBy(' id desc ')->limit(3)->asArray()->all();
         if($list){
@@ -692,7 +675,7 @@ class GoodsController extends BackendController
      *
      *
      */
-    public function actionExamine($params){
+    public function actionExamine(){
         $params = unserialize($params);
         $goods = Goods::findOne(['id'=>$params['id']]);
         if(!$goods){
@@ -735,7 +718,7 @@ class GoodsController extends BackendController
      *
      *
      */
-    public function actionApplyExamine($params){
+    public function actionApplyExamine(){
         $params = unserialize($params);
         $goods = Goods::findOne(['id'=>$params['id']]);
         if(!$goods){
@@ -769,7 +752,7 @@ class GoodsController extends BackendController
      *
      *
      */
-    public function actionCancelApplyExamine($params){
+    public function actionCancelApplyExamine(){
         $params = unserialize($params);
         $goods = Goods::findOne(['id'=>$params['id']]);
         if(!$goods){

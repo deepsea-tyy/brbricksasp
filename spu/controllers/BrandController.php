@@ -112,6 +112,7 @@ class BrandController extends BackendController
     /**
      * @OA\post(path="/spu/brand/create",
      *   summary="添加品牌",
+     *   description="数据结构 brandCreate",
      *   tags={"spu模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *
@@ -160,6 +161,7 @@ class BrandController extends BackendController
     /**
      * @OA\post(path="/spu/brand/update",
      *   summary="修改品牌",
+     *   description="数据结构 brandUpdate",
      *   tags={"spu模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *
