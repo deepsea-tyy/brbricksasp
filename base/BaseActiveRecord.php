@@ -3,7 +3,7 @@ namespace bricksasp\base;
 
 use Yii;
 use yii\db\ActiveQuery;
-use bricksasp\helpers\Tools;
+use bricksasp\base\Tools;
 
 class BaseActiveRecord extends \yii\db\ActiveRecord
 {
@@ -40,11 +40,11 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
         $start_at = $end_at = $release_at = null;
         if (!empty($data['start_at']) && !is_numeric($data['start_at'])) {
             $start_at = strtotime($data['start_at']);
-            $start_at = $start_at ? $start_at : null;
+            $start_at = $start_at ? $start_at : Tools::breakOff('时间格式不正确');
         }
         if (!empty($data['end_at']) && !is_numeric($data['end_at'])) {
             $end_at = strtotime($data['end_at']);
-            $end_at = $end_at ? $end_at : null;
+            $end_at = $end_at ? $end_at : Tools::breakOff('时间格式不正确');
         }
         if (!empty($data['release_at']) && !is_numeric($data['release_at'])) {
             $release_at = strtotime($data['release_at']);
