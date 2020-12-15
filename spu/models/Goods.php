@@ -9,7 +9,6 @@ use bricksasp\models\Label;
 use bricksasp\models\LabelRelation;
 use bricksasp\models\File;
 use bricksasp\models\FileRelation;
-
 /**
  * This is the model class for table "{{%goods}}".
  *
@@ -72,6 +71,12 @@ use bricksasp\models\FileRelation;
  * @property string|null $store_id 门店id
  * @property string|null $write_off_at 兑换限时
  * @property int|null $write_off_at_type 兑换限时类型1指定天数2指定日期
+ * @property int|null $postage_free_num 单品满件包邮
+ * @property float|null $postage_free_price 单品满额包邮
+ * @property string|null $exclude_area 不参与单品包邮地区
+ * @property int|null $postage_id 运费模版id
+ * @property float|null $postage_price 统一邮费
+ * @property int|null $place_delivery 发货地areaid
  * @property int|null $created_at
  * @property int|null $updated_at
  */
@@ -115,14 +120,14 @@ class Goods extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['owner_id', 'user_id', 'version', 'brand_id', 'cat_id', 'spec_id', 'type', 'sort', 'is_hot', 'is_recommend', 'status', 'is_delete', 'check_stock', 'show_stock', 'pre_sale', 'on_shelves', 'on_shelves_at', 'off_shelves_at', 'sell_num', 'buy_num', 'show_buy_num', 'return_num', 'view_num', 'comments_num', 'is_vip_discount', 'vip', 'follow_force', 'offline_write_off', 'store_force', 'write_off_at_type', 'created_at', 'updated_at'], 'integer'],
+            [['owner_id', 'user_id', 'version', 'brand_id', 'cat_id', 'spec_id', 'type', 'sort', 'is_hot', 'is_recommend', 'status', 'is_delete', 'check_stock', 'show_stock', 'pre_sale', 'on_shelves', 'on_shelves_at', 'off_shelves_at', 'sell_num', 'buy_num', 'show_buy_num', 'return_num', 'view_num', 'comments_num', 'is_vip_discount', 'vip', 'follow_force', 'offline_write_off', 'store_force', 'write_off_at_type', 'postage_free_num', 'postage_id', 'place_delivery', 'created_at', 'updated_at'], 'integer'],
             [['subtitle'], 'required'],
             [['content', 'specs', 'params'], 'string'],
-            [['price', 'costprice', 'mktprice', 'distprice', 'vip_price'], 'number'],
+            [['price', 'costprice', 'mktprice', 'distprice', 'vip_price', 'postage_free_price', 'postage_price'], 'number'],
             [['code', 'barcode'], 'string', 'max' => 30],
-            [['name', 'subtitle', 'brief', 'keywords', 'share_desc', 'follow_guide', 'store_id'], 'string', 'max' => 255],
+            [['name', 'subtitle', 'brief', 'keywords', 'share_desc', 'follow_guide', 'store_id', 'exclude_area'], 'string', 'max' => 255],
             [['subtitle_short', 'write_off_at'], 'string', 'max' => 32],
-            [['video', 'share_title', 'share_image_id', 'follow_tip'], 'string', 'max' => 64],
+            [['image_id', 'video', 'share_title', 'share_image_id', 'follow_tip'], 'string', 'max' => 64],
             [['stock_unit', 'weight_unit', 'volume_unit', 'vip_discount'], 'string', 'max' => 8],
 
             [['image_id'], 'safe'],
@@ -202,6 +207,12 @@ class Goods extends \bricksasp\base\BaseActiveRecord
             'store_id' => 'Store ID',
             'write_off_at' => 'Write Off At',
             'write_off_at_type' => 'Write Off At Type',
+            'postage_free_num' => 'Postage Free Num',
+            'postage_free_price' => 'Postage Free Price',
+            'exclude_area' => 'Exclude Area',
+            'postage_id' => 'Postage ID',
+            'postage_price' => 'Postage Price',
+            'place_delivery' => 'Place Delivery',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
