@@ -131,9 +131,7 @@ class Promotion extends \bricksasp\base\BaseActiveRecord
                 $condition->load($data['condition']);
                 if (!$condition->save()) {
                     $transaction->rollBack();
-                    foreach ($condition->errors as $k => $v) {
-                        $this->addError($k,$v[0]);
-                    }
+                    $this->setErrors($condition->errors);
                     return false;
                 }
             }

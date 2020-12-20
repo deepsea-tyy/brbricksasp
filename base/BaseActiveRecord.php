@@ -75,4 +75,9 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
         }
         return true;
     }
+
+    protected function setErrors(array $errors)
+    {
+        $this->errors = $errors;
+    }
 }

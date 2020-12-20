@@ -9,6 +9,7 @@ use Yii;
  *
  * @property int $user_id
  * @property int|null $owner_id
+ * @property int|null $show_id
  * @property string|null $avatar
  * @property string|null $name 姓名
  * @property string|null $nickname
@@ -53,7 +54,7 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['user_id'], 'required'],
-            [['user_id', 'owner_id', 'birthday', 'age', 'gender', 'last_login_time', 'login_count', 'vip_time', 'platform', 'level', 'company_id', 'type', 'created_at', 'updated_at'], 'integer'],
+            [['user_id', 'owner_id', 'show_id', 'birthday', 'age', 'gender', 'last_login_time', 'login_count', 'vip_time', 'platform', 'level', 'company_id', 'type', 'created_at', 'updated_at'], 'integer'],
             [['avatar'], 'string', 'max' => 255],
             [['name', 'nickname', 'vip', 'country_code'], 'string', 'max' => 32],
             [['last_login_ip', 'last_login_area', 'mark'], 'string', 'max' => 64],
@@ -70,6 +71,7 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
         return [
             'user_id' => 'User ID',
             'owner_id' => 'Owner ID',
+            'show_id' => 'Show ID',
             'avatar' => 'Avatar',
             'name' => 'Name',
             'nickname' => 'Nickname',

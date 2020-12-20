@@ -94,7 +94,6 @@ class AdvertPosition extends \bricksasp\base\BaseActiveRecord
 
         $transaction = self::getDb()->beginTransaction();
         try {
-            // 保存广告位
             if ($this->save() === false) {
                 $transaction->rollBack();
                 return false;

@@ -11,9 +11,9 @@ use bricksasp\base\Tools;
  * @property int $id
  * @property int|null $user_id
  * @property int|null $owner_id
+ * @property string|null $title
  * @property string|null $key
  * @property string|null $val
- * @property string|null $title
  * @property string|null $val1
  * @property string|null $val2
  * @property int|null $type 分类
@@ -36,10 +36,10 @@ class Setting extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['user_id', 'owner_id', 'type'], 'integer'],
-            [['key', 'title'], 'string', 'max' => 64],
+            [['ext'], 'string'],
+            [['title', 'key'], 'string', 'max' => 64],
             [['val', 'val1', 'val2'], 'string', 'max' => 255],
             [['owner_id', 'key'], 'unique', 'targetAttribute' => ['owner_id', 'key']],
-            [['ext'], 'safe'],
         ];
     }
 
@@ -52,11 +52,13 @@ class Setting extends \bricksasp\base\BaseActiveRecord
             'id' => 'ID',
             'user_id' => 'User ID',
             'owner_id' => 'Owner ID',
+            'title' => 'Title',
             'key' => 'Key',
             'val' => 'Val',
-            'title' => 'title',
-            'val1' => 'val1',
-            'val2' => 'val2',
+            'val1' => 'Val1',
+            'val2' => 'Val2',
+            'type' => 'Type',
+            'ext' => 'Ext',
         ];
     }
 
@@ -65,146 +67,40 @@ class Setting extends \bricksasp\base\BaseActiveRecord
      * @var [array]
      */
     public static $defaultSettings = [
-        'WX_OFFICIAL_TYPE' => [
-            'title' => '公众号类型',
-            'val' => '',
-            'option' => [ 1=>'服务和', 2=>'订阅号']
-        ],
-        'WX_OFFICIAL_APPID' => [
-            'title' => '公众号APPID',
-            'val' => '',
-        ],
-        'WX_OFFICIAL_SECRET' => [
-            'title' => '公众号SECRET',
-            'val' => '',
-        ],
-        'WX_OFFICIAL_ORIGINAL_ID' => [
-            'title' => '公众号原始ID',
-            'val' => '',
-        ],
-        'WX_OFFICIAL_KEY' => [
-            'title' => '公众号EncodingAESKey',
-            'val' => '',
-        ],
-        'WX_OFFICIAL_RETURN_URL' =>[
-            'title' => '微信开放平台公众号回调地址',
-            'val'   => '/wxweb/get-info',
-        ],
-        'WX_OFFICIAL_SCOPE' =>[
-            'title' => '微信开放平台公众号scope',
-            'val'   => 'snsapi_login',
-        ],
 
-        'WX_APPLET_APPID' => [
-            'title' => '小程序APPID',
-            'val' => '',
-        ],
-        'WX_APPLET_SECRET' => [
-            'title' => '小程序SECRET',
-            'val' => '',
-        ],
-        'WX_APPLET_ORIGINAL_ID' => [
-            'title' => '小程序原始ID',
-            'val' => '',
-        ],
-        'WX_APPLET_KEY' => [
-            'title' => '小程序EncodingAESKey',
-            'val' => '',
-        ],
-
-        'WX_APPLET_APPID_SHOP' => [
-            'title' => '个店小程序APPID',
-            'val' => '',
-        ],
-        'WX_APPLET_SECRET_SHOP' => [
-            'title' => '个店小程序SECRET',
-            'val' => '',
-        ],
-        'WX_APPLET_ORIGINAL_ID_SHOP' => [
-            'title' => '个店小程序原始ID',
-            'val' => '',
-        ],
-        'WX_APPLET_KEY_SHOP' => [
-            'title' => '个店小程序EncodingAESKey',
-            'val' => '',
-        ],
-
-        'SMS_TEN_SECRETID' => [
-            'title' => '腾讯云短信SecretId',
-            'val' => '',
-        ],
-        'SMS_TEN_SECRETKETY' => [
-            'title' => '腾讯云短信SecretKey',
-            'val' => '',
-        ],
-        'SMS_ALI_SECRETID' => [
-            'title' => '阿里云短信SecretId',
-            'val' => '',
-        ],
-        'SMS_ALI_SECRETKETY' => [
-            'title' => '阿里云短信SecretKey',
-            'val' => '',
-        ],
-        'SMS_USE_ON' => [
-            'title' => '使用三方短信',
-            'val'   => 'SmsTencent',
-        ],
-        'SMS_PLATFORM' => [
-            'title' => '短信平台',
-            'val'   => [
-                'SmsTencent' => [
-                    'title' => '腾讯云',
-                    'secretid' => 'SMS_TEN_SECRETID',
-                    'secretkey' => 'SMS_TEN_SECRETKETY'
-                ],
-                'SmsAli' => [
-                    'title' => '阿里云',
-                    'secretid' => 'SMS_ALI_SECRETID',
-                    'secretkey' => 'SMS_ALI_SECRETKETY'
-                ],
-            ],
-        ],
-
-
-
-        'WX_WEB_APPID' =>[
+        'WX_OPEN_APPID' =>[
             'title' => '微信开放平台网站应用app_id',
             'val'   => '',
         ],
-        'WX_WEB_SECRET' =>[
+        'WX_OPEN_SECRET' =>[
             'title' => '微信开放平台网站应用app_secret',
             'val'   => '',
         ],
-        'WX_WEB_RETURN_URL' =>[
+        'WX_OPEN_RETURN_URL' =>[
             'title' => '微信开放平台网站应用回调地址',
             'val'   => '/wxweb/to-where',
         ],
-        'WX_WEB_LOCATION_URL' =>[
+        'WX_OPEN_LOCATION_URL' =>[
             'title' => '开放平台登录后回调的地址',
             'val'   => '/static/home/#/',
         ],
-        'WX_WEB_LOCATION_HOME_URL' =>[
+        'WX_OPEN_LOCATION_HOME_URL' =>[
             'title' => '官网登录后回调的地址',
             'val'   => '/static/home/#/receivecode',
         ],
-        'WX_WEB_SCOPE' =>[
+        'WX_OPEN_SCOPE' =>[
             'title' => '微信开放平台网站应用scope',
             'val'   => 'snsapi_login',
         ],
 
 
-        'MALL_ORDER_EFFECTICE_TIME' =>[
+        'ORDER_DURATION' =>[
             'title' => '订单有效时间(天)',
-            'val'   => 24 * 3600,
+            'val'   => 2,
         ],
-        'MALL_ORDER_RESHIP_EFFECTICE_TIME' =>[
+        'RETURN_DURATION' =>[
             'title' => '退货有效时间(天)',
-            'val'   => 3 * 24 * 3600,
-        ],
-        'MALL_ORDER_FREE_SHIPPING' =>[
-            'title' => '是否免邮',
-            'val'   => 0,
-            'val1'  => 100, //免邮金额
+            'val'   => 7,
         ],
 
         'WEB_NAME' =>[
@@ -272,27 +168,27 @@ class Setting extends \bricksasp\base\BaseActiveRecord
             'val' => '',
         ],
         
-        'GLOBAL_COPYRIGHT_ON' =>[
+        'COPYRIGHT_ON' =>[
             'title' => '开启版权',
             'val' => 1,
         ],
-        'GLOBAL_COPYRIGHT_DESC' =>[
+        'COPYRIGHT_DESC' =>[
             'title' => '版权说明',
             'val' => '',
         ],
-        'GLOBAL_COPYRIGHT_LOGO' =>[
+        'COPYRIGHT_LOGO' =>[
             'title' => '版权logo',
             'val' => '',
         ],
-        'GLOBAL_VERSION' =>[
+        'VERSION' =>[
             'title' => '版本号',
             'val' => '1.0.0',
         ],
-        'GLOBAL_UPDATE_TIME' =>[
+        'UPDATE_TIME' =>[
             'title' => '更新时间',
             'val' => '2020-11-09',
         ],
-        'GLOBAL_FILE_DOMAIN' =>[
+        'FILE_DOMAIN' =>[
             'title' => '文件访问域名',
             'val' => Yii::$app->request->hostInfo,
         ],

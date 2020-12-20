@@ -150,7 +150,6 @@ class Article extends \bricksasp\base\BaseActiveRecord
         $this->load($this->formatData($data));
         $transaction = self::getDb()->beginTransaction();
         try {
-            // 保存广告位
             if ($this->save() === false) {
                 $transaction->rollBack();
                 return false;
