@@ -4,14 +4,14 @@ namespace bricksasp\user\controllers;
 
 use Yii;
 use bricksasp\base\Tools;
-use bricksasp\models\ShoppingCart;
+use bricksasp\models\ShipAddress;
 use yii\data\ActiveDataProvider;
 use bricksasp\base\BackendController;
 
 /**
- * ShoppingCartController implements the CRUD actions for ShoppingCart model.
+ * ShipAddressController implements the CRUD actions for ShipAddress model.
  */
-class ShoppingCartController extends BackendController
+class ShipAddressController extends BackendController
 {
     public function noLoginAction()
     {
@@ -19,8 +19,8 @@ class ShoppingCartController extends BackendController
     }
 
     /**
-     * @OA\Get(path="/user/shopping-cart/index",
-     *   summary="购物车列表",
+     * @OA\Get(path="/user/ship-address/index",
+     *   summary="收货地址列表",
      *   tags={"user模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
@@ -40,11 +40,11 @@ class ShoppingCartController extends BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query =  ShoppingCart::find();
+        $query =  ShipAddress::find();
         $query->andFilterWhere([
             'status' => $params['status']??null,
         ]);
-        $query->andFilterWhere(['user_id'=>$this->current_user_id]);
+        $query->andFilterWhere($this->ownerCondition());
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -59,8 +59,8 @@ class ShoppingCartController extends BackendController
     }
 
     /**
-     * @OA\Get(path="/user/shopping-cart/view",
-     *   summary="购物车详情",
+     * @OA\Get(path="/user/ship-address/view",
+     *   summary="收货地址详情",
      *   tags={"user模块"},
      *   
      *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
@@ -73,29 +73,28 @@ class ShoppingCartController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       
-     *       @OA\Schema(ref="#/components/schemas/ShoppingCartUpdate"),
+     *       @OA\Schema(ref="#/components/schemas/ShipAddressUpdate"),
      *     ),
      *   ),
-     * )
-     *
-     * @OA\Schema(
-     *   schema="/ShoppingCartView",
-     *   description="购物车数据详情",
-     *   allOf={
-     *     @OA\Schema(ref="#/components/schemas/ShoppingCartUpdate"),
-     *   }
      * )
      */
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel(['user_id'=>$this->current_user_id,'id'=>$params['id']??0]);
-        return $this->success($model);
+        $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
+        $data = $model->toArray();
+        
+        if ($model->company) {
+            $data['company'] = $model->company->toArray();
+            $data['company']['gps'] = json_decode($model->company->gps,true);
+        }
+        $data['companyQualifications'] = $model->companyQualifications;
+        return $this->success($data);
     }
 
     /**
-     * @OA\Post(path="/user/shopping-cart/create",
-     *   summary="创建购物车",
+     * @OA\Post(path="/user/ship-address/create",
+     *   summary="创建收货地址",
      *   tags={"user模块"},
      *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
@@ -103,7 +102,7 @@ class ShoppingCartController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/ShoppingCartCreate"
+     *         ref="#/components/schemas/ShipAddressCreate"
      *       )
      *     )
      *   ),
@@ -119,22 +118,20 @@ class ShoppingCartController extends BackendController
      * )
      *
      * @OA\Schema(
-     *   schema="ShoppingCartCreate",
-     *   description="购物车",
-     *   @OA\Property(property="product_id", type="integer", description="单品id"),
-     *   @OA\Property(property="num", type="integer", description="数量"),
+     *   schema="ShipAddressCreate",
+     *   description="收货地址",
+     *   @OA\Property(property="name", type="string", description="收货人姓名"),
+     *   @OA\Property(property="area_id", type="integer", description="收货地区ID"),
+     *   @OA\Property(property="address", type="string", description="收货详细地址"),
+     *   @OA\Property(property="phone", type="string", description="收货电话",),
+     *   @OA\Property(property="is_default", type="integer", description="是否默认 1是",),
      *   required={"name"}
      * )
      */
     public function actionCreate()
     {
         $params = $this->queryMapPost();
-        $map = ['user_id'=>$this->current_user_id,'product_id'=>$params['product_id']??0];
-        $model = ShoppingCart::findOne($map);
-        if ($model) {
-            return ShoppingCart::updateAllCounters(['num'=>$params['num']??1], $map) ? $this->success():$this->fail();
-        }
-        $model = new ShoppingCart();
+        $model = new ShipAddress();
         if ($model->saveData($params)) {
             return $this->success();
         }
@@ -143,8 +140,8 @@ class ShoppingCartController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/user/shopping-cart/update",
-     *   summary="修改购物车",
+     * @OA\Post(path="/user/ship-address/update",
+     *   summary="修改收货地址",
      *   tags={"user模块"},
      *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
@@ -152,7 +149,7 @@ class ShoppingCartController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/ShoppingCartUpdate"
+     *         ref="#/components/schemas/ShipAddressUpdate"
      *       )
      *     )
      *   ),
@@ -169,20 +166,20 @@ class ShoppingCartController extends BackendController
      * 
      * 
      * @OA\Schema(
-     *   schema="ShoppingCartUpdate",
-     *   description="购物车数据",
+     *   schema="ShipAddressUpdate",
+     *   description="收货地址数据",
      *   allOf={
      *     @OA\Schema(
      *       @OA\Property(property="id", type="integer", description="id"),
      *     ),
-     *     @OA\Schema(ref="#/components/schemas/ShoppingCartCreate"),
+     *     @OA\Schema(ref="#/components/schemas/ShipAddressCreate"),
      *   }
      * )
      */
     public function actionUpdate()
     {
         $params = $this->queryMapPost();
-        $model = $this->findModel(['user_id'=>$this->current_user_id,'id'=>$params['id']??0]);
+        $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
 
         if ($model->saveData($params)) {
             return $this->success();
@@ -192,8 +189,8 @@ class ShoppingCartController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/user/shopping-cart/delete",
-     *   summary="删除购物车",
+     * @OA\Post(path="/user/ship-address/delete",
+     *   summary="删除收货地址",
      *   tags={"user模块"},
      *   
      *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
@@ -222,9 +219,10 @@ class ShoppingCartController extends BackendController
     public function actionDelete()
     {
         $params = $this->queryMapPost();
-        $transaction = ShoppingCart::getDb()->beginTransaction();
+
+        $transaction = ShipAddress::getDb()->beginTransaction();
         try {
-            ShoppingCart::deleteAll(['user_id'=>$this->current_user_id, 'id'=>$params['ids']??0]);
+            ShipAddress::deleteAll($this->updateCondition(['id'=>$params['ids']??0]));
             $transaction->commit();
             return $this->success();
         } catch(\Throwable $e) {
@@ -234,14 +232,14 @@ class ShoppingCartController extends BackendController
     }
 
     /**
-     * Finds the ShoppingCart model based on its primary key value.
+     * Finds the ShipAddress model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return ShoppingCart the loaded model
+     * @return ShipAddress the loaded model
      */
     protected function findModel($id)
     {
-        if (($model = ShoppingCart::findOne($id)) !== null) {
+        if (($model = ShipAddress::findOne($id)) !== null) {
             return $model;
         }
 

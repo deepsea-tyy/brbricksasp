@@ -102,14 +102,14 @@ class BaseController extends \yii\web\Controller
 	 */
 	protected function ownerCondition()
 	{
-		if ($this->current_login_type == Token::TOKEN_TYPE_BACKEND && $this->current_user_id == 1) {
-			return [];
+		if (!($this->current_login_type == Token::TOKEN_TYPE_BACKEND && $this->current_user_id == 1)) {
+			$cdt['owner_id'] = $this->current_owner_id;
 		}
-		$cdt['owner_id'] = $this->current_owner_id;
-		if (Yii::$app->request->get('user_data') || Yii::$app->request->post('user_data')) {
+
+		if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
 			$cdt['user_id'] = $this->current_user_id;
 		}
-		return $cdt;
+		return $cdt??[];
 	}
 
 	/**
@@ -118,13 +118,12 @@ class BaseController extends \yii\web\Controller
 	 */
 	protected function updateCondition(array $cdt)
 	{
-		if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
-			$cdt['owner_id'] = $this->current_owner_id;
-			$cdt['user_id'] = $this->current_user_id;
-		}
-
 		if (!($this->current_login_type == Token::TOKEN_TYPE_BACKEND && $this->current_user_id == 1)) {
 			$cdt['owner_id'] = $this->current_owner_id;
+		}
+
+		if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
+			$cdt['user_id'] = $this->current_user_id;
 		}
 		return $cdt;
 	}

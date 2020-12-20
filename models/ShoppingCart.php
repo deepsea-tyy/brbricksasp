@@ -40,6 +40,7 @@ class ShoppingCart extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['user_id', 'product_id', 'num', 'created_at', 'updated_at'], 'integer'],
+            [['num'], 'checkNum'],
         ];
     }
 
@@ -56,6 +57,13 @@ class ShoppingCart extends \bricksasp\base\BaseActiveRecord
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
+    }
+
+    public function checkNum()
+    {
+        if ($this->num < 1) {
+            $this->addError('num','数量不能小于1');
+        }
     }
 
     public function getProduct()
