@@ -357,13 +357,22 @@ class Goods extends \bricksasp\base\BaseActiveRecord
             }
         }
         $defProd = [];
-        foreach ($data['productItems'] as $k => $item) {
-            if ($item['is_default']??false) {
-                $defProd = $item;
+        $data['productItems'] = array_filter($data['productItems']?$data['productItems']:[]);
+        if ($data['productItems']) {
+
+            foreach ($data['productItems'] as $k => $item) {
+                if ($item['is_default']??false) {
+                    $defProd = $item;
+                }
+                $item['name'] = $data['name'];
+                $item['code'] = $item['code']??Tools::get_sn(4);
+                $data['productItems'][$k] = $item;
             }
-            $item['name'] = $data['name'];
-            $item['code'] = $item['code']??Tools::get_sn(4);
-            $data['productItems'][$k] = $item;
+        }else{
+            $model = new GoodsProduct();
+
+            $model->load($data);
+            $data['productItems'][] = $model->attributes;
         }
 
         // 设置默认单品

@@ -33,4 +33,30 @@ class FormValidate extends \yii\base\DynamicModel {
 		parent::__construct(array_merge($attributes, $config));
 	}
 
+    public function checkArray($data=[], $fields=[])
+    {
+        foreach ($fields as $f) {
+            if (!is_array($data[$f]??[])) {
+                $this->addError($f,'只能是数组且不能为空');
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 获取当前场景所需参数
+     * @return array
+     */
+    public function getSaveData()
+    {
+    	$data = [];
+    	$scenarios = $this->scenarios();
+    	foreach ($this->attributes as $field => $val) {
+    		if (in_array($field, $scenarios[$this->scenario])) {
+    			$data[$field] = $val;
+    		}
+    	}
+    	return $data;
+    }
 }
