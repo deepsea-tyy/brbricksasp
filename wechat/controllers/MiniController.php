@@ -1,23 +1,23 @@
 <?php
-namespace bricksasp\cms\controllers;
+namespace bricksasp\wechat\controllers;
 
 use Yii;
 use bricksasp\base\Tools;
+use bricksasp\models\Mini;
 use yii\data\ActiveDataProvider;
 use bricksasp\models\redis\Token;
 use bricksasp\base\BackendController;
-use bricksasp\cms\models\ArticleCategory;
 
 /**
- * CategoryController implements the CRUD actions for ArticleCategory model.
+ * MiniController implements the CRUD actions for Mini model.
  */
-class CategoryController extends BackendController
+class MiniController extends BackendController
 {
 
     /**
-     * @OA\Get(path="/cms/category/index",
-     *   summary="文章分类列表",
-     *   tags={"cms模块"},
+     * @OA\Get(path="/wechat/mini/index",
+     *   summary="微信公众号/小程序列表",
+     *   tags={"wechat模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
@@ -39,17 +39,13 @@ class CategoryController extends BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query = ArticleCategory::find();
+        $query = Mini::find();
 
         $query->andFilterWhere($this->ownerCondition());
-        if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND && empty($params['user_data'])) {
-            $query->andFilterWhere(['status' => 1]);
-        }
         $query->andFilterWhere(['is_delete'=> empty($params['is_delete']) ? 0 : 1]);
-        $query->orderBy(['sort' => SORT_DESC]);
 
         $dataProvider = new ActiveDataProvider([
-            'query' => $query->with(['file']),
+            'query' => $query,
         ]);
 
         $list = [];
@@ -68,9 +64,10 @@ class CategoryController extends BackendController
     }
 
     /**
-     * @OA\Get(path="/cms/category/view",
-     *   summary="文章分类详情",
-     *   tags={"cms模块"},
+     * @OA\Get(path="/wechat/mini/view",
+     *   summary="微信公众号/小程序详情",
+     *   tags={"wechat模块"},
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   
      *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
      *   
@@ -80,7 +77,7 @@ class CategoryController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/cmsCatUpdate"
+     *         ref="#/components/schemas/MiniUpdate"
      *       ),
      *     ),
      *   ),
@@ -94,84 +91,16 @@ class CategoryController extends BackendController
     }
 
     /**
-     * @OA\Get(path="/cms/category/tree",
-     *   summary="文章分类树",
-     *   tags={"cms模块"},
-     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
-     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="分类id,返回对应id子树"),
-     *   
-     *   @OA\Response(
-     *     response=200,
-     *     description="返回数据",
-     *     @OA\MediaType(
-     *         mediaType="application/json",
-     *         @OA\Schema(ref="#/components/schemas/cmsCategoryTree"),
-     *     ),
-     *   ),
-     * )
-     *
-     * @OA\Schema(
-     *   schema="cmsCategoryTree",
-     *   description="文章分类",
-     *   allOf={
-     *     @OA\Schema(
-     *       @OA\Property(property="id", type="integer", description="分类id"),
-     *       @OA\Property(property="name", type="string", description="分类名称"),
-     *       @OA\Property(property="parent_id", type="integer", description="父id"),
-     *       @OA\Property( property="children", type="array", description="子集", @OA\Items(
-     *            @OA\Property(property="id", type="integer", description="分类id"),
-     *            @OA\Property( property="name", type="string", description="名称"),
-     *            @OA\Property(property="parent_id", type="integer", description="父id"),
-     *         ),
-     *       ),
-     *     )
-     *   }
-     * )
-     * 
-     */
-    public function actionTree()
-    {
-        $params = Yii::$app->request->get();
-        $map = [];
-        if (!empty($params['id'])) {
-            $map['parent_id'] =  (int)$params['id'];
-        }
-
-        $query = ArticleCategory::find();
-        if ($this->current_login_type == Token::TOKEN_TYPE_BACKEND) {
-            $data = ArticleCategory::find()->select(['id', 'parent_id', 'name'])
-                ->andWhere($map)
-                ->asArray()
-                ->all();
-            $data = array_map(function ($item)
-            {
-                return $item->toArray();
-            }, $data);
-        }else{
-            $data = ArticleCategory::find()
-                ->select(['id', 'parent_id', 'name','image'])
-                ->andWhere($map)
-                ->asArray()
-                ->all();
-        }
-        if ($map) {
-            return $this->success($data);
-        }
-        $tree = Tools::build_tree($data);
-        return $this->success($tree);
-    }
-
-    /**
-     * @OA\Post(path="/cms/category/create",
-     *   summary="创建文章分类",
-     *   tags={"cms模块"},
+     * @OA\Post(path="/wechat/mini/create",
+     *   summary="创建微信公众号/小程序",
+     *   tags={"wechat模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/cmsCatCreate"
+     *         ref="#/components/schemas/MiniCreate"
      *       )
      *     )
      *   ),
@@ -187,19 +116,24 @@ class CategoryController extends BackendController
      * )
      *
      * @OA\Schema(
-     *   schema="cmsCatCreate",
-     *   description="文章分类",
-     *   @OA\Property(property="name", type="string", description="分类名称"),
-     *   @OA\Property(property="parent_id", type="integer", description="父id"),
-     *   @OA\Property(property="sort", type="integer", description="排序"),
-     *   @OA\Property(property="image", type="string", description="封面图"),
-     *   @OA\Property(property="code", type="string", description="调用代码"),
+     *   schema="MiniCreate",
+     *   description="微信公众号/小程序",
+     *   @OA\Property(property="name", type="string", description="名称"),
+     *   @OA\Property(property="avatar", type="string", description="头像"),
+     *   @OA\Property(property="platform", type="integer", description="1微信2支付宝3抖音"),
+     *   @OA\Property(property="appid", type="string", description="appid"),
+     *   @OA\Property(property="app_secret", type="string", description="开发密钥"),
+     *   @OA\Property(property="app_original_id", type="string", description="原始id"),
+     *   @OA\Property(property="encoding_key", type="string", description="消息加密密钥"),
+     *   @OA\Property(property="type", type="integer", description="微信1小程序2服务号3订阅号"),
+     *   @OA\Property(property="status", type="integer", description="1启用"),
+     *   @OA\Property(property="scene", type="integer", description="场景1默认"),
      * )
      */
     public function actionCreate()
     {
         $params = $this->queryMapPost();
-        $model = new ArticleCategory();
+        $model = new Mini();
         if ($model->saveData($params)) {
             return $this->success();
         }
@@ -208,16 +142,16 @@ class CategoryController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/cms/category/update",
-     *   summary="修改文章分类",
-     *   tags={"cms模块"},
+     * @OA\Post(path="/wechat/mini/update",
+     *   summary="修改微信公众号/小程序",
+     *   tags={"wechat模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/cmsCatUpdate"
+     *         ref="#/components/schemas/MiniUpdate"
      *       )
      *     )
      *   ),
@@ -234,13 +168,13 @@ class CategoryController extends BackendController
      * 
      * 
      * @OA\Schema(
-     *   schema="cmsCatUpdate",
-     *   description="文章分类",
+     *   schema="MiniUpdate",
+     *   description="微信公众号/小程序",
      *   allOf={
      *     @OA\Schema(
      *       @OA\Property(property="id", type="integer", description="id"),
      *     ),
-     *     @OA\Schema(ref="#/components/schemas/cmsCatCreate"),
+     *     @OA\Schema(ref="#/components/schemas/MiniCreate"),
      *   }
      * )
      */
@@ -257,9 +191,9 @@ class CategoryController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/cms/category/delete",
-     *   summary="删除文章分类",
-     *   tags={"cms模块"},
+     * @OA\Post(path="/wechat/mini/delete",
+     *   summary="删除微信公众号/小程序",
+     *   tags={"wechat模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   
@@ -287,15 +221,15 @@ class CategoryController extends BackendController
     public function actionDelete()
     {
         $params = $this->queryMapPost();
-        if (ArticleCategory::updateAll(['is_delete'=>1, 'updated_at'=>time()],$this->updateCondition(['id'=>$params['ids']??0, 'is_delete'=>0]))) {
+        if (Mini::updateAll(['is_delete'=>1, 'updated_at'=>time()],$this->updateCondition(['id'=>$params['ids']??0, 'is_delete'=>0]))) {
             return $this->success();
         }
-        return ArticleCategory::deleteAll($this->updateCondition(['id'=>$params['ids']??0])) ? $this->success() : Tools::breakOff(40001);
+        return Mini::deleteAll($this->updateCondition(['id'=>$params['ids']??0])) ? $this->success() : Tools::breakOff(40001);
     }
 
     protected function findModel($id)
     {
-        if (($model = ArticleCategory::findOne($id)) !== null) {
+        if (($model = Mini::findOne($id)) !== null) {
             return $model;
         }
         Tools::breakOff(40001);

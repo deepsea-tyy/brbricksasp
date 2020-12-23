@@ -21,14 +21,16 @@ use bricksasp\models\ShoppingCart;
  * @property float|null $pay_price 支付价格
  * @property int|null $pay_status 支付状态1未付款2已付款3部分付款4部分退款5已退款
  * @property float|null $payed_price 已付金额
- * @property string|null $pay_platform 支付方式 2微信3支付宝
+ * @property string|null $pay_platform 支付方式
  * @property int|null $pay_at 支付时间
  * @property string|null $logistics_name 配送方式名称
  * @property float|null $logistics_price 配送费用
  * @property string|null $logistics_id 物流号
  * @property int|null $seller_id 店铺id
- * @property int|null $confirm 确单状态0未确认收货1确认收货
- * @property int|null $confirm_at 确认收货时间
+ * @property int|null $complete 确单状态0未确认收货1确认收货
+ * @property int|null $complete_at
+ * @property int|null $confirm 确单状态发货前0未确认确单1确认确单
+ * @property int|null $confirm_at 确认订单时间
  * @property int|null $store_id 自提门店ID
  * @property int|null $ship_status 发货状态1未发货2已发货3部分发货4部分退货5已退货
  * @property int|null $ship_area_id 收货地区ID
@@ -108,7 +110,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['id', 'owner_id', 'user_id', 'pay_status', 'pay_at', 'seller_id', 'confirm', 'confirm_at', 'store_id', 'ship_status', 'ship_area_id', 'tax_type', 'type', 'point', 'source', 'status', 'is_comment', 'is_delete', 'created_at', 'updated_at'], 'integer'],
+            [['id', 'owner_id', 'user_id', 'pay_status', 'pay_at', 'seller_id', 'complete', 'complete_at', 'confirm', 'confirm_at', 'store_id', 'ship_status', 'ship_area_id', 'tax_type', 'type', 'point', 'source', 'status', 'is_comment', 'is_delete', 'created_at', 'updated_at'], 'integer'],
             [['total_price', 'pay_price', 'payed_price', 'logistics_price', 'total_weight', 'total_volume', 'point_money', 'order_pmt'], 'number'],
             [['pay_platform'], 'string', 'max' => 8],
             [['logistics_name'], 'string', 'max' => 32],
@@ -146,6 +148,8 @@ class Order extends \bricksasp\base\BaseActiveRecord
             'logistics_price' => 'Logistics Price',
             'logistics_id' => 'Logistics ID',
             'seller_id' => 'Seller ID',
+            'complete' => 'Complete',
+            'complete_at' => 'Complete At',
             'confirm' => 'Confirm',
             'confirm_at' => 'Confirm At',
             'store_id' => 'Store ID',
@@ -183,6 +187,16 @@ class Order extends \bricksasp\base\BaseActiveRecord
     public function getOrderItem()
     {
         return $this->hasMany(OrderItem::className(),['order_id'=>'id']);
+    }
+
+    public function getGoods()
+    {
+        return $this->hasMany(Goods::className(), ['id'=>'goods_id'])->via('orderItem');
+    }
+
+    public function getProduct()
+    {
+        return $this->hasMany(GoodsProduct::className(), ['id'=>'product_id'])->via('orderItem');
     }
 
     public function saveData($data)

@@ -80,25 +80,25 @@ class BaseController extends \yii\web\Controller
 	 */
 	protected function queryMapGet()
 	{
-		return array_merge(Yii::$app->request->get(), $this->sysParams());
+		return $this->sysParams(Yii::$app->request->get());
 	}
 
 	protected function queryMapPost()
 	{
-		return array_merge(Yii::$app->request->post(), $this->sysParams());
+		return $this->sysParams(Yii::$app->request->post());
 	}
 
 	/**
 	 * 系统参数
 	 * @return array 
 	 */
-	protected function sysParams()
+	protected function sysParams($params=[])
 	{
-		return [
+		return array_merge($params, [
 			'current_user_id' => $this->current_user_id,
 			'current_owner_id' => $this->current_owner_id,
 			'current_login_type' => $this->current_login_type,
-		];
+		]);
 	}
 
 	/**
