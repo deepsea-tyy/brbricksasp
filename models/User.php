@@ -31,6 +31,13 @@ class User extends \bricksasp\base\BaseActiveRecord
         return '{{%user}}';
     }
 
+    public function behaviors()
+    {
+        return [
+            \yii\behaviors\TimestampBehavior::className(),
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */

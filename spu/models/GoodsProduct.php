@@ -13,7 +13,7 @@ use Yii;
  * @property string|null $code 商品编码
  * @property string|null $barcode 条形码
  * @property string|null $spec
- * @property int|null $on_shelves 1上架
+ * @property int|null $on_shelves 单品 1上架
  * @property int|null $stock 库存
  * @property int|null $freeze_stock 冻结库存
  * @property int|null $is_default 1默认展示
@@ -52,7 +52,7 @@ class GoodsProduct extends \bricksasp\base\BaseActiveRecord
             [['barcode'], 'string', 'max' => 64],
             [['vip_discount'], 'string', 'max' => 8],
 
-            [['price', 'costprice', 'mktprice', 'distprice', 'vip_price', 'on_shelves', ], 'default', 'value' => 0],
+            [['price', 'costprice', 'mktprice', 'distprice', 'vip_price', 'on_shelves', 'freeze_stock'], 'default', 'value' => 0],
         ];
     }
 
@@ -84,5 +84,10 @@ class GoodsProduct extends \bricksasp\base\BaseActiveRecord
             'volume' => 'Volume',
             'is_delete' => 'Is Delete',
         ];
+    }
+
+    public function getGoods()
+    {
+        return $this->hasOne(Goods::className(),['id'=>'goods_id']);
     }
 }

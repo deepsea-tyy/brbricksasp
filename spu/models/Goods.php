@@ -9,6 +9,7 @@ use bricksasp\models\Label;
 use bricksasp\models\LabelRelation;
 use bricksasp\models\File;
 use bricksasp\models\FileRelation;
+
 /**
  * This is the model class for table "{{%goods}}".
  *
@@ -40,7 +41,7 @@ use bricksasp\models\FileRelation;
  * @property int|null $check_stock 1拍下减库存2付款减库存3不减库存
  * @property int|null $show_stock 1显示库存
  * @property int|null $pre_sale 1预售
- * @property int|null $on_shelves 0未上架1上架2下架
+ * @property int|null $on_shelves 商品 0未上架1上架2下架
  * @property int|null $on_shelves_at 上架时间
  * @property int|null $off_shelves_at 下架时间
  * @property int|null $sell_num 已售数量
@@ -52,14 +53,14 @@ use bricksasp\models\FileRelation;
  * @property string|null $stock_unit 库存单位
  * @property string|null $weight_unit
  * @property string|null $volume_unit
- * @property float|null $price 售价
- * @property float|null $costprice 成本
- * @property float|null $mktprice 市场价
- * @property float|null $distprice 分销价格
- * @property int|null $is_vip_discount 1参与会员折扣
- * @property string|null $vip_discount 折扣0.1-10
- * @property float|null $vip_price 会员价格
- * @property int|null $vip 会员限购等级
+ * @property float|null $price 默认单品售价
+ * @property float|null $costprice 默认单品成本
+ * @property float|null $mktprice 默认单品市场价
+ * @property float|null $distprice 默认单品分销价格
+ * @property int|null $is_vip_discount 默认单品1参与会员折扣
+ * @property string|null $vip_discount 默认单品折扣0.1-10
+ * @property float|null $vip_price 默认单品会员价格
+ * @property int|null $vip 默认单品会员限购等级
  * @property string|null $share_title 分享标题
  * @property string|null $share_image_id 分享图片
  * @property string|null $share_desc 分享描述

@@ -170,8 +170,7 @@ class Promotion extends \bricksasp\base\BaseActiveRecord
         }
 
         $condition = PromotionCondition::find()->where(['promotion_id' => $data['promotion_id']])->one();
-        $cdata['type']      = $condition->result_type;
-        $cdata['content']   = $condition->result;
+        $cdata['type']  = PromotionCondition::TYPE_RECEIVE;
         $cdata['start_at']  = $promotion->start_at;
         $cdata['end_at']    = $promotion->end_at;
         $cdata['exclusion'] = $promotion->exclusion;
@@ -191,7 +190,7 @@ class Promotion extends \bricksasp\base\BaseActiveRecord
             $transaction->commit();
         }catch (\Exception $e){
             $transaction->rollBack();
-            return false;
+            Tools::breakOff('领取失败');
         }
 
         return $model;

@@ -25,7 +25,7 @@ class OrderValidate extends \bricksasp\base\FormValidate
             ['store_id', 'vaildStoreId', 'on'=> [self::CREATE_ORDER]],
             ['buy_now', 'vaildBuyNow', 'on'=> [self::CREATE_ORDER]],
 
-            [['cart_ids', 'buy_now'],'required', 'when'=>function ($model, $attribute)
+            [['cart_ids', 'buy_now', 'coupon_ids'],'required', 'when'=>function ($model, $attribute)
             {
                 if (!$model->cart_ids && !$model->buy_now) {
                     return true;
@@ -41,14 +41,14 @@ class OrderValidate extends \bricksasp\base\FormValidate
     public function scenarios()
     {
         return [
-            self::CREATE_ORDER => ['cart_ids', 'buy_now', 'ship_id', 'store_id', 'lat', 'lon', 'pay_now', 'show_id', 'pay_platform', 'pay_type'],
+            self::CREATE_ORDER => ['cart_ids', 'coupon_ids', 'buy_now', 'ship_id', 'store_id', 'lat', 'lon', 'pay_now', 'show_id', 'pay_platform', 'pay_type'],
             self::CREATE_BILL => ['pay_platform', 'pay_type', 'order_id'],
         ];
     }
 
     public function vaildBuyNow()
     {
-        if ($this->checkArray([$this->cart_ids, $this->buy_now], ['buy_now','cart_ids'])) {
+        if ($this->checkArray([$this->cart_ids, $this->buy_now, $this->coupon_ids], ['buy_now','cart_ids','coupon_ids'])) {
             if ($this->buy_now) {
                 if ($this->buy_now['num'] < 1) {
                     $this->addError('buy_now.num', '购买数量不能小于1');

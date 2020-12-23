@@ -32,9 +32,8 @@ use bricksasp\models\redis\Token;
  * @property int|null $promotion_id
  * @property int|null $user_id
  * @property string|null $code
- * @property int|null $status 1正常2已使用
- * @property int|null $type
- * @property string|null $content
+ * @property int|null $status 0未使用1已使用
+ * @property int|null $type 1领取获得2购买获得
  * @property int|null $start_at
  * @property int|null $end_at
  * @property int|null $exclusion
@@ -43,18 +42,13 @@ use bricksasp\models\redis\Token;
  */
 class PromotionCoupon extends \bricksasp\base\BaseActiveRecord
 {
-    const STATUS_NO = 1; //未使用
-    const STATUS_USED = 2; //已使用
-    const EXCLUSION_NO = 2; //不排他
+    const STATUS_NO = 0; //未使用
+    const STATUS_USED = 1; //已使用
+    const EXCLUSION_NO = 0; //不排他
     const EXCLUSION_YES = 1; //排他
-    // 类型：1商品减固定金额2商品折扣3商品一口价4订单减固定金额5订单折扣6订单一口价
-    const RESULT_GOODS_AMOUT = 1;
-    const RESULT_GOODS_DISCOUNT = 2;
-    const RESULT_GOODS_PRICE = 3;
-    
-    const RESULT_ORDER_AMOUT = 4;
-    const RESULT_ORDER_DISCOUNT = 5;
-    const RESULT_ORDER_PRICE = 6;
+    const TYPE_RECEIVE = 1; //领取获得
+    const TYPE_BUY = 2; //购买获得
+
 
     /**
      * {@inheritdoc}
@@ -79,8 +73,7 @@ class PromotionCoupon extends \bricksasp\base\BaseActiveRecord
         return [
             [['id', 'owner_id', 'promotion_id', 'user_id', 'status', 'type', 'start_at', 'end_at', 'exclusion', 'created_at', 'updated_at'], 'integer'],
             [['code'], 'string', 'max' => 8],
-            [['content'], 'string', 'max' => 255],
-            [['status'], 'default', 'value' => 1],
+            [['status'], 'default', 'value' => 0],
             [['code'], 'default', 'value' => Yii::$app->security->generateRandomString(6)]
         ];
     }
@@ -122,13 +115,19 @@ class PromotionCoupon extends \bricksasp\base\BaseActiveRecord
         return $this->hasOne(PromotionCondition::className(),['promotion_id'=>'id'])->via('promotion');
     }
 
-    public function checkEffectiveness($ids=[])
+    /**
+     * 检查优惠券是否有效
+     * @param  array|int  $ids   优惠券id
+     * @param  array $goods [[product_id=>goods_id]]
+     * @return array
+     */
+    public function checkEffectiveness($ids,$owner_id)
     {
-        $coupons = $this->find()->with(['condition'])->where(['id' => $ids])->all();
+        $coupons = $this->find()->with(['condition'])->where(['id' => $ids,'owner_id'=>$owner_id])->all();
         if (!$coupons) {
             Tools::breakOff(Yii::t('messages', 40002, '优惠券'));
         }
-        $cps = [];
+
         foreach ($coupons as $k => $item) {
             if ($item->start_at > time()) {
                 Tools::breakOff(990002);
@@ -142,14 +141,8 @@ class PromotionCoupon extends \bricksasp\base\BaseActiveRecord
             if (count($ids) > 1 && $item->exclusion == self::EXCLUSION_YES) {
                 Tools::breakOff(990005);
             }
-            $cps[$item->condition->condition_type]['content'][] = $item->condition->content;
-            if ($item->type == self::RESULT_GOODS_PRICE) {
-                $cps[$item->condition->condition_type]['result'][$item->type][$item->condition->content] = $item->content;
-            }else{
-                $cps[$item->condition->condition_type]['result'][$item->type][] = $item->content;
-            }
         }
-        return $cps;
+        return $coupons;
     }
 
     /**
