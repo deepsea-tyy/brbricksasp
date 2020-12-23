@@ -9,7 +9,6 @@ use Yii;
 class OrderValidate extends \bricksasp\base\FormValidate
 {
     const CREATE_ORDER = 'create_order';
-    const UPDATE_ORDER = 'update_order';
     const CREATE_BILL = 'create_bill';
     /**
      * {@inheritdoc}

@@ -358,7 +358,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
                         $orderItems[$v->id]['pay_price'] = $itemCp->result;
                     }
                 }
-                if ($orderItems[$v->id]['pay_price'] <  0) {
+                if ($orderItems[$v->id]['pay_price'] <=  0) {
                     $orderItems[$v->id]['pay_price'] = 0;
                 }
                 $orderItems[$v->id]['pmt_price'] = $orderItems[$v->id]['price'] - $orderItems[$v->id]['pay_price'];
@@ -387,8 +387,9 @@ class Order extends \bricksasp\base\BaseActiveRecord
         if ($useCoupon) {// 优惠信息
             $data['promotion_info'] = json_encode($useCoupon);
         }
-        if ($data['total_price'] < 0) {
+        if ($data['total_price'] <= 0) {
             $data['total_price'] = 0;
+            $data['pay_status'] = 2;
         }
         $data['order_pmt'] = $data['total_price'] - $data['pay_price'];
         $data['created_at'] = $t;
