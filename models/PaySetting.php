@@ -100,6 +100,7 @@ class PaySetting extends \bricksasp\base\BaseActiveRecord
         }
 
         $model = new OrderPay();
+        $pay = null;
         $model->load([
             'order_id' => $data['order_id'],
             'user_id' => $data['current_user_id'],
@@ -119,7 +120,7 @@ class PaySetting extends \bricksasp\base\BaseActiveRecord
                     'ip' => $model->ip,
                 ]);
             }
-            
         }
+        return $pay->$pay_type();
     }
 }

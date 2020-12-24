@@ -260,7 +260,7 @@ class PaySettingController extends BackendController
         $validator = new OrderValidate($params, ['scenario' => 'create_bill']);
         if ($validator->validate()) {
             $model = new PaySetting();
-            return $model->createOrderPay($this->sysParams($validator->getSaveData()));
+            return $this->success($model->createOrderPay($this->sysParams($validator->getSaveData())));
         }
         return $this->fail($validator->errors);
     }

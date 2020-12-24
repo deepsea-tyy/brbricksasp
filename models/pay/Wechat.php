@@ -57,7 +57,6 @@ class Wechat extends BaseObject implements PayInterface
     // 扫码支付
     public function qr(){
         $cfg = $this->config();
-
         $payModel = new Pay($cfg);
         $result = $payModel->createOrder($this->getOption($cfg['notify_url'],'NATIVE'));
         $result['code_url'] = Yii::$app->request->hostInfo . Url::toRoute(['/qr/img', 'content' => $result['code_url']]);
@@ -66,22 +65,22 @@ class Wechat extends BaseObject implements PayInterface
 
     public function lite(){
         $cfg = $this->config();
-        $openid = UserInfo::find()->select(['openid'])->where(['user_id'=>$this->user_id])->one();
+
+        $user = UserInfo::find()->select(['open_id'])->where(['user_id'=>$this->user_id])->one();
         $payModel = new Pay($cfg);
 
         try {
             // 生成预支付码
             $params = $this->getOption($cfg['notify_url']);
-            $params['openid'] = $openid->openid;
+            $params['openid'] = $user->open_id;
             
             $result = $payModel->createOrder($params);
             
             // 创建JSAPI参数签名
-            return  $payModel->createParamsForJsApi($result['prepay_id']);
+            return $payModel->createParamsForJsApi($result['prepay_id']);
         } catch (Exception $e) {
-            $this->error = $e->getMessage();
+            Tools::breakOff($e->getMessage());
         }
-        return false;
     }
 
     // 组装参数，可以参考官方商户文档
@@ -89,7 +88,8 @@ class Wechat extends BaseObject implements PayInterface
     {
         $map = [
             'user_id'=> $this->user_id,
-            'owner_id'=> $this->owner_id
+            'owner_id'=> $this->owner_id,
+            'scene'=> $this->scene,
         ];
         return [
             'body'             => $this->body ?? '新支付单:'.$this->pay_id. '收款 ' . $this->money,
@@ -103,10 +103,10 @@ class Wechat extends BaseObject implements PayInterface
         ];
     }
 
-    // public function app(){}
-    // public function bar(){}
-    // public function wap(){}
-    // public function pub(){}
-    // public function refund(){}
-    // public function query(){}
+    public function app(){}
+    public function bar(){}
+    public function wap(){}
+    public function pub(){}
+    public function refund(){}
+    public function query(){}
 }

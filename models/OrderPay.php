@@ -16,6 +16,7 @@ use Yii;
  * @property string|null $pay_type 支付类型编码
  * @property string|null $pay_info 回调原始参数
  * @property string|null $ip
+ * @property string|null $third_id 三方流水号
  * @property int|null $created_at
  * @property int|null $updated_at
  */
@@ -23,6 +24,9 @@ class OrderPay extends \bricksasp\base\BaseActiveRecord
 {
     const TYPE_ALL = 1;
     const TYPE_PART = 2;
+
+    const STATUS_SUCCESS = 1;
+
     /**
      * {@inheritdoc}
      */
@@ -53,7 +57,7 @@ class OrderPay extends \bricksasp\base\BaseActiveRecord
             [['money'], 'number'],
             [['pay_info'], 'string'],
             [['pay_type'], 'string', 'max' => 8],
-            [['ip'], 'string', 'max' => 50],
+            [['ip', 'third_id'], 'string', 'max' => 50],
             [['id'], 'unique'],
         ];
     }
