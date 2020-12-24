@@ -34,6 +34,7 @@ use Yii;
  * @property string|null $uuid
  * @property string|null $mark 备注
  * @property int|null $type 注册入口 1普通会员2商家
+ * @property int|null $scene 应用场景
  * @property int|null $created_at
  * @property int|null $updated_at
  */
@@ -71,6 +72,7 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
             [['last_login_ip', 'last_login_area', 'mark'], 'string', 'max' => 64],
             [['open_id', 'country', 'province', 'city', 'unionid', 'uuid'], 'string', 'max' => 128],
             [['user_id'], 'unique'],
+            [['scene'], 'default', 'value' => Mini::SCENE_WX_DEFAULT],
         ];
     }
 

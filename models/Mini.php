@@ -59,7 +59,7 @@ class Mini extends \bricksasp\base\BaseActiveRecord
             [['appid', 'app_secret', 'encoding_key', 'avatar'], 'string', 'max' => 64],
             [['app_original_id'], 'string', 'max' => 32],
             [['name'], 'string', 'max' => 16],
-            [['scene'], 'default', 'value' => 1],
+            [['scene'], 'default', 'value' => self::SCENE_WX_DEFAULT],
         ];
     }
 

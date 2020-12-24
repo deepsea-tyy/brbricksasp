@@ -99,16 +99,6 @@ class PaySetting extends \bricksasp\base\BaseActiveRecord
             $type = OrderPay::TYPE_ALL;
         }
 
-            $pay = Yii::createObject([
-                'class' => Wechat::className(),
-                'money' => 1,
-                'owner_id' => $data['current_owner_id'],
-                'user_id' => 1,
-                'pay_id' => 1,
-                'ip' => 1,
-            ]);
-        print_r($pay->$pay_type());exit;
-
         $model = new OrderPay();
         $model->load([
             'order_id' => $data['order_id'],
