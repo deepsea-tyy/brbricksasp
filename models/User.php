@@ -23,6 +23,8 @@ use Yii;
  */
 class User extends \bricksasp\base\BaseActiveRecord
 {
+    const TYPE_DEFAULT = 1; //普通会员
+
     /**
      * {@inheritdoc}
      */
@@ -44,8 +46,8 @@ class User extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['username', 'auth_key', 'password_hash', 'type', 'created_at', 'updated_at'], 'required'],
-            [['mobile', 'status', 'shop_id', 'created_at', 'updated_at'], 'integer'],
+            [['username', 'auth_key', 'password_hash',], 'required'],
+            [['mobile', 'status', 'shop_id', 'is_delete', 'created_at', 'updated_at'], 'integer'],
             [['username', 'password_hash', 'password_reset_token'], 'string', 'max' => 255],
             [['auth_key'], 'string', 'max' => 32],
             [['email', 'access_token'], 'string', 'max' => 64],
@@ -53,6 +55,7 @@ class User extends \bricksasp\base\BaseActiveRecord
             [['password_reset_token'], 'unique'],
             [['email'], 'unique'],
             [['mobile'], 'unique'],
+            [['type'], 'default', 'value'=>self::TYPE_DEFAULT],
         ];
     }
 

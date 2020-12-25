@@ -66,13 +66,13 @@ class Wechat extends BaseObject implements PayInterface
     public function lite(){
         $cfg = $this->config();
 
-        $user = UserInfo::find()->select(['open_id'])->where(['user_id'=>$this->user_id])->one();
+        $user = UserInfo::find()->select(['openid'])->where(['user_id'=>$this->user_id])->one();
         $payModel = new Pay($cfg);
 
         try {
             // 生成预支付码
             $params = $this->getOption($cfg['notify_url']);
-            $params['openid'] = $user->open_id;
+            $params['openid'] = $user->openid;
             
             $result = $payModel->createOrder($params);
             

@@ -3,6 +3,7 @@
 namespace bricksasp\models;
 
 use Yii;
+use bricksasp\base\Tools;
 
 /**
  * This is the model class for table "{{%user_info}}".
@@ -23,11 +24,10 @@ use Yii;
  * @property string|null $vip 会员等级
  * @property int|null $vip_duration
  * @property int|null $platform 用户类型 1站内用户2微信用户3支付宝用户4抖音用户
- * @property string|null $open_id
+ * @property string|null $openid
  * @property string|null $country
  * @property string|null $province
  * @property string|null $city
- * @property string|null $country_code
  * @property string|null $unionid
  * @property int|null $level 级别
  * @property int|null $company_id 公司id
@@ -68,11 +68,11 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
             [['user_id'], 'required'],
             [['user_id', 'owner_id', 'show_id', 'birthday', 'age', 'gender', 'last_login_time', 'login_count', 'vip_duration', 'platform', 'level', 'company_id', 'type', 'created_at', 'updated_at'], 'integer'],
             [['avatar'], 'string', 'max' => 255],
-            [['name', 'nickname', 'vip', 'country_code'], 'string', 'max' => 32],
+            [['name', 'nickname', 'vip'], 'string', 'max' => 32],
             [['last_login_ip', 'last_login_area', 'mark'], 'string', 'max' => 64],
-            [['open_id', 'country', 'province', 'city', 'unionid', 'uuid'], 'string', 'max' => 128],
+            [['openid', 'country', 'province', 'city', 'unionid', 'uuid'], 'string', 'max' => 128],
             [['user_id'], 'unique'],
-            [['scene'], 'default', 'value' => Mini::SCENE_WX_DEFAULT],
+            [['scene', 'type'], 'default', 'value' => Mini::SCENE_WX_DEFAULT],
         ];
     }
 
@@ -98,11 +98,10 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
             'vip' => 'Vip',
             'vip_duration' => 'Vip Duration',
             'platform' => 'Platform',
-            'open_id' => 'Open ID',
+            'openid' => 'Open ID',
             'country' => 'Country',
             'province' => 'Province',
             'city' => 'City',
-            'country_code' => 'Country Code',
             'unionid' => 'Unionid',
             'level' => 'Level',
             'company_id' => 'Company ID',
@@ -111,5 +110,21 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
+    }
+
+    public function gerUser()
+    {
+        return $this->hasOne(User::className(),['id'=>'user_id']);
+    }
+
+    public function saveData($data)
+    {
+        $this->load($this->formatData($data));
+        if ($data['avatarUrl']) {
+            Tools::download_file($data['avatarUrl'],'wx'.$data['current_user_id'] . '.jpg', Yii::$app->basePath . '/web/file/avatar');
+            $data['avatar'] = '/file/avatar/'.'wx'.$data['current_user_id'] . '.jpg';
+        }
+        $this->load($data);
+        return $this->save();
     }
 }
