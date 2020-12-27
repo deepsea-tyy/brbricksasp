@@ -14,7 +14,11 @@ use Yii;
  * @property string|null $address 收货详细地址
  * @property string|null $name 收货人姓名
  * @property string|null $phone 收货电话
- * @property int|null $is_default 是否默认 1是
+ * @property int|null $is_default 1是
+ * @property string|null $school 学校名称
+ * @property string|null $building_no 楼号
+ * @property int|null $floor 楼层
+ * @property int|null $house_number 门牌号
  * @property int|null $created_at
  * @property int|null $updated_at
  */
@@ -41,10 +45,11 @@ class ShipAddress extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['owner_id', 'user_id', 'area_id', 'is_default', 'created_at', 'updated_at'], 'integer'],
+            [['owner_id', 'user_id', 'area_id', 'is_default', 'floor', 'house_number', 'created_at', 'updated_at'], 'integer'],
             [['address'], 'string', 'max' => 128],
-            [['name'], 'string', 'max' => 4],
+            [['name', 'building_no'], 'string', 'max' => 4],
             [['phone'], 'string', 'max' => 16],
+            [['school'], 'string', 'max' => 32],
         ];
     }
 
@@ -62,6 +67,10 @@ class ShipAddress extends \bricksasp\base\BaseActiveRecord
             'name' => 'Name',
             'phone' => 'Phone',
             'is_default' => 'Is Default',
+            'school' => 'School',
+            'building_no' => 'Building No',
+            'floor' => 'Floor',
+            'house_number' => 'House Number',
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];

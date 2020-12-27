@@ -67,7 +67,10 @@ class Order extends \bricksasp\base\BaseActiveRecord
     const PLATFORM_ALI = 3; // 支付宝
 
     const TYPE_DEFAULT = 1; // 默认类型
-    const TYPE_OTHER = 2; // 其他订单
+    const TYPE_SCHOOL_EXPRESS = 2; // 校园跑腿取快递
+    const TYPE_SCHOOL_DAINA = 3; // 校园跑腿外卖代拿
+    const TYPE_SCHOOL_RUN = 4; // 校园跑腿
+    const TYPE_SCHOOL_OTHER = 5; // 校园跑腿其他帮助
 
     const SHIP_STATUS_NO = 1; //未发货
     const SHIP_STATUS_YES = 2; //已发货
@@ -76,7 +79,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
     const STATUS_NORMAL = 1; //订单状态 正常
     const STATUS_COMPLETE = 2; //订单状态 完成
     const STATUS_CANCEL = 3; //订单状态 取消
-    const STATUS_DELETE = 3; //订单状态 取消
+    const STATUS_DELETE = 4; //订单状态 用户删除
 
     const PAY_NO = 1; // 未付款
     const PAY_ALL = 2; // 已付款

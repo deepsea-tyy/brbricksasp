@@ -1,27 +1,25 @@
 <?php
 
-namespace bricksasp\user\controllers;
+namespace bricksasp\runerrands\controllers;
 
 use Yii;
-use bricksasp\base\Tools;
-use bricksasp\models\ShipAddress;
+use bricksasp\models\School;
 use yii\data\ActiveDataProvider;
-use bricksasp\base\BackendController;
 
-/**
- * ShipAddressController implements the CRUD actions for ShipAddress model.
- */
-class ShipAddressController extends BackendController
+class SchoolController extends \bricksasp\base\BaseController
 {
-    public function noLoginAction()
-    {
-        return [];
-    }
+
+	public function noLoginAction()
+	{
+		return [
+			'index',
+		];
+	}
 
     /**
-     * @OA\Get(path="/user/ship-address/index",
-     *   summary="收货地址列表",
-     *   tags={"user模块"},
+     * @OA\Get(path="/runerrands/school/index",
+     *   summary="学校列表",
+     *   tags={"跑腿模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
@@ -40,11 +38,8 @@ class ShipAddressController extends BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query =  ShipAddress::find();
-        $query->andFilterWhere([
-            'status' => $params['status']??null,
-        ]);
-        $query->andFilterWhere($this->ownerCondition());
+        $query =  School::find();
+        $query->andFilterWhere(['like', 'name', $params['name']??null]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -59,9 +54,9 @@ class ShipAddressController extends BackendController
     }
 
     /**
-     * @OA\Get(path="/user/ship-address/view",
-     *   summary="收货地址详情",
-     *   tags={"user模块"},
+     * @OA\Get(path="/runerrands/school/view",
+     *   summary="学校详情",
+     *   tags={"跑腿模块"},
      *   
      *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
@@ -73,7 +68,7 @@ class ShipAddressController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       
-     *       @OA\Schema(ref="#/components/schemas/ShipAddressUpdate"),
+     *       @OA\Schema(ref="#/components/schemas/SchoolUpdate"),
      *     ),
      *   ),
      * )
@@ -81,28 +76,22 @@ class ShipAddressController extends BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
-        $data = $model->toArray();
+        $model = $this->findModel(['id'=>$params['id'] ?? 0]);
         
-        if ($model->company) {
-            $data['company'] = $model->company->toArray();
-            $data['company']['gps'] = json_decode($model->company->gps,true);
-        }
-        $data['companyQualifications'] = $model->companyQualifications;
-        return $this->success($data);
+        return $this->success($model);
     }
 
     /**
-     * @OA\Post(path="/user/ship-address/create",
-     *   summary="创建收货地址",
-     *   tags={"user模块"},
+     * @OA\Post(path="/runerrands/school/create",
+     *   summary="创建学校",
+     *   tags={"跑腿模块"},
      *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/ShipAddressCreate"
+     *         ref="#/components/schemas/SchoolCreate"
      *       )
      *     )
      *   ),
@@ -118,24 +107,23 @@ class ShipAddressController extends BackendController
      * )
      *
      * @OA\Schema(
-     *   schema="ShipAddressCreate",
-     *   description="收货地址",
-     *   @OA\Property(property="name", type="string", description="收货人姓名"),
-     *   @OA\Property(property="area_id", type="integer", description="收货地区ID"),
-     *   @OA\Property(property="address", type="string", description="收货详细地址"),
-     *   @OA\Property(property="phone", type="string", description="收货电话",),
-     *   @OA\Property(property="is_default", type="integer", description="是否默认 1是"),
-     *   @OA\Property(property="school", type="string", description="学校名称"),
-     *   @OA\Property(property="building_no", type="string", description="楼号"),
-     *   @OA\Property(property="floor", type="integer", description="楼层"),
-     *   @OA\Property(property="house_number", type="integer", description="门牌号"),
+     *   schema="SchoolCreate",
+     *   description="学校",
+     *   @OA\Property(property="name", type="string", description="学校名称"),
+     *   @OA\Property(property="code", type="integer", description="学校标识码"),
+     *   @OA\Property(property="parent_id", type="integer", description="0主校区 其他表示分校区"),
+     *   @OA\Property(property="level", type="string", description="1本科2专科",),
+     *   @OA\Property(property="city", type="string", description="学校所在城市",),
+     *   @OA\Property(property="address", type="string", description="学校详细地址",),
+     *   @OA\Property(property="logo", type="string", description="logo",),
+     *   @OA\Property(property="mark", type="string", description="备注",),
      *   required={"name"}
      * )
      */
     public function actionCreate()
     {
         $params = $this->queryMapPost();
-        $model = new ShipAddress();
+        $model = new School();
         if ($model->saveData($params)) {
             return $this->success();
         }
@@ -144,16 +132,16 @@ class ShipAddressController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/user/ship-address/update",
-     *   summary="修改收货地址",
-     *   tags={"user模块"},
+     * @OA\Post(path="/runerrands/school/update",
+     *   summary="修改学校",
+     *   tags={"跑腿模块"},
      *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/ShipAddressUpdate"
+     *         ref="#/components/schemas/SchoolUpdate"
      *       )
      *     )
      *   ),
@@ -170,20 +158,20 @@ class ShipAddressController extends BackendController
      * 
      * 
      * @OA\Schema(
-     *   schema="ShipAddressUpdate",
-     *   description="收货地址数据",
+     *   schema="SchoolUpdate",
+     *   description="学校数据",
      *   allOf={
      *     @OA\Schema(
      *       @OA\Property(property="id", type="integer", description="id"),
      *     ),
-     *     @OA\Schema(ref="#/components/schemas/ShipAddressCreate"),
+     *     @OA\Schema(ref="#/components/schemas/SchoolCreate"),
      *   }
      * )
      */
     public function actionUpdate()
     {
         $params = $this->queryMapPost();
-        $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
+        $model = $this->findModel(['id'=>$params['id'] ?? 0]);
 
         if ($model->saveData($params)) {
             return $this->success();
@@ -193,9 +181,9 @@ class ShipAddressController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/user/ship-address/delete",
-     *   summary="删除收货地址",
-     *   tags={"user模块"},
+     * @OA\Post(path="/runerrands/school/delete",
+     *   summary="删除学校",
+     *   tags={"跑腿模块"},
      *   
      *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
@@ -223,27 +211,18 @@ class ShipAddressController extends BackendController
     public function actionDelete()
     {
         $params = $this->queryMapPost();
-
-        $transaction = ShipAddress::getDb()->beginTransaction();
-        try {
-            ShipAddress::deleteAll($this->updateCondition(['id'=>$params['ids']??0]));
-            $transaction->commit();
-            return $this->success();
-        } catch(\Throwable $e) {
-            $transaction->rollBack();
-            return $this->fail($e->getMessage());
-        }
+        return School::deleteAll(['id'=>$params['ids']??0]) ? $this->success() : $this->fail();
     }
 
     /**
-     * Finds the ShipAddress model based on its primary key value.
+     * Finds the School model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return ShipAddress the loaded model
+     * @return School the loaded model
      */
     protected function findModel($id)
     {
-        if (($model = ShipAddress::findOne($id)) !== null) {
+        if (($model = School::findOne($id)) !== null) {
             return $model;
         }
 

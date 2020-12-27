@@ -35,6 +35,7 @@ use bricksasp\base\Tools;
  * @property string|null $mark 备注
  * @property int|null $type 注册入口 1普通会员2商家
  * @property int|null $scene 应用场景
+ * @property int|null $school_id
  * @property int|null $created_at
  * @property int|null $updated_at
  */
@@ -66,7 +67,7 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['user_id'], 'required'],
-            [['user_id', 'owner_id', 'show_id', 'birthday', 'age', 'gender', 'last_login_time', 'login_count', 'vip_duration', 'platform', 'level', 'company_id', 'type', 'created_at', 'updated_at'], 'integer'],
+            [['user_id', 'owner_id', 'show_id', 'birthday', 'age', 'gender', 'last_login_time', 'login_count', 'vip_duration', 'platform', 'level', 'company_id', 'type', 'school_id', 'created_at', 'updated_at'], 'integer'],
             [['avatar'], 'string', 'max' => 255],
             [['name', 'nickname', 'vip'], 'string', 'max' => 32],
             [['last_login_ip', 'last_login_area', 'mark'], 'string', 'max' => 64],

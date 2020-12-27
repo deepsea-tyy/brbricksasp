@@ -163,6 +163,7 @@ class UserInfoController extends BackendController
      *   @OA\Property(property="mark", type="string", description="备注"),
      *   @OA\Property(property="type", type="string", description="注册入口 1普通会员2商家"),
      *   @OA\Property(property="scene", type="string", description="应用场景"),
+     *   @OA\Property(property="school_id", type="integer", description="学校id"),
      *   required={"name"}
      * )
      */
