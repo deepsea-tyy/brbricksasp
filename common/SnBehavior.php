@@ -2,10 +2,10 @@
 namespace bricksasp\common;
 
 use Yii;
+use bricksasp\base\Tools;
+use yii\db\BaseActiveRecord;
 use yii\base\InvalidCallException;
 use yii\behaviors\AttributeBehavior;
-use yii\db\BaseActiveRecord;
-use bricksasp\base\Tools;
 
 /**
  * 默认编号字段

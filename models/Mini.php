@@ -21,18 +21,22 @@ use Yii;
  * @property string|null $name
  * @property int|null $status 1启用
  * @property int|null $is_delete
- * @property int|null $scene 场景1默认
+ * @property int|null $scene 场景 1默认官方官网 2校园跑腿用户端 3校园跑腿骑手端 4其他
  * @property int|null $created_at
  * @property int|null $updated_at
  */
 class Mini extends \bricksasp\base\BaseActiveRecord
 {
-    const SCENE_WX_DEFAULT = 1; // 小程序
-    const SCENE_WX_OFFICIAL = 2; // 公众号
+    const SCENE_WX_DEFAULT = 1; // 1默认官方官网
+    const SCENE_WX_RUNERRANDS = 2; // 2校园跑腿用户端
+    const SCENE_WX_RIDER = 3; // 3校园跑腿骑手端
 
     const PLATFORM_WX = 1; // 微信
     const PLATFORM_ALI = 2; // 支付宝
     const PLATFORM_DY = 3; // 抖音
+
+    const TYPE_WX_MINI = 1; // 微信1小程序2服务号3订阅号
+    const TYPE_WX_OFFICIAL = 2;
 
     /**
      * {@inheritdoc}

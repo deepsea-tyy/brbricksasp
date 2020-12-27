@@ -28,6 +28,7 @@ class LoginController extends FrontendController
      *   tags={"user模块"},
      *   
      *   @OA\Parameter(name="code",in="query",@OA\Schema(type="integer"),description="小程序用户登录凭证"),
+     *   @OA\Parameter(name="scene",in="query",@OA\Schema(type="integer"),description="应用场景1默认官方官网 2校园跑腿用户端 3校园跑腿骑手端 4其他",example=1),
      *   
      *   @OA\Response(
      *     response=200,
@@ -47,13 +48,14 @@ class LoginController extends FrontendController
     {
 		$model = Crypt::instance($this->wxConfig($this->current_owner_id));
 		$res = $model->session(Yii::$app->request->get('code')??Tools::breakOff('code必填'));
+        $scene = Yii::$app->request->get('scene',Mini::SCENE_WX_DEFAULT);
 
-		$user = UserInfo::find()->where(['scene'=>Mini::SCENE_WX_DEFAULT, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
+		$user = UserInfo::find()->where(['scene'=>$sence, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
         $is_new_user = 0;
 		if (!$user) {
             $is_new_user=1;
-            $reg = new Register(['scenario' => Register::MINI_WX_DEFAULT]);
-            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>Mini::SCENE_WX_DEFAULT]),'');
+            $reg = new Register(['scenario' => Register::TYPE_WX_MINI]);
+            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$sence]),'');
             $user = $reg->signup();
             if (!$user) {
                 return $this->fail($reg->errors);
@@ -74,6 +76,7 @@ class LoginController extends FrontendController
      *         @OA\Property(property="code", type="string", description="小程序用户登录凭证"),
      *         @OA\Property(property="iv", type="string", description="小程序iv"),
      *         @OA\Property(property="encryptedData", type="string", description="小程序encryptedData"),
+     *         @OA\Property(property="scene", type="integer", description="应用场景1默认官方官网 2校园跑腿用户端 3校园跑腿骑手端 4其他",example=1),
      *       )
      *     )
      *   ),
@@ -96,13 +99,14 @@ class LoginController extends FrontendController
         $params = Yii::$app->request->post();
         $model = Crypt::instance($this->wxConfig($this->current_owner_id));
         $res = $model->userInfo($params['code']??Tools::breakOff('code必填'), $params['iv']??Tools::breakOff('iv必填'), $params['encryptedData']??Tools::breakOff('encryptedData必填'));
+        $scene = Yii::$app->request->get('scene',Mini::SCENE_WX_DEFAULT);
 
-        $user = UserInfo::find()->where(['scene'=>Mini::SCENE_WX_DEFAULT, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
+        $user = UserInfo::find()->where(['scene'=>$sence, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
         $is_new_user = 0;
         if (!$user) {
             $is_new_user=1;
-            $reg = new Register(['scenario' => Register::MINI_WX_DEFAULT]);
-            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>Mini::SCENE_WX_DEFAULT, 'mobile'=> $res['purePhoneNumber']]),'');
+            $reg = new Register(['scenario' => Register::TYPE_WX_MINI]);
+            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$sence, 'mobile'=> $res['purePhoneNumber']]),'');
             $user = $reg->signup();
             if (!$user) {
                 return $this->fail($reg->errors);

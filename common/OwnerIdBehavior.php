@@ -2,9 +2,9 @@
 namespace bricksasp\common;
 
 use Yii;
-use yii\behaviors\AttributeBehavior;
-use yii\base\InvalidCallException;
 use yii\db\BaseActiveRecord;
+use yii\base\InvalidCallException;
+use yii\behaviors\AttributeBehavior;
 
 /**
  * 默认用户字段
@@ -23,8 +23,8 @@ class OwnerIdBehavior extends AttributeBehavior
     {
         parent::init();
 
-        if (empty($this->attributes)) {
-            $this->attributes = [
+        if (empty($this->onlyAttribute)) {
+            $this->onlyAttribute = [
                 BaseActiveRecord::EVENT_BEFORE_INSERT => $this->onlyAttribute,
                 // BaseActiveRecord::EVENT_BEFORE_UPDATE => $this->onlyAttribute,
             ];

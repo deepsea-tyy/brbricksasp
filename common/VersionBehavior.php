@@ -1,9 +1,9 @@
 <?php
 namespace bricksasp\common;
 
-use yii\behaviors\AttributeBehavior;
-use yii\base\InvalidCallException;
 use yii\db\BaseActiveRecord;
+use yii\base\InvalidCallException;
+use yii\behaviors\AttributeBehavior;
 
 /**
  * 默认版本号字段
@@ -22,8 +22,8 @@ class VersionBehavior extends AttributeBehavior
     {
         parent::init();
 
-        if (empty($this->attributes)) {
-            $this->attributes = [
+        if (empty($this->onlyAttribute)) {
+            $this->onlyAttribute = [
                 BaseActiveRecord::EVENT_BEFORE_INSERT => $this->onlyAttribute,
                 BaseActiveRecord::EVENT_BEFORE_UPDATE => $this->onlyAttribute,
             ];

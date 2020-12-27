@@ -16,7 +16,8 @@ use bricksasp\rbac\components\UserStatus;
  */
 class Register extends Model
 {
-    const MINI_WX_DEFAULT = 'wx_def';
+    const TYPE_WX_MINI = 'wx_mini';
+    const TYPE_WX_MINI = 'wx_offi';
 
     public $username;
     public $access_token;
@@ -24,12 +25,13 @@ class Register extends Model
     public $mobile;
     public $password;
     public $openid;
-    public $scene;
     public $retypePassword;
     public $current_owner_id;
     public $shop_id;
     public $code;
     public $key;
+    public $scene; // Mini::scene类型
+    public $type; // Mini::type类型
 
     /**
      * 使用场景
@@ -37,7 +39,7 @@ class Register extends Model
     public function scenarios()
     {
         return [
-            self::MINI_WX_DEFAULT => ['current_owner_id', 'openid', 'scene', 'mobile'],
+            self::TYPE_WX_MINI => ['current_owner_id', 'openid', 'scene', 'mobile','type'],
         ];
     }
 
@@ -47,19 +49,19 @@ class Register extends Model
     public function rules()
     {
         return [
-            [['current_owner_id', 'scene'], 'integer'],
+            [['current_owner_id', 'scene', 'type'], 'integer'],
             [['current_owner_id', 'openid', 'scene'], 'required'],
             [['username','openid'], 'string'],
-            [['scene'], 'validScene'],
+            [['type'], 'validType'],
         ];
     }
 
-    public function validScene()
+    public function validType()
     {
-        if ($this->scene == Mini::SCENE_WX_DEFAULT) {
-            $this->username = 'wx_lite' . Yii::$app->security->generateRandomString(12);
-        }elseif ($this->scene == Mini::SCENE_WX_OFFICIAL) {
-            $this->username = 'wx_offic' . Yii::$app->security->generateRandomString(12);
+        if ($this->scene == Mini::TYPE_WX_MINI) {
+            $this->username = 'wx_mini' . Yii::$app->security->generateRandomString(12);
+        }elseif ($this->scene == Mini::TYPE_WX_OFFICIAL) {
+            $this->username = 'wx_offi' . Yii::$app->security->generateRandomString(12);
         }
         // if ($this->type == 2) {
         //     $this->access_token = Yii::$app->security->generateRandomString();

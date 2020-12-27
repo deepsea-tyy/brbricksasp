@@ -1,11 +1,10 @@
 <?php
 namespace bricksasp\common;
 
-use app\models\ChannelQualification;
 use Yii;
-use yii\behaviors\AttributeBehavior;
-use yii\base\InvalidCallException;
 use yii\db\BaseActiveRecord;
+use yii\base\InvalidCallException;
+use yii\behaviors\AttributeBehavior;
 
 /**
  * 默认用户字段
@@ -29,8 +28,8 @@ class ShowIdBehavior extends AttributeBehavior
     public function init()
     {
         parent::init();
-        if (empty($this->attributes)) {
-            $this->attributes = [
+        if (empty($this->onlyAttribute)) {
+            $this->onlyAttribute = [
                 BaseActiveRecord::EVENT_BEFORE_INSERT => $this->onlyAttribute,
             ];
         }
@@ -41,9 +40,8 @@ class ShowIdBehavior extends AttributeBehavior
         if ($this->value === null) {
             $temp = Yii::$app->redis->get($this->key);
             if(!$temp){
-                $one = ChannelQualification::find()->select([$this->onlyAttribute])->orderBy($this->onlyAttribute.' desc')->one();
                 $field = $this->onlyAttribute;
-                Yii::$app->redis->set($this->key, $one ? $one->$field : $this->number);
+                Yii::$app->redis->set($this->key, $this->number);
             }
             return Yii::$app->redis->incr($this->key);
         }
