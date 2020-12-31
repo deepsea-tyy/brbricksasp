@@ -4,29 +4,20 @@ namespace bricksasp\user\controllers;
 
 use Yii;
 use bricksasp\base\Tools;
-use bricksasp\models\UserVip;
+use bricksasp\models\RealNameAuth;
 use yii\data\ActiveDataProvider;
 use bricksasp\base\BackendController;
 
-/**
- * UserVipController implements the CRUD actions for UserVip model.
- */
-class UserVipController extends BackendController
+class RealNameAuthController extends BackendController
 {
-    public function noLoginAction()
-    {
-        return [];
-    }
-
     /**
-     * @OA\Get(path="/user/user-vip/index",
-     *   summary="会员等级列表",
+     * @OA\Get(path="/user/real-name-auth/index",
+     *   summary="实名认证列表",
      *   tags={"user模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
-     *   @OA\Parameter(name="is_delete",in="query",@OA\Schema(type="integer"),description="1软删除"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -41,12 +32,11 @@ class UserVipController extends BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query =  UserVip::find();
+        $query =  RealNameAuth::find();
         $query->andFilterWhere([
             'status' => $params['status']??null,
         ]);
         $query->andFilterWhere($this->ownerCondition());
-        $query->andFilterWhere(['is_delete'=> empty($params['is_delete']) ? 0 : 1]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -61,12 +51,12 @@ class UserVipController extends BackendController
     }
 
     /**
-     * @OA\Get(path="/user/user-vip/view",
-     *   summary="会员等级详情",
+     * @OA\Get(path="/user/real-name-auth/view",
+     *   summary="实名认证详情",
      *   tags={"user模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
-     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id",),
+     *   @OA\Parameter(name="user_id",in="query",@OA\Schema(type="integer"),description="user_id",),
      *   
      *   @OA\Response(
      *     response=200,
@@ -74,7 +64,7 @@ class UserVipController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       
-     *       @OA\Schema(ref="#/components/schemas/UserVipUpdate"),
+     *       @OA\Schema(ref="#/components/schemas/RealNameAuthUpdate"),
      *     ),
      *   ),
      * )
@@ -82,20 +72,15 @@ class UserVipController extends BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
+        $model = $this->findModel($this->updateCondition(empty($params['user_id']) ? [] : ['user_id'=>$params['user_id']]));
         $data = $model->toArray();
         
-        if ($model->company) {
-            $data['company'] = $model->company->toArray();
-            $data['company']['gps'] = json_decode($model->company->gps,true);
-        }
-        $data['companyQualifications'] = $model->companyQualifications;
         return $this->success($data);
     }
 
     /**
-     * @OA\Post(path="/user/user-vip/create",
-     *   summary="创建会员等级",
+     * @OA\Post(path="/user/real-name-auth/create",
+     *   summary="创建实名认证",
      *   tags={"user模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
      *   
@@ -103,7 +88,7 @@ class UserVipController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/UserVipCreate"
+     *         ref="#/components/schemas/RealNameAuthCreate"
      *       )
      *     )
      *   ),
@@ -119,21 +104,22 @@ class UserVipController extends BackendController
      * )
      *
      * @OA\Schema(
-     *   schema="UserVipCreate",
-     *   description="会员等级",
-     *   @OA\Property(property="level", type="integer", description="等级"),
-     *   @OA\Property(property="up_cdt", type="integer", description="升级条件1订单金额/数量2指定商品"),
-     *   @OA\Property(property="up_cdt_val", type="string", description="条件值"),
-     *   @OA\Property(property="discount", type="string", description="折扣",),
-     *   @OA\Property(property="duration", type="integer", description="会员时间期限 月",),
-     *   @OA\Property(property="status", type="integer", description="1启用",),
+     *   schema="RealNameAuthCreate",
+     *   description="实名认证",
+     *   @OA\Property(property="name", type="string", description="真实姓名"),
+     *   @OA\Property(property="gender", type="integer", description="性别"),
+     *   @OA\Property(property="id_card_no", type="string", description="身份证号"),
+     *   @OA\Property(property="id_card_frontal_photo", type="string", description="身份证正面照",),
+     *   @OA\Property(property="id_card_reverse_photo", type="string", description="身份证反面照"),
+     *   @OA\Property(property="status", type="integer", description="0未审核1通过2拒绝"),
+     *   @OA\Property(property="refuse_reasons", type="string", description="拒绝原因"),
      *   required={"name"}
      * )
      */
     public function actionCreate()
     {
         $params = $this->queryMapPost();
-        $model = new UserVip();
+        $model = new RealNameAuth();
         if ($model->saveData($params)) {
             return $this->success();
         }
@@ -142,8 +128,8 @@ class UserVipController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/user/user-vip/update",
-     *   summary="修改会员等级",
+     * @OA\Post(path="/user/real-name-auth/update",
+     *   summary="修改实名认证",
      *   tags={"user模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
      *   
@@ -151,7 +137,7 @@ class UserVipController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/UserVipUpdate"
+     *         ref="#/components/schemas/RealNameAuthUpdate"
      *       )
      *     )
      *   ),
@@ -168,20 +154,20 @@ class UserVipController extends BackendController
      * 
      * 
      * @OA\Schema(
-     *   schema="UserVipUpdate",
-     *   description="会员等级数据",
+     *   schema="RealNameAuthUpdate",
+     *   description="实名认证数据",
      *   allOf={
      *     @OA\Schema(
-     *       @OA\Property(property="id", type="integer", description="id"),
+     *       @OA\Property(property="user_id", type="integer", description="user_id"),
      *     ),
-     *     @OA\Schema(ref="#/components/schemas/UserVipCreate"),
+     *     @OA\Schema(ref="#/components/schemas/RealNameAuthCreate"),
      *   }
      * )
      */
     public function actionUpdate()
     {
         $params = $this->queryMapPost();
-        $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
+        $model = $this->findModel($this->updateCondition(empty($params['user_id']) ? [] : ['user_id'=>$params['user_id']]));
 
         if ($model->saveData($params)) {
             return $this->success();
@@ -191,8 +177,8 @@ class UserVipController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/user/user-vip/delete",
-     *   summary="删除会员等级",
+     * @OA\Post(path="/user/real-name-auth/delete",
+     *   summary="删除实名认证",
      *   tags={"user模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
@@ -221,22 +207,27 @@ class UserVipController extends BackendController
     public function actionDelete()
     {
         $params = $this->queryMapPost();
-        if (UserVip::updateAll(['is_delete'=>1, 'updated_at'=>time()],$this->updateCondition(['id'=>$params['ids']??0, 'is_delete'=>0]))) {
-            return $this->success();
-        }
 
-        return UserVip::deleteAll($this->updateCondition(['id'=>$params['ids']??0])) ? $this->success() : Tools::breakOff(40001);
+        $transaction = RealNameAuth::getDb()->beginTransaction();
+        try {
+            RealNameAuth::deleteAll($this->updateCondition(['user_id'=>$params['ids']??0]));
+            $transaction->commit();
+            return $this->success();
+        } catch(\Throwable $e) {
+            $transaction->rollBack();
+            return $this->fail($e->getMessage());
+        }
     }
 
     /**
-     * Finds the UserVip model based on its primary key value.
+     * Finds the RealNameAuth model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return UserVip the loaded model
+     * @return RealNameAuth the loaded model
      */
     protected function findModel($id)
     {
-        if (($model = UserVip::findOne($id)) !== null) {
+        if (($model = RealNameAuth::findOne($id)) !== null) {
             return $model;
         }
 
