@@ -3,10 +3,11 @@
 namespace bricksasp\runerrands\controllers;
 
 use Yii;
-use bricksasp\models\RunerrandsCost;
+use bricksasp\base\Tools;
 use yii\data\ActiveDataProvider;
+use bricksasp\models\RunerrandsCost;
 
-class CostController extends \bricksasp\base\BaseController
+class CostController extends \bricksasp\base\BackendController
 {
 
 	public function noLoginAction()
@@ -59,8 +60,7 @@ class CostController extends \bricksasp\base\BaseController
      *   tags={"跑腿模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
-     *   
-     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id",),
      *   
      *   @OA\Response(
      *     response=200,
@@ -76,7 +76,7 @@ class CostController extends \bricksasp\base\BaseController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel(['id'=>$params['id'] ?? 0]);
+        $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
         
         return $this->success($model);
     }
@@ -118,7 +118,12 @@ class CostController extends \bricksasp\base\BaseController
      *   @OA\Property(property="stationmaster_perc", type="integer", description="站长抽成",),
      *   @OA\Property(property="settlement_type", type="integer", description="结算方式1微信零钱2银行卡",),
      *   @OA\Property(property="settlement_least", type="number", description="最低结算金额",),
-     *   @OA\Property(property="settlement_date", type="string", description="结算日期",),
+     *   @OA\Property(property="settlement_date", type="integer", description="结算日期",),
+     *   @OA\Property(property="weight_cost", type="array", @OA\Items(
+     *     @OA\Property(property="id", type="integer", description="id",),
+     *     @OA\Property(property="title", type="string", description="重量范围",),
+     *     @OA\Property(property="price", type="number", description="价格",),
+     *   ), description="附加总量",)
      * )
      */
     public function actionCreate()
@@ -172,7 +177,7 @@ class CostController extends \bricksasp\base\BaseController
     public function actionUpdate()
     {
         $params = $this->queryMapPost();
-        $model = $this->findModel(['id'=>$params['id'] ?? 0]);
+        $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
 
         if ($model->saveData($params)) {
             return $this->success();

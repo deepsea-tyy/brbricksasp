@@ -4,10 +4,10 @@ namespace bricksasp\runerrands\controllers;
 
 use Yii;
 use bricksasp\base\Tools;
-use bricksasp\models\School;
 use yii\data\ActiveDataProvider;
+use bricksasp\models\OrderRunerrands;
 
-class SchoolController extends \bricksasp\base\BackendController
+class OrderController extends \bricksasp\base\BackendController
 {
 
 	public function noLoginAction()
@@ -18,8 +18,8 @@ class SchoolController extends \bricksasp\base\BackendController
 	}
 
     /**
-     * @OA\Get(path="/runerrands/school/index",
-     *   summary="学校列表",
+     * @OA\Get(path="/runerrands/order/index",
+     *   summary="跑腿订单列表",
      *   tags={"跑腿模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
@@ -39,7 +39,7 @@ class SchoolController extends \bricksasp\base\BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query =  School::find();
+        $query =  OrderRunerrands::find();
         $query->andFilterWhere(['like', 'name', $params['name']??null]);
 
         $dataProvider = new ActiveDataProvider([
@@ -55,13 +55,12 @@ class SchoolController extends \bricksasp\base\BackendController
     }
 
     /**
-     * @OA\Get(path="/runerrands/school/view",
-     *   summary="学校详情",
+     * @OA\Get(path="/runerrands/order/view",
+     *   summary="跑腿订单详情",
      *   tags={"跑腿模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
-     *   
-     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id",),
      *   
      *   @OA\Response(
      *     response=200,
@@ -69,7 +68,7 @@ class SchoolController extends \bricksasp\base\BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       
-     *       @OA\Schema(ref="#/components/schemas/SchoolUpdate"),
+     *       @OA\Schema(ref="#/components/schemas/OrderRunerrandsUpdate"),
      *     ),
      *   ),
      * )
@@ -77,14 +76,14 @@ class SchoolController extends \bricksasp\base\BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel(['id'=>$params['id'] ?? 0]);
+        $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
         
         return $this->success($model);
     }
 
     /**
-     * @OA\Post(path="/runerrands/school/create",
-     *   summary="创建学校",
+     * @OA\Post(path="/runerrands/order/create",
+     *   summary="创建跑腿订单",
      *   tags={"跑腿模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
@@ -92,7 +91,7 @@ class SchoolController extends \bricksasp\base\BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/SchoolCreate"
+     *         ref="#/components/schemas/OrderRunerrandsCreate"
      *       )
      *     )
      *   ),
@@ -108,23 +107,26 @@ class SchoolController extends \bricksasp\base\BackendController
      * )
      *
      * @OA\Schema(
-     *   schema="SchoolCreate",
-     *   description="学校",
-     *   @OA\Property(property="name", type="string", description="学校名称"),
-     *   @OA\Property(property="code", type="integer", description="学校标识码"),
-     *   @OA\Property(property="parent_id", type="integer", description="0主校区 其他表示分校区"),
-     *   @OA\Property(property="level", type="string", description="1本科2专科",),
-     *   @OA\Property(property="city", type="string", description="学校所在城市",),
-     *   @OA\Property(property="address", type="string", description="学校详细地址",),
-     *   @OA\Property(property="logo", type="string", description="logo",),
-     *   @OA\Property(property="mark", type="string", description="备注",),
-     *   required={"name"}
+     *   schema="OrderRunerrandsCreate",
+     *   description="跑腿订单",
+     *   @OA\Property(property="order_id", type="number", description="order_id"),
+     *   @OA\Property(property="content", type="number", description="办事内容"),
+     *   @OA\Property(property="start_place", type="number", description="起始地"),
+     *   @OA\Property(property="end_place", type="number", description="目的地",),
+     *   @OA\Property(property="time", type="number", description="办事时间",),
+     *   @OA\Property(property="gender", type="integer", description="0女1男",),
+     *   @OA\Property(property="overtime", type="integer", description="超时 小时",),
+     *   @OA\Property(property="tip", type="number", description="小费",),
+     *   @OA\Property(property="type", type="integer", description="类型 2取快递3外卖代拿4校园跑腿5其他帮助",),
+     *   @OA\Property(property="coupon_ids",type="array",description="优惠券", @OA\Items(example=1)),
+     *   @OA\Property(property="pay_platform",type="integer",example="2",description="支付方式 2微信3支付宝",),
+     *   @OA\Property(property="pay_type",type="string",example="qr",description="支付类型 (查看获取支付参数接口)",),
      * )
      */
     public function actionCreate()
     {
         $params = $this->queryMapPost();
-        $model = new School();
+        $model = new OrderRunerrands();
         if ($model->saveData($params)) {
             return $this->success();
         }
@@ -133,8 +135,8 @@ class SchoolController extends \bricksasp\base\BackendController
     }
 
     /**
-     * @OA\Post(path="/runerrands/school/update",
-     *   summary="修改学校",
+     * @OA\Post(path="/runerrands/order/update",
+     *   summary="修改跑腿订单",
      *   tags={"跑腿模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
@@ -142,7 +144,7 @@ class SchoolController extends \bricksasp\base\BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/SchoolUpdate"
+     *         ref="#/components/schemas/OrderRunerrandsUpdate"
      *       )
      *     )
      *   ),
@@ -159,20 +161,20 @@ class SchoolController extends \bricksasp\base\BackendController
      * 
      * 
      * @OA\Schema(
-     *   schema="SchoolUpdate",
-     *   description="学校数据",
+     *   schema="OrderRunerrandsUpdate",
+     *   description="跑腿订单数据",
      *   allOf={
      *     @OA\Schema(
      *       @OA\Property(property="id", type="integer", description="id"),
      *     ),
-     *     @OA\Schema(ref="#/components/schemas/SchoolCreate"),
+     *     @OA\Schema(ref="#/components/schemas/OrderRunerrandsCreate"),
      *   }
      * )
      */
     public function actionUpdate()
     {
         $params = $this->queryMapPost();
-        $model = $this->findModel(['id'=>$params['id'] ?? 0]);
+        $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
 
         if ($model->saveData($params)) {
             return $this->success();
@@ -182,8 +184,8 @@ class SchoolController extends \bricksasp\base\BackendController
     }
 
     /**
-     * @OA\Post(path="/runerrands/school/delete",
-     *   summary="删除学校",
+     * @OA\Post(path="/runerrands/order/delete",
+     *   summary="删除跑腿订单",
      *   tags={"跑腿模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
@@ -212,18 +214,18 @@ class SchoolController extends \bricksasp\base\BackendController
     public function actionDelete()
     {
         $params = $this->queryMapPost();
-        return School::deleteAll(['id'=>$params['ids']??0]) ? $this->success() : $this->fail();
+        return OrderRunerrands::deleteAll(['id'=>$params['ids']??0]) ? $this->success() : $this->fail();
     }
 
     /**
-     * Finds the School model based on its primary key value.
+     * Finds the Order model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return School the loaded model
+     * @return Order the loaded model
      */
     protected function findModel($id)
     {
-        if (($model = School::findOne($id)) !== null) {
+        if (($model = OrderRunerrands::findOne($id)) !== null) {
             return $model;
         }
 

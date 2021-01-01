@@ -93,16 +93,6 @@ class Setting extends \bricksasp\base\BaseActiveRecord
             'val'   => 'snsapi_login',
         ],
 
-
-        'ORDER_DURATION' =>[
-            'title' => '订单有效时间(天)',
-            'val'   => 2,
-        ],
-        'RETURN_DURATION' =>[
-            'title' => '退货有效时间(天)',
-            'val'   => 7,
-        ],
-
         'WEB_NAME' =>[
             'title' => '网站名称',
             'val' => '',
@@ -191,6 +181,11 @@ class Setting extends \bricksasp\base\BaseActiveRecord
         'FILE_DOMAIN' =>[
             'title' => '文件访问域名',
             'val' => Yii::$app->request->hostInfo,
+        ],
+
+        'RUNERRANDS_WEATHER_ON' =>[
+            'title' => '开启特色天气费',
+            'val' => 1,
         ],
 
     ];

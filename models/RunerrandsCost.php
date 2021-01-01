@@ -75,9 +75,15 @@ class RunerrandsCost extends \bricksasp\base\BaseActiveRecord
         ];
     }
 
+    public function getWeithtCost()
+    {
+        return $this->hasMany(RunerrandsCostWeight::className(),['cost_id'=>'id']);
+    }
+
     public function saveData($data)
     {
         $this->load($this->formatData($data));
+        
         return $this->save();
     }
 }
