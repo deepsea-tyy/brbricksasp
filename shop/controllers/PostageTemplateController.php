@@ -67,9 +67,9 @@ class PostageTemplateController extends BackendController
      *   summary="运费模板详情",
      *   tags={"shop模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
-     *   @OA\Parameter(description="id",name="id",in="query",@OA\Schema(type="integer")),
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -113,7 +113,7 @@ class PostageTemplateController extends BackendController
      * @OA\Post(path="/shop/postage-template/create",
      *   summary="创建运费模板",
      *   tags={"shop模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -177,7 +177,7 @@ class PostageTemplateController extends BackendController
      * @OA\Post(path="/shop/postage-template/update",
      *   summary="修改运费模板",
      *   tags={"shop模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -227,7 +227,7 @@ class PostageTemplateController extends BackendController
      *   summary="删除运费模板",
      *   tags={"shop模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(

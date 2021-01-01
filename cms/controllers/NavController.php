@@ -83,7 +83,7 @@ class NavController extends BackendController
      *   tags={"cms模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   
-     *   @OA\Parameter(description="id",name="id",in="query",@OA\Schema(type="integer")),
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
      *   
      *   @OA\Response(
      *     response=200,

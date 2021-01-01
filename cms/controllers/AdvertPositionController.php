@@ -66,9 +66,9 @@ class AdvertPositionController extends BackendController
      *   summary="广告位详情",
      *   tags={"cms模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
-     *   @OA\Parameter(description="id",name="id",in="query",@OA\Schema(type="integer")),
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -106,7 +106,7 @@ class AdvertPositionController extends BackendController
      * @OA\Post(path="/cms/advert-position/create",
      *   summary="创建广告位",
      *   tags={"cms模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -152,7 +152,7 @@ class AdvertPositionController extends BackendController
      * @OA\Post(path="/cms/advert-position/update",
      *   summary="修改广告位",
      *   tags={"cms模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -202,7 +202,7 @@ class AdvertPositionController extends BackendController
      *   summary="删除广告位",
      *   tags={"cms模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(

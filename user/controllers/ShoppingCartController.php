@@ -63,9 +63,9 @@ class ShoppingCartController extends BackendController
      *   summary="购物车详情",
      *   tags={"user模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
-     *   @OA\Parameter(description="id",name="id",in="query",@OA\Schema(type="integer")),
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -97,7 +97,7 @@ class ShoppingCartController extends BackendController
      * @OA\Post(path="/user/shopping-cart/create",
      *   summary="创建购物车",
      *   tags={"user模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -146,7 +146,7 @@ class ShoppingCartController extends BackendController
      * @OA\Post(path="/user/shopping-cart/update",
      *   summary="修改购物车",
      *   tags={"user模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -196,7 +196,7 @@ class ShoppingCartController extends BackendController
      *   summary="删除购物车",
      *   tags={"user模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(

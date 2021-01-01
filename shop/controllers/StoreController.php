@@ -68,9 +68,9 @@ class StoreController extends BackendController
      *   summary="商铺详情",
      *   tags={"shop模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
-     *   @OA\Parameter(description="id",name="id",in="query",@OA\Schema(type="integer")),
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -112,7 +112,7 @@ class StoreController extends BackendController
      * @OA\Post(path="/shop/store/create",
      *   summary="创建商铺",
      *   tags={"shop模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -230,7 +230,7 @@ class StoreController extends BackendController
      * @OA\Post(path="/shop/store/update",
      *   summary="修改商铺",
      *   tags={"shop模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -280,7 +280,7 @@ class StoreController extends BackendController
      *   summary="删除商铺",
      *   tags={"shop模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(

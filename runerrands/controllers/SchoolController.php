@@ -58,9 +58,9 @@ class SchoolController extends \bricksasp\base\BaseController
      *   summary="学校详情",
      *   tags={"跑腿模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
-     *   @OA\Parameter(description="id",name="id",in="query",@OA\Schema(type="integer")),
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -85,7 +85,7 @@ class SchoolController extends \bricksasp\base\BaseController
      * @OA\Post(path="/runerrands/school/create",
      *   summary="创建学校",
      *   tags={"跑腿模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -135,7 +135,7 @@ class SchoolController extends \bricksasp\base\BaseController
      * @OA\Post(path="/runerrands/school/update",
      *   summary="修改学校",
      *   tags={"跑腿模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -185,7 +185,7 @@ class SchoolController extends \bricksasp\base\BaseController
      *   summary="删除学校",
      *   tags={"跑腿模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(

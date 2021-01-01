@@ -181,9 +181,9 @@ class UserController extends BackendController {
      * @OA\Post(path="/user/logout",
      *   summary="管理员退出登录",
      *   tags={"管理后台全局接口"},
-     *   @OA\Parameter(description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   @OA\Response(
-     *     description="",
+     *     description="响应结构",
      *     response=200,
      *     @OA\MediaType(
      *         mediaType="application/json",

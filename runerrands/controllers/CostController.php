@@ -1,19 +1,25 @@
 <?php
 
-namespace bricksasp\user\controllers;
+namespace bricksasp\runerrands\controllers;
 
 use Yii;
-use bricksasp\base\Tools;
-use bricksasp\models\StudentAuth;
+use bricksasp\models\RunerrandsCost;
 use yii\data\ActiveDataProvider;
-use bricksasp\base\BackendController;
 
-class StudentAuthController extends BackendController
+class CostController extends \bricksasp\base\BaseController
 {
+
+	public function noLoginAction()
+	{
+		return [
+			'index',
+		];
+	}
+
     /**
-     * @OA\Get(path="/user/student-auth/index",
-     *   summary="学生认证列表",
-     *   tags={"user模块"},
+     * @OA\Get(path="/runerrands/cost/index",
+     *   summary="跑腿费用设置列表",
+     *   tags={"跑腿模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
@@ -32,11 +38,8 @@ class StudentAuthController extends BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query =  StudentAuth::find();
-        $query->andFilterWhere([
-            'status' => $params['status']??null,
-        ]);
-        $query->andFilterWhere($this->ownerCondition());
+        $query =  RunerrandsCost::find();
+        $query->andFilterWhere(['like', 'name', $params['name']??null]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -51,12 +54,13 @@ class StudentAuthController extends BackendController
     }
 
     /**
-     * @OA\Get(path="/user/student-auth/view",
-     *   summary="学生认证详情",
-     *   tags={"user模块"},
+     * @OA\Get(path="/runerrands/cost/view",
+     *   summary="跑腿费用设置详情",
+     *   tags={"跑腿模块"},
      *   
-     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
-     *   @OA\Parameter(name="user_id",in="query",@OA\Schema(type="integer"),description="user_id"),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
+     *   
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -64,7 +68,7 @@ class StudentAuthController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       
-     *       @OA\Schema(ref="#/components/schemas/StudentAuthUpdate"),
+     *       @OA\Schema(ref="#/components/schemas/RunerrandsCostUpdate"),
      *     ),
      *   ),
      * )
@@ -72,23 +76,22 @@ class StudentAuthController extends BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(empty($params['user_id']) ? [] : ['user_id'=>$params['user_id']]));
-        $data = $model->toArray();
+        $model = $this->findModel(['id'=>$params['id'] ?? 0]);
         
-        return $this->success($data);
+        return $this->success($model);
     }
 
     /**
-     * @OA\Post(path="/user/student-auth/create",
-     *   summary="创建学生认证",
-     *   tags={"user模块"},
-     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
+     * @OA\Post(path="/runerrands/cost/create",
+     *   summary="创建跑腿费用设置",
+     *   tags={"跑腿模块"},
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/StudentAuthCreate"
+     *         ref="#/components/schemas/RunerrandsCostCreate"
      *       )
      *     )
      *   ),
@@ -104,25 +107,24 @@ class StudentAuthController extends BackendController
      * )
      *
      * @OA\Schema(
-     *   schema="StudentAuthCreate",
-     *   description="学生认证",
-     *   @OA\Property(property="school_id", type="integer", description="主校id"),
-     *   @OA\Property(property="school_area_id", type="integer", description="校区id"),
-     *   @OA\Property(property="faculty", type="string", description="院系"),
-     *   @OA\Property(property="subject", type="string", description="专业",),
-     *   @OA\Property(property="enrollment_at", type="string", description="入学时间"),
-     *   @OA\Property(property="student_id", type="integer", description="学号"),
-     *   @OA\Property(property="student_id_card_frontal_photo", type="string", description="学生证正面照"),
-     *   @OA\Property(property="student_id_card_reverse_photo", type="string", description="学生证反面照"),
-     *   @OA\Property(property="status", type="integer", description="0未审核1通过2拒绝"),
-     *   @OA\Property(property="refuse_reasons", type="string", description="拒绝原因"),
-     *   required={"name"}
+     *   schema="RunerrandsCostCreate",
+     *   description="跑腿费用设置",
+     *   @OA\Property(property="basic_cost", type="number", description="基础费"),
+     *   @OA\Property(property="lunch_time_cost", type="number", description="特殊时段费"),
+     *   @OA\Property(property="dinner_time_cost", type="number", description="特殊时段费"),
+     *   @OA\Property(property="difficulty_cost", type="number", description="难度费5楼以上",),
+     *   @OA\Property(property="weather_cist", type="number", description="天气费",),
+     *   @OA\Property(property="platform_perc", type="integer", description="平台抽成",),
+     *   @OA\Property(property="stationmaster_perc", type="integer", description="站长抽成",),
+     *   @OA\Property(property="settlement_type", type="integer", description="结算方式1微信零钱2银行卡",),
+     *   @OA\Property(property="settlement_least", type="number", description="最低结算金额",),
+     *   @OA\Property(property="settlement_date", type="string", description="结算日期",),
      * )
      */
     public function actionCreate()
     {
         $params = $this->queryMapPost();
-        $model = new StudentAuth();
+        $model = new RunerrandsCost();
         if ($model->saveData($params)) {
             return $this->success();
         }
@@ -131,16 +133,16 @@ class StudentAuthController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/user/student-auth/update",
-     *   summary="修改学生认证",
-     *   tags={"user模块"},
-     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
+     * @OA\Post(path="/runerrands/cost/update",
+     *   summary="修改跑腿费用设置",
+     *   tags={"跑腿模块"},
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/StudentAuthUpdate"
+     *         ref="#/components/schemas/RunerrandsCostUpdate"
      *       )
      *     )
      *   ),
@@ -157,20 +159,20 @@ class StudentAuthController extends BackendController
      * 
      * 
      * @OA\Schema(
-     *   schema="StudentAuthUpdate",
-     *   description="学生认证数据",
+     *   schema="RunerrandsCostUpdate",
+     *   description="跑腿费用设置数据",
      *   allOf={
      *     @OA\Schema(
-     *       @OA\Property(property="user_id", type="integer", description="user_id"),
+     *       @OA\Property(property="id", type="integer", description="id"),
      *     ),
-     *     @OA\Schema(ref="#/components/schemas/StudentAuthCreate"),
+     *     @OA\Schema(ref="#/components/schemas/RunerrandsCostCreate"),
      *   }
      * )
      */
     public function actionUpdate()
     {
         $params = $this->queryMapPost();
-        $model = $this->findModel($this->updateCondition(empty($params['user_id']) ? [] : ['user_id'=>$params['user_id']]));
+        $model = $this->findModel(['id'=>$params['id'] ?? 0]);
 
         if ($model->saveData($params)) {
             return $this->success();
@@ -180,11 +182,11 @@ class StudentAuthController extends BackendController
     }
 
     /**
-     * @OA\Post(path="/user/student-auth/delete",
-     *   summary="删除学生认证",
-     *   tags={"user模块"},
+     * @OA\Post(path="/runerrands/cost/delete",
+     *   summary="删除跑腿费用设置",
+     *   tags={"跑腿模块"},
      *   
-     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -210,27 +212,18 @@ class StudentAuthController extends BackendController
     public function actionDelete()
     {
         $params = $this->queryMapPost();
-
-        $transaction = StudentAuth::getDb()->beginTransaction();
-        try {
-            StudentAuth::deleteAll($this->updateCondition(['user_id'=>$params['ids']??0]));
-            $transaction->commit();
-            return $this->success();
-        } catch(\Throwable $e) {
-            $transaction->rollBack();
-            return $this->fail($e->getMessage());
-        }
+        return RunerrandsCost::deleteAll(['id'=>$params['ids']??0]) ? $this->success() : $this->fail();
     }
 
     /**
-     * Finds the StudentAuth model based on its primary key value.
+     * Finds the RunerrandsCost model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return StudentAuth the loaded model
+     * @return RunerrandsCost the loaded model
      */
     protected function findModel($id)
     {
-        if (($model = StudentAuth::findOne($id)) !== null) {
+        if (($model = RunerrandsCost::findOne($id)) !== null) {
             return $model;
         }
 

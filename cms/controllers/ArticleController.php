@@ -138,7 +138,7 @@ class ArticleController extends BackendController
      * @OA\Post(path="/cms/article/create",
      *   summary="创建文章",
      *   tags={"cms模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -196,7 +196,7 @@ class ArticleController extends BackendController
      * @OA\Post(path="/cms/article/update",
      *   summary="修改文章",
      *   tags={"cms模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -246,7 +246,7 @@ class ArticleController extends BackendController
      *   summary="删除文章",
      *   tags={"cms模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -295,7 +295,7 @@ class ArticleController extends BackendController
      *   summary="设置文章标签",
      *   tags={"cms模块"},
      *   
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(

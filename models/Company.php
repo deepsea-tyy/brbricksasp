@@ -105,4 +105,10 @@ class Company extends \bricksasp\base\BaseActiveRecord
             'updated_at' => 'Updated At',
         ];
     }
+
+    public function saveData($data)
+    {
+        $this->load($this->formatData($data));
+        return $this->save();
+    }
 }

@@ -184,7 +184,7 @@ class OrderController extends BackendController
      *   summary="统一下单接口",
      *   description="说明：购物车参数与单品参数二选一，购物车参数优先",
      *   tags={"bill模块"},
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\RequestBody(
      *     @OA\MediaType(

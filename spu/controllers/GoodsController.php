@@ -382,7 +382,7 @@ class GoodsController extends BackendController
      *   summary="设置商品标签",
      *   tags={"spu模块"},
      *
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -436,7 +436,7 @@ class GoodsController extends BackendController
      *   summary="商品评价",
      *   tags={"spu模块"},
      *
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *
      *   @OA\RequestBody(
      *     @OA\MediaType(
@@ -548,7 +548,7 @@ class GoodsController extends BackendController
      *   summary="商品评价审核",
      *   tags={"spu模块"},
      *
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *
      *  @OA\Parameter( description="评价id",name="id",in="query",@OA\Schema(type="integer")),
      *  @OA\Parameter( description="状态 0未审核 1审核通过 2未通过",name="status",in="query",@OA\Schema(type="integer")),
@@ -587,7 +587,7 @@ class GoodsController extends BackendController
      *   summary="商品评价审核",
      *   tags={"spu模块"},
      *
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *
      *  @OA\Parameter( description="评价id",name="id",in="query",@OA\Schema(type="integer")),
      *  @OA\Parameter( description="是否显示 1显示 2不显示",name="status",in="query",@OA\Schema(type="integer")),
@@ -663,7 +663,7 @@ class GoodsController extends BackendController
      *   summary="商品上架审核",
      *   tags={"spu模块"},
      *
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *
      *  @OA\Parameter( description="商品id",name="id",in="query",@OA\Schema(type="integer")),
      *  @OA\Parameter( description="0未上架1上架2下架3待审核4已拒绝",name="is_on_shelves",in="query",@OA\Schema(type="integer")),
@@ -708,7 +708,7 @@ class GoodsController extends BackendController
      *   summary="商品申请上架",
      *   tags={"spu模块"},
      *
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *
      *  @OA\Parameter( description="商品id",name="id",in="query",@OA\Schema(type="integer")),
      *
@@ -742,7 +742,7 @@ class GoodsController extends BackendController
      *   summary="取消商品申请上架",
      *   tags={"spu模块"},
      *
-     *   @OA\Parameter(description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *
      *  @OA\Parameter( description="商品id",name="id",in="query",@OA\Schema(type="integer")),
      *

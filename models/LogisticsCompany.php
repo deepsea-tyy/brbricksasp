@@ -41,4 +41,10 @@ class LogisticsCompany extends \bricksasp\base\BaseActiveRecord
             'sort' => 'Sort',
         ];
     }
+
+    public function saveData($data)
+    {
+        $this->load($this->formatData($data));
+        return $this->save();
+    }
 }
