@@ -77,8 +77,9 @@ class CostController extends \bricksasp\base\BackendController
     {
         $params = Yii::$app->request->get();
         $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
-        
-        return $this->success($model);
+        $data = $model->toArray();
+        $data['weithtCost'] = $model->weithtCost;
+        return $this->success($data);
     }
 
     /**

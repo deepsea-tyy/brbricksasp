@@ -67,7 +67,6 @@ class Setting extends \bricksasp\base\BaseActiveRecord
      * @var [array]
      */
     public static $defaultSettings = [
-
         'WX_OPEN_APPID' =>[
             'title' => '微信开放平台网站应用app_id',
             'val'   => '',
@@ -178,9 +177,9 @@ class Setting extends \bricksasp\base\BaseActiveRecord
             'title' => '更新时间',
             'val' => '2020-11-09',
         ],
-        'FILE_DOMAIN' =>[
+        'FILE_DOMAIN_URL' =>[
             'title' => '文件访问域名',
-            'val' => Yii::$app->request->hostInfo,
+            'val' => '',
         ],
 
         'RUNERRANDS_WEATHER_ON' =>[

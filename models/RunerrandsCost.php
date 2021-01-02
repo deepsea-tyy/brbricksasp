@@ -3,6 +3,7 @@
 namespace bricksasp\models;
 
 use Yii;
+use bricksasp\base\Tools;
 
 /**
  * This is the model class for table "{{%runerrands_cost}}".
@@ -82,8 +83,31 @@ class RunerrandsCost extends \bricksasp\base\BaseActiveRecord
 
     public function saveData($data)
     {
-        $this->load($this->formatData($data));
-        
-        return $this->save();
+        if (!$this->checkArray($data,['weight_cost'])) {
+            return false;
+        }
+
+        $transaction = self::getDb()->beginTransaction();
+        try {
+            $this->load($this->formatData($data));
+            if (!$this->save()) {
+                $transaction->rollBack();
+                return false;
+            }
+            if ($data['weight_cost']??false) {
+                RunerrandsCostWeight::deleteAll(['cost_id'=>$this->id]);
+                $weight_cost = [];
+                foreach ($data['weight_cost'] as $k => $v) {
+                    $v['cost_id'] = $this->id;
+                    $weight_cost[] = $v;
+                }
+                Yii::$app->db->createCommand()->batchInsert(RunerrandsCostWeight::tableName(), array_keys(end($weight_cost)), $weight_cost)->execute();
+            }
+            $transaction->commit();
+            return true;
+        } catch(\Throwable $e) {
+            $transaction->rollBack();
+            Tools::breakOff($e->getMessage());
+        }
     }
 }

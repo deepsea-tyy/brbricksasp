@@ -5,6 +5,7 @@ namespace bricksasp\runerrands\controllers;
 use Yii;
 use bricksasp\base\Tools;
 use yii\data\ActiveDataProvider;
+use bricksasp\models\Order;
 use bricksasp\models\OrderRunerrands;
 
 class OrderController extends \bricksasp\base\BackendController
@@ -110,13 +111,15 @@ class OrderController extends \bricksasp\base\BackendController
      *   schema="OrderRunerrandsCreate",
      *   description="跑腿订单",
      *   @OA\Property(property="order_id", type="number", description="order_id"),
-     *   @OA\Property(property="content", type="number", description="办事内容"),
-     *   @OA\Property(property="start_place", type="number", description="起始地"),
-     *   @OA\Property(property="end_place", type="number", description="目的地",),
-     *   @OA\Property(property="time", type="number", description="办事时间",),
+     *   @OA\Property(property="content", type="string", description="办事内容"),
+     *   @OA\Property(property="start_place", type="string", description="起始地"),
+     *   @OA\Property(property="end_place", type="string", description="目的地",),
+     *   @OA\Property(property="time", type="string", description="办事时间",),
+     *   @OA\Property(property="weight", type="integer", description="重量",),
      *   @OA\Property(property="gender", type="integer", description="0女1男",),
      *   @OA\Property(property="overtime", type="integer", description="超时 小时",),
      *   @OA\Property(property="tip", type="number", description="小费",),
+     *   @OA\Property(property="ship_id",type="integer",description="收货地址id",),
      *   @OA\Property(property="type", type="integer", description="类型 2取快递3外卖代拿4校园跑腿5其他帮助",),
      *   @OA\Property(property="coupon_ids",type="array",description="优惠券", @OA\Items(example=1)),
      *   @OA\Property(property="pay_platform",type="integer",example="2",description="支付方式 2微信3支付宝",),
@@ -136,7 +139,7 @@ class OrderController extends \bricksasp\base\BackendController
 
     /**
      * @OA\Post(path="/runerrands/order/update",
-     *   summary="修改跑腿订单",
+     *   summary="跑腿抢单",
      *   tags={"跑腿模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
@@ -173,14 +176,8 @@ class OrderController extends \bricksasp\base\BackendController
      */
     public function actionUpdate()
     {
-        $params = $this->queryMapPost();
-        $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
 
-        if ($model->saveData($params)) {
-            return $this->success();
-        }
-
-        return $this->fail($model->errors);
+        return $this->fail('未开放功能');
     }
 
     /**
@@ -230,5 +227,46 @@ class OrderController extends \bricksasp\base\BackendController
         }
 
         Tools::breakOff(40001);
+    }
+
+    /**
+     *
+     * @OA\Post(path="/runerrands/order/delivery",
+     *   summary="跑腿送货",
+     *   tags={"bill模块"},
+     *   @OA\Parameter(name="X-Token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
+     *
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         @OA\Property(property="order_id",type="integer",description="订单id")
+     *       )
+     *     )
+     *   ),
+     *
+     *   @OA\Response(
+     *     response=200,
+     *     description="响应结构",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionDelivery() {
+        $params = $this->queryMapPost();
+        $order_id = $params['order_id'];
+        $key = 'graborder' . $order_id;
+        if (Yii::$app->redis->setnx($key,1)) {
+            if (Order::updateAll(['receiver' => $this->current_user_id, 'receiver_at'=>time()],['id'=>$order_id]) === false) {
+                Yii::$app->redis->del($key);
+                return $this->fail('请重试');
+            }
+        }
+        Yii::$app->redis->del($key);
+        return $this->fail('差一点点运气，该单已被抢走～～');
     }
 }

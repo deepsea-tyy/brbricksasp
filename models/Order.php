@@ -33,6 +33,7 @@ use bricksasp\models\ShoppingCart;
  * @property int|null $confirm_at 确认订单时间
  * @property int|null $store_id 自提门店ID
  * @property int|null $ship_status 发货状态1未发货2已发货3部分发货4部分退货5已退货
+ * @property int|null $ship_id 收货地址ID
  * @property int|null $ship_area_id 收货地区ID
  * @property string|null $ship_address 收货详细地址
  * @property string|null $ship_name 收货人姓名
@@ -58,6 +59,8 @@ use bricksasp\models\ShoppingCart;
  * @property int|null $is_delete
  * @property string|null $lat
  * @property string|null $lon
+ * @property int|null $receiver 接单人
+ * @property int|null $receiver_at 接单时间
  * @property int|null $created_at 创建时间
  * @property int|null $updated_at 更新时间
  */
@@ -113,7 +116,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['id', 'owner_id', 'user_id', 'pay_status', 'pay_at', 'seller_id', 'complete', 'complete_at', 'confirm', 'confirm_at', 'store_id', 'ship_status', 'ship_area_id', 'tax_type', 'type', 'point', 'source', 'status', 'is_comment', 'is_delete', 'created_at', 'updated_at'], 'integer'],
+            [['id', 'owner_id', 'user_id', 'pay_status', 'pay_at', 'seller_id', 'complete', 'complete_at', 'confirm', 'confirm_at', 'store_id', 'ship_status', 'ship_id', 'ship_area_id', 'tax_type', 'type', 'point', 'source', 'status', 'is_comment', 'is_delete', 'receiver', 'receiver_at', 'created_at', 'updated_at'], 'integer'],
             [['total_price', 'pay_price', 'payed_price', 'logistics_price', 'total_weight', 'total_volume', 'point_money', 'order_pmt'], 'number'],
             [['pay_platform'], 'string', 'max' => 8],
             [['logistics_name'], 'string', 'max' => 32],
@@ -157,6 +160,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
             'confirm_at' => 'Confirm At',
             'store_id' => 'Store ID',
             'ship_status' => 'Ship Status',
+            'ship_id' => 'Ship ID',
             'ship_area_id' => 'Ship Area ID',
             'ship_address' => 'Ship Address',
             'ship_name' => 'Ship Name',
@@ -205,7 +209,6 @@ class Order extends \bricksasp\base\BaseActiveRecord
     public function saveData($data)
     {
         list($data, $orderItems, $purchase) = $this->formatData($data);
-        // print_r($data);exit;
 
         $transaction = self::getDb()->beginTransaction();
         try {
@@ -223,7 +226,9 @@ class Order extends \bricksasp\base\BaseActiveRecord
             foreach ($purchase as $v) {
                 GoodsProduct::updateAllCounters(['stock'=> -$v['num']], ['id' => $v['id']]);
             }
-
+            if (!empty($data['coupon_ids'])) {
+                PromotionCoupon::updateAll(['status'=>PromotionCoupon::STATUS_USED],['id'=>$data['coupon_ids']]);
+            }
             Yii::$app->db->createCommand()->batchInsert(OrderItem::tableName(), array_keys(end($orderItems)), $orderItems)->execute();
             
             if (!empty($data['cart_ids'])) {
@@ -236,7 +241,6 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $transaction->rollBack();
             Tools::breakOff($e->getMessage());
         }
-        return $this->save();
     }
 
     public function formatData($data)
@@ -255,12 +259,14 @@ class Order extends \bricksasp\base\BaseActiveRecord
         }
 
         // 收货地址
-        $shipAdr = ShipAddress::find()->where(['id' => $data['ship_id']??0])->one();
-        if ($shipAdr) {
-            $data['ship_area_id'] = $shipAdr->area_id;
-            $data['ship_address'] = $shipAdr->address;
-            $data['ship_name'] = $shipAdr->name;
-            $data['ship_phone'] = $shipAdr->phone;
+        if (!empty($data['ship_id'])) {
+            $shipAdr = ShipAddress::find()->where(['id' => $data['ship_id']])->one();
+            if ($shipAdr) {
+                $data['ship_area_id'] = $shipAdr->area_id;
+                $data['ship_address'] = $shipAdr->address;
+                $data['ship_name'] = $shipAdr->name;
+                $data['ship_phone'] = $shipAdr->phone;
+            }
         }
 
         $products = GoodsProduct::find()->with(['goods'])->where(['id' => $pids])->all();
@@ -389,6 +395,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
 
         if ($useCoupon) {// 优惠信息
             $data['promotion_info'] = json_encode($useCoupon);
+            $data['coupon_ids'] = array_column($useCoupon,'id');
         }
         if ($data['total_price'] <= 0) {
             $data['total_price'] = 0;

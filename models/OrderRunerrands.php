@@ -3,6 +3,8 @@
 namespace bricksasp\models;
 
 use Yii;
+use bricksasp\base\Tools;
+use bricksasp\promotion\models\PromotionCoupon;
 
 /**
  * This is the model class for table "{{%order_runerrands}}".
@@ -64,22 +66,21 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
         if (!$this->checkArray($data,['coupon_ids'])) {
             return false;
         }
-        list($data, $orderItems) = $this->formatData($data);
+        $data = $this->formatData($data);
 
         $transaction = self::getDb()->beginTransaction();
         try {
             $model = new Order();
             $model->load($data);
             if ($model->save()) {
-                $orderItems['order_id'] = $model->id;
+                $data['order_id'] = $model->id;
                 $this->load($data);
-                $this->save();
-                if (!$this->id) {
+                if (!$this->save()) {
                     $transaction->rollBack();
-                    Tools::breakOff('下单失败,请重试');
+                    return false;
                 }
 
-                $transaction->rollBack();
+                $transaction->commit();
                 return true;
             }else{
                 $this->setErrors($model->errors);
@@ -95,15 +96,76 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
 
     public function formatData($data)
     {
+        if (!in_array($data['type']??0, [2,3,4,5])) {
+            $this->addError('type','type无效');
+            return false;
+        }
         $data = parent::formatData($data);
         $student = StudentAuth::find()->select(['school_id','school_area_id'])->where(['user_id'=>$data['user_id']])->one();
         $schoolRel = StoreRelation::find()->where(['type'=>StoreRelation::TYPE_SCHOOL, 'object_id'=>$student->school_area_id??$student->school_id])->one();
-        $cost = RunerrandsCost::find()->where(['owner_id'=>1])->one();
-        $setting = Setting::getSetting($schoolRel->owner_id,'RUNERRANDS');//RUNERRANDS_WEATHER_ON
-        $data['total_price']=0;
-        $data['pay_price']=0;
-        $data['pay_platform']=0;
-        print_r($data);exit;
+        if ($schoolRel) {
+            $data['owner_id'] = $schoolRel->owner_id;
+        }
+
+        $cost = RunerrandsCost::find()->with(['weithtCost'])->where(['owner_id'=>$data['owner_id']])->one();
+        $setting = Setting::getSetting($data['owner_id'],'RUNERRANDS');//RUNERRANDS_WEATHER_ON
+
+        $data['total_price'] = $cost->basic_cost;
+        if ($setting['RUNERRANDS_WEATHER_ON']['val']??0) {//天气
+            $data['total_price'] += $cost->weather_cist;
+        }
+
+        if (!empty($data['weight'])) {
+            foreach ($cost['weithtCost'] as $item) {//重量
+                if ($item->id == $data['weight']) {
+                    $data['total_price']+=$item->price;
+                    break;
+                }
+            }
+        }
+        $hour = date('H',time());
+        if ($hour < 13 && $hour>=11) {//时段
+            $data['total_price'] += $cost->lunch_time_cost;
+        }
+        if ($hour < 19 && $hour>=17) {
+            $data['total_price'] += $cost->dinner_time_cost;
+        }
+
+        if (!empty($data['ship_id'])) {//楼层
+            $shipAdr = ShipAddress::find()->where(['id' => $data['ship_id']])->one();
+            if ($shipAdr) {
+                $data['ship_area_id'] = $shipAdr->area_id;
+                $data['ship_address'] = $shipAdr->address;
+                $data['ship_name'] = $shipAdr->name;
+                $data['ship_phone'] = $shipAdr->phone;
+                if ($shipAdr->floor >=5) {
+                    $data['total_price'] += $cost->difficulty_cost;
+                }
+            }
+        }
+
+        if (!empty($data['tip'])) {
+            $data['total_price'] += $data['tip'];
+        }
+
+        $data['pay_price']=$data['total_price'];
+        //优惠券
+        if (!empty($data['coupon_ids'])) {
+            $model = new PromotionCoupon();
+            $coupon =  $model->checkEffectiveness($data['coupon_ids'],$data['owner_id']);
+            foreach ($coupon as $item) {
+                if ($item->result_type == PromotionCondition::RESULT_FIX_REDUCE) {
+                    $data['pay_price'] = $data['total_price'] - $item->result;
+                }
+                if ($item->result_type == PromotionCondition::RESULT_DISCOUNT) {
+                    $data['pay_price'] = $data['total_price'] * $item->result / 10;
+                }
+                if ($item->result_type == PromotionCondition::RESULT_ONE_PRICE) {
+                    $data['pay_price'] = $item->result;
+                }
+            }
+            PromotionCoupon::updateAll(['status'=>PromotionCoupon::STATUS_USED],['id'=>$data['coupon_ids'],'owner_id'=>$data['owner_id']]);
+        }
 
         return $data;
     }
