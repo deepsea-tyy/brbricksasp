@@ -261,7 +261,7 @@ class OrderController extends \bricksasp\base\BackendController
         $order_id = $params['order_id'];
         $key = 'graborder' . $order_id;
         if (Yii::$app->redis->setnx($key,1)) {
-            if (Order::updateAll(['receiver' => $this->current_user_id, 'receiver_at'=>time()],['id'=>$order_id]) === false) {
+            if (Order::updateAll(['receiver' => $this->current_user_id, 'receiver_at'=>time()],['id'=>$order_id, 'status'=>0]) === false) {
                 Yii::$app->redis->del($key);
                 return $this->fail('请重试');
             }
