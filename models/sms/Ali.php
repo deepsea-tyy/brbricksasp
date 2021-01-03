@@ -8,9 +8,10 @@ use Yii;
  */
 class Ali
 {
+	public $sid;
+	public $skey;
+	public $tpl_id;
+	public $appid;
+	public $sign;
 	
-	function __construct(argument)
-	{
-		
-	}
 }

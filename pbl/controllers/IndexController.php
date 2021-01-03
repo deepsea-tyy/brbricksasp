@@ -15,6 +15,30 @@ use bricksasp\models\IndustryCategory;
 class IndexController extends \bricksasp\base\FrontendController
 {
     /**
+     * 免登录访问
+     * @return array
+     */
+    public function noLoginAction() {
+        return [
+            'sms-vcode',
+            'fileupload',
+            'fileuploads',
+            'check-vcode',
+            'get-industry-category',
+            'hot-keywords',
+            'get-logistics',
+            'config',
+        ];
+    }
+
+    public function checkLoginAction() {
+        return [
+            'fileupload',
+            'fileuploads',
+        ];
+    }
+
+    /**
      * @OA\Post(
      *   path="/pbl/index/fileupload",
      *   summary="文件上传",
@@ -57,30 +81,6 @@ class IndexController extends \bricksasp\base\FrontendController
       ];
     }
 
-	/**
-	 * 免登录访问
-	 * @return array
-	 */
-	public function noLoginAction() {
-		return [
-			'sms-vcode',
-			'fileupload',
-			'fileuploads',
-            'check-vcode',
-            'get-industry-category',
-            'hot-keywords',
-            'get-logistics',
-            'config',
-		];
-	}
-
-    public function checkLoginAction() {
-        return [
-            'fileupload',
-            'fileuploads',
-        ];
-    }
-
     /**
 	 * @OA\Post(path="/pbl/index/sms-vcode",
 	 *   summary="发送短信验证码",
@@ -89,13 +89,9 @@ class IndexController extends \bricksasp\base\FrontendController
 	 *     @OA\MediaType(
      *       mediaType="application/json",
 	 *       @OA\Schema(
-	 *         @OA\Property(
-	 *           description="手机号码",
-	 *           property="mobile",
-	 *           type="integer",
-	 *           example=18782908511
-	 *         ),
-     *         required={"mobile"},
+	 *         @OA\Property(property="mobile",type="integer",description="手机号码",example=18782908511),
+     *         @OA\Property(property="type",type="integer",description="1通用验证码2登录验证码3注册验证码",example=1),
+     *         required={"mobile", "type"},
 	 *       )
 	 *     )
 	 *   ),
@@ -114,9 +110,9 @@ class IndexController extends \bricksasp\base\FrontendController
     {
     	$model = new Sms();
     	$code = rand(10000,99999) . '';
-    	$res = $model->sendsms(Yii::$app->request->post('mobile'), $code, Sms::TYPE_VCODE,$this->current_owner_id);
+    	$res = $model->sendsms(Yii::$app->request->post('mobile'), $code, Yii::$app->request->post('type',Sms::TYPE_VCODE_PATTERN),$this->current_owner_id);
     	if ($res) {
-    		return $this->success(Yii::t('messages',980006), $res ?? $code);
+    		return $this->success(Yii::t('messages',980006), YII_DEBUG ? $code:'SUCCESS');
     	}
     	return $this->fail($model->errors);
     }
@@ -154,10 +150,10 @@ class IndexController extends \bricksasp\base\FrontendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         @OA\Property(description="手机号",property="phone",type="string",example="18782908511",),
-     *         @OA\Property(description="验证码",property="vcode",type="string"),
-     *         @OA\Property(description="操作类型 默认为空 修改手机号: CHANGE_PHONE",property="dotype",type="string"),
-     *         required={"phone", "vcode"}
+     *         @OA\Property(property="phone",type="string",description="手机号", example="18782908511",),
+     *         @OA\Property(property="type",type="integer",description="1通用验证码2登录验证码3注册验证码",example=1),
+     *         @OA\Property(property="vcode",type="string",description="验证码"),
+     *         required={"phone", "vcode", "type"}
      *       )
      *     )
      *   ),
@@ -178,11 +174,7 @@ class IndexController extends \bricksasp\base\FrontendController
      public function actionCheckVcode()
      {
         $model = new Sms();
-        if ($model->verificationCode(Yii::$app->request->post('phone'),Yii::$app->request->post('vcode'))) {
-            if (Yii::$app->request->post('dotype') == 'CHANGE_PHONE') {
-                $key = ['CHANGE_PHONE',Yii::$app->request->post('phone')];
-                Yii::$app->cache->set($key, 1, Sms::SMS_DURATION);
-            }
+        if ($model->checkVcode(Yii::$app->request->post('phone'),Yii::$app->request->post('vcode'),Yii::$app->request->post('type',Sms::TYPE_VCODE_PATTERN),$this->current_user_id)) {
             return $this->success();
         }
         return $this->fail($model->errors);

@@ -1,5 +1,5 @@
 <?php
-namespace bricksasp\models\platform;
+namespace bricksasp\models\sms;
 
 use Yii;
 use bricksasp\base\Tools;
