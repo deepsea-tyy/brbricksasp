@@ -77,13 +77,13 @@ class PostageTemplateController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       
-     *       @OA\Schema(ref="#/components/schemas/postageTemplateUpdate"),
+     *       @OA\Schema(ref="#/components/schemas/postageTemplateView"),
      *     ),
      *   ),
      * )
      *
      * @OA\Schema(
-     *   schema="/postageTemplateView",
+     *   schema="postageTemplateView",
      *   description="运费模板数据详情",
      *   allOf={
      *     @OA\Schema(

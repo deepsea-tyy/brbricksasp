@@ -73,13 +73,13 @@ class ShoppingCartController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       
-     *       @OA\Schema(ref="#/components/schemas/ShoppingCartUpdate"),
+     *       @OA\Schema(ref="#/components/schemas/ShoppingCartView"),
      *     ),
      *   ),
      * )
      *
      * @OA\Schema(
-     *   schema="/ShoppingCartView",
+     *   schema="ShoppingCartView",
      *   description="购物车数据详情",
      *   allOf={
      *     @OA\Schema(ref="#/components/schemas/ShoppingCartUpdate"),

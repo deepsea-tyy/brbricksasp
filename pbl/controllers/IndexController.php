@@ -1,0 +1,323 @@
+<?php
+
+namespace bricksasp\pbl\controllers;
+
+use Yii;
+use bricksasp\models\Sms;
+use bricksasp\base\Tools;
+use bricksasp\rbac\models\User;
+use bricksasp\models\redis\Token;
+use bricksasp\models\SearchKeywords;
+use bricksasp\rbac\models\form\Login;
+use bricksasp\models\LogisticsCompany;
+use bricksasp\models\IndustryCategory;
+
+class IndexController extends \bricksasp\base\FrontendController
+{
+    /**
+     * @OA\Post(
+     *   path="/pbl/index/fileupload",
+     *   summary="文件上传",
+     *   description="更新图片时，带上原图片地址 oldFile",
+     *   tags={"pbl模块"},
+     *   operationId="",
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\MediaType(
+     *       mediaType="multipart/form-data",
+     *       @OA\Schema(
+     *         @OA\Property(description="文件 小于2M",property="file",type="file"),
+     *         @OA\Property(description="原有文件地址，更新文件时使用",property="oldFile",type="string"),
+     *         required={"file"}
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="文件结构",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         @OA\Property(description="文件访问地址",property="file_url",type="string"),
+     *       ),
+     *     ),
+     *   ),
+     * )
+     * */
+    public function actions()
+    {
+      return [
+        'fileupload' => [
+          'class' => \bricksasp\base\FileAction::className(),
+        ],
+        'fileuploads' => [
+          'class' => \bricksasp\base\FileAction::className(),
+      ]
+      ];
+    }
+
+	/**
+	 * 免登录访问
+	 * @return array
+	 */
+	public function noLoginAction() {
+		return [
+			'sms-vcode',
+			'fileupload',
+			'fileuploads',
+            'check-vcode',
+            'get-industry-category',
+            'hot-keywords',
+            'get-logistics',
+            'config',
+		];
+	}
+
+    public function checkLoginAction() {
+        return [
+            'fileupload',
+            'fileuploads',
+        ];
+    }
+
+    /**
+	 * @OA\Post(path="/pbl/index/sms-vcode",
+	 *   summary="发送短信验证码",
+	 *   tags={"pbl模块"},
+	 *   @OA\RequestBody(
+	 *     @OA\MediaType(
+     *       mediaType="application/json",
+	 *       @OA\Schema(
+	 *         @OA\Property(
+	 *           description="手机号码",
+	 *           property="mobile",
+	 *           type="integer",
+	 *           example=18782908511
+	 *         ),
+     *         required={"mobile"},
+	 *       )
+	 *     )
+	 *   ),
+	 *   @OA\Response(
+	 *     response=200,
+	 *     description="sms",
+	 *     @OA\MediaType(
+	 *       mediaType="application/json",
+	 *       @OA\Schema(ref="#/components/schemas/response"),
+	 *     ),
+	 *   ),
+	 * )
+	 *
+	 */
+    public function actionSmsVcode()
+    {
+    	$model = new Sms();
+    	$code = rand(10000,99999) . '';
+    	$res = $model->sendsms(Yii::$app->request->post('mobile'), $code, Sms::TYPE_VCODE,$this->current_owner_id);
+    	if ($res) {
+    		return $this->success(Yii::t('messages',980006), $res ?? $code);
+    	}
+    	return $this->fail($model->errors);
+    }
+
+    /**
+     * @OA\Get(path="/pbl/index/config",
+     *   summary="网站基础配置",
+     *   tags={"pbl模块"},
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="sms",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
+     *
+     */
+    public function actionConfig()
+    {
+        return $this->success([
+            'file_domain' => Yii::$app->request->hostInfo,
+        ]);
+    }
+
+    /**
+     * 
+     * @OA\Post(path="/pbl/index/check-vcode",
+     *   summary="短信验证码验证",
+     *   tags={"pbl模块"},
+     *   
+     *   @OA\RequestBody(
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         @OA\Property(description="手机号",property="phone",type="string",example="18782908511",),
+     *         @OA\Property(description="验证码",property="vcode",type="string"),
+     *         @OA\Property(description="操作类型 默认为空 修改手机号: CHANGE_PHONE",property="dotype",type="string"),
+     *         required={"phone", "vcode"}
+     *       )
+     *     )
+     *   ),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="响应结构",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(
+     *           ref="#/components/schemas/response",
+     *         ),
+     *       )
+     *     ),
+     *   ),
+     * )
+     */
+     public function actionCheckVcode()
+     {
+        $model = new Sms();
+        if ($model->verificationCode(Yii::$app->request->post('phone'),Yii::$app->request->post('vcode'))) {
+            if (Yii::$app->request->post('dotype') == 'CHANGE_PHONE') {
+                $key = ['CHANGE_PHONE',Yii::$app->request->post('phone')];
+                Yii::$app->cache->set($key, 1, Sms::SMS_DURATION);
+            }
+            return $this->success();
+        }
+        return $this->fail($model->errors);
+     }
+
+
+
+    /**
+     * @OA\Get(path="/pbl/index/get-industry-category",
+     *   summary="经济行业分类",
+     *   tags={"pbl模块"},
+     *   @OA\Parameter(description="id",name="id",in="query",@OA\Schema(type="string")),
+     *
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/pagination"),
+     *     ),
+     *   ),
+     * )
+     *
+     */
+     public function actionGetIndustryCategory(){
+
+         $id = Yii::$app->request->get('id');
+         if($id){
+             $one = IndustryCategory::findOne(['id'=>$id]);
+             $condition['parent_id'] = $one['industry_id'];
+         }else{
+             $condition['level_type'] = 0;
+         }
+         $data = IndustryCategory::find()->Where($condition)->asArray()->all()
+         ;
+         if($data){
+             return $this->success($data);
+         }
+        return $this->fail('获取数据失败');
+     }
+
+
+    /**
+     * @OA\Get(path="/pbl/index/hot-keywords",
+     *   summary="热搜词汇",
+     *   tags={"pbl模块"},
+     *   @OA\Parameter(name="type",in="query",@OA\Schema(type="string"),description="1商品2文章"),
+     *   @OA\Response(
+     *     response=200,
+     *     description="参数列表",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response")
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionHotKeywords()
+    {
+        $models = SearchKeywords::find()->select(['keywords'])->where(['type'=>Yii::$app->request->get('type',1),'owner_id'=>$this->current_owner_id])->limit(10)->all();
+        return $this->success($models);
+    }
+
+
+    /**
+     * @OA\Get(path="/pbl/index/get-logistics",
+     *   summary="获取快递公司",
+     *   tags={"pbl模块"},
+     *   @OA\Response(
+     *     response=200,
+     *     description="参数列表",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response")
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionGetLogistics(){
+        $logisticsCompany = Yii::$app->redis->get('logistics_company');
+        if(!$logisticsCompany){
+            $logisticsCompany = LogisticsCompany::find()->asArray()->all();
+            if(!$logisticsCompany){
+                return $this->fail('为获取到数据');
+            }
+            Yii::$app->redis->set('logistics_company',json_encode($logisticsCompany,JSON_UNESCAPED_UNICODE));
+        }
+        return $this->success(json_decode($logisticsCompany,true));
+    }
+
+    /**
+     *
+     * @return array
+     */
+    public function actionGetInfo(){
+        $authHeader = $this->request->getHeaders()->get('X-Token');
+        $info = Token::find($authHeader);
+        if(!isset($info['user_id'])){
+            return $this->fail('无效token');
+        }
+        return $this->success($info);
+    }
+
+    /**
+     * Login
+     * @OA\Post(path="/site/login",
+     *   summary="前台用户统一登录接口",
+     *   tags={"pbl模块"},
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\MediaType(
+     *       mediaType="multipart/form-data",
+     *       @OA\Schema(
+     *         @OA\Property(description="用户名",property="username",type="string",default="bricksasp"),
+     *         @OA\Property(description="密码",property="password",type="string",default="111111")
+     *       )
+     *     )
+     *   ),
+     *   @OA\Response(
+     *     response=200,
+     *     description="响应结构",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response")
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionLogin()
+    {
+        $model = new Login();
+        if ($model->load(Yii::$app->request->post(), '') && $model->login()) {
+            $token = User::generateApiToken(Yii::$app->getUser()->id, 1);
+            return $token == false ? $this->fail(Yii::t('messages',50002), 50002) : $this->success(['token' => $token]);
+        };
+        return $this->fail($model->errors);
+    }
+}

@@ -78,13 +78,13 @@ class StoreController extends BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       
-     *       @OA\Schema(ref="#/components/schemas/StoreUpdate"),
+     *       @OA\Schema(ref="#/components/schemas/StoreView"),
      *     ),
      *   ),
      * )
      *
      * @OA\Schema(
-     *   schema="/StoreView",
+     *   schema="StoreView",
      *   description="商铺数据详情",
      *   allOf={
      *     @OA\Schema(

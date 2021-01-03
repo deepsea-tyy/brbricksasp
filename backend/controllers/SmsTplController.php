@@ -22,6 +22,7 @@ class SmsTplController extends BackendController
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
      *   @OA\Parameter(name="is_delete",in="query",@OA\Schema(type="integer"),description="1软删除"),
+     *   @OA\Parameter(name="platform",in="query",@OA\Schema(type="integer"),description="1腾讯2阿里"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -38,6 +39,8 @@ class SmsTplController extends BackendController
         $params = Yii::$app->request->get();
         $query = SmsTpl::find();
         $query->andFilterWhere($this->ownerCondition());
+        $query->andFilterWhere(['platform'=>$params['platform']??1]);
+        $query->andFilterWhere(['is_delete'=>$params['is_delete']??0]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -58,7 +61,7 @@ class SmsTplController extends BackendController
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   
-     *       @OA\Property(property="platform", type="integer", description="platform"),
+     *   @OA\Property(property="platform", type="integer", description="platform"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -73,7 +76,7 @@ class SmsTplController extends BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(['platform'=>$params['platform'] ?? 0]));
+        $model = $this->findModel($this->updateCondition(['id'=>$params['id']??0]));
         return $this->success($model);
     }
 
@@ -106,11 +109,11 @@ class SmsTplController extends BackendController
      *   schema="SmsTplCreate",
      *   description="短信模板",
      *   @OA\Property(property="code", type="string", description="模版标识"),
-     *   @OA\Property(property="content", type="string", description="模版内容"),
-     *   @OA\Property(property="platform", type="integer", description="1腾讯2阿里"),
-     *   @OA\Property(property="sign", type="integer", description="签名"),
+     *   @OA\Property(property="platform", type="integer", description="1腾讯2阿里",example=1),
+     *   @OA\Property(property="appid", type="string", description="appid"),
+     *   @OA\Property(property="sign", type="string", description="签名"),
      *   @OA\Property(property="tpl_id", type="integer", description="平台模版id号"),
-     *   @OA\Property(property="appid", type="integer", description="appid"),
+     *   @OA\Property(property="content", type="string", description="模版内容"),
      * )
      */
     public function actionCreate()
@@ -156,7 +159,7 @@ class SmsTplController extends BackendController
      *   description="短信模板数据",
      *   allOf={
      *     @OA\Schema(
-     *       @OA\Property(property="platform", type="integer", description="platform"),
+     *       @OA\Property(property="id", type="integer", description="id"),
      *     ),
      *     @OA\Schema(ref="#/components/schemas/SmsTplCreate"),
      *   }
@@ -165,7 +168,7 @@ class SmsTplController extends BackendController
     public function actionUpdate()
     {
         $params = $this->queryMapPost();
-        $model = $this->findModel($this->updateCondition(['platform'=>$params['platform'] ?? 0]));
+        $model = $this->findModel($this->updateCondition(['id'=>$params['id']??0]));
 
         if ($model->saveData($params)) {
             return $this->success();
@@ -203,6 +206,9 @@ class SmsTplController extends BackendController
     public function actionDelete()
     {
         $params = $this->queryMapPost();
+        if (SmsTpl::updateAll(['is_delete'=>1],$this->updateCondition(['id'=>$params['ids']??0, 'is_delete'=>0]))) {
+            return $this->success();
+        }
         return SmsTpl::deleteAll($this->updateCondition(['id'=>$params['ids']??0])) ? $this->success() : Tools::breakOff(40001);
     }
 
@@ -219,5 +225,27 @@ class SmsTplController extends BackendController
             return $model;
         }
         Tools::breakOff(40001);
+    }
+
+    /**
+     * @OA\Get(path="/backend/sms-tpl/sys",
+     *   summary="系统短信模板",
+     *   tags={"backend模块"},
+     *   
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(ref="#/components/schemas/SmsTplUpdate"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionSys()
+    {
+        return $this->success(SmsTpl::$defaultCode);
     }
 }

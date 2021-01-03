@@ -13,6 +13,7 @@ use Yii;
  * @property string|null $secret_id
  * @property string|null $secret_key
  * @property int|null $platform
+ * @property int|null $status 1启用
  * @property int|null $created_at
  * @property int|null $updated_at
  */
@@ -26,6 +27,13 @@ class SmsSetting extends \bricksasp\base\BaseActiveRecord
         return '{{%sms_setting}}';
     }
 
+    public function behaviors()
+    {
+        return [
+            \yii\behaviors\TimestampBehavior::className(),
+        ];
+    }
+
     /**
      * {@inheritdoc}
      */
@@ -33,9 +41,9 @@ class SmsSetting extends \bricksasp\base\BaseActiveRecord
     {
         return [
             ['platform', 'required'],
-            [['owner_id', 'user_id', 'platform', 'created_at', 'updated_at'], 'integer'],
+            [['owner_id', 'user_id', 'platform', 'status', 'created_at', 'updated_at'], 'integer'],
             [['secret_id', 'secret_key'], 'string', 'max' => 64],
-            ['platform', 'in', 'range'=> [1,2]],
+            ['platform', 'in', 'range'=> [1,2],],
         ];
     }
 

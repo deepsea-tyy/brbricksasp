@@ -21,7 +21,6 @@ class SmsSettingController extends BackendController
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
-     *   @OA\Parameter(name="is_delete",in="query",@OA\Schema(type="integer"),description="1软删除"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -73,7 +72,7 @@ class SmsSettingController extends BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(['platform'=>$params['platform'] ?? 0]));
+        $model = $this->findModel($this->updateCondition(['platform'=>$params['platform'] ?? ['id'=>$params['id']??0]]));
         return $this->success($model);
     }
 
@@ -108,6 +107,7 @@ class SmsSettingController extends BackendController
      *   @OA\Property(property="secret_id", type="string", description="secret_id"),
      *   @OA\Property(property="secret_key", type="string", description="secret_key"),
      *   @OA\Property(property="platform", type="integer", description="1腾讯2阿里"),
+     *   @OA\Property(property="status", type="integer", description="1启用"),
      * )
      */
     public function actionCreate()
@@ -162,7 +162,7 @@ class SmsSettingController extends BackendController
     public function actionUpdate()
     {
         $params = $this->queryMapPost();
-        $model = $this->findModel($this->updateCondition(['platform'=>$params['platform'] ?? 0]));
+        $model = $this->findModel($this->updateCondition(['platform'=>$params['platform'] ?? ['id'=>$params['id']??0]]));
 
         if ($model->saveData($params)) {
             return $this->success();
