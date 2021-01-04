@@ -45,7 +45,7 @@ class CallbackController extends BaseController
 		$config = $pay->config();
 		$wechat = \WeChat\Pay::instance($config);
 
-	    // if (isset($data['sign']) && $wechat->getPaySign($data) === $data['sign'] && $data['return_code'] === 'SUCCESS' && $data['result_code'] === 'SUCCESS') {
+	    if (isset($data['sign']) && $wechat->getPaySign($data) === $data['sign'] && $data['return_code'] === 'SUCCESS' && $data['result_code'] === 'SUCCESS') {
 	        $model = OrderPay::find()->where(['id' => $data['out_trade_no']])->one();
 	        if (!$model || $model->status == OrderPay::STATUS_SUCCESS) {
 				return $this->asXml(['return_code' => 'FAIL', 'return_msg' => $model ? '已处理' : '支付单号无效']);
@@ -64,7 +64,7 @@ class CallbackController extends BaseController
 			} catch (Exception $e) {
                 $transaction->rollBack();
 			}
-	    // }
+	    }
 
 		return $this->asXml(['return_code' => 'FAIL', 'return_msg' => '签名无效']);
 	}

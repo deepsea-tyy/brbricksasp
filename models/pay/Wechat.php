@@ -22,6 +22,7 @@ class Wechat extends BaseObject implements PayInterface
     public $ip;
     public $scene;
     public $body;
+    public $app_type;
 
     public function config()
     {
@@ -38,6 +39,7 @@ class Wechat extends BaseObject implements PayInterface
 
         $paySet = json_decode($paySet->config,true);
 
+        $this->app_type = $app->type;
         return [
             'appid'          => $app->appid,
             'appsecret'      => $app->app_secret,
@@ -48,7 +50,7 @@ class Wechat extends BaseObject implements PayInterface
             'ssl_key'        => $payConf['ssl_key'],
             'ssl_cer'        => $payConf['ssl_cer'],
             'notify_url'     => $payConf['notify_url'],
-            'redirect_url'     => $payConf['redirect_url'],
+            'redirect_url'   => $payConf['redirect_url'],
             // 缓存目录配置（可选，需拥有读写权限）
             'cache_path'     => Yii::getAlias('@runtime') . '/cache/wx',
         ];

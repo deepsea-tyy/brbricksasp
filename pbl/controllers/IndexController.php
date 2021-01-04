@@ -280,7 +280,7 @@ class IndexController extends \bricksasp\base\FrontendController
 
     /**
      * Login
-     * @OA\Post(path="/site/login",
+     * @OA\Post(path="/pbl/index/login",
      *   summary="前台用户统一登录接口",
      *   tags={"pbl模块"},
      *   @OA\RequestBody(

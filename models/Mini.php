@@ -37,6 +37,7 @@ class Mini extends \bricksasp\base\BaseActiveRecord
 
     const TYPE_WX_MINI = 1; // 微信1小程序2服务号3订阅号
     const TYPE_WX_OFFICIAL = 2;
+    const TYPE_WX_SUBSCRIBE = 3;
 
     /**
      * {@inheritdoc}

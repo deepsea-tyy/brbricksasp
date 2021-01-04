@@ -50,7 +50,7 @@ class LoginController extends FrontendController
 		$res = $model->session(Yii::$app->request->get('code')??Tools::breakOff('code必填'));
         $scene = Yii::$app->request->get('scene',Mini::SCENE_WX_DEFAULT);
 
-		$user = UserInfo::find()->where(['scene'=>$sence, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
+		$user = UserInfo::find()->where(['scene'=>$sence, 'owner_id'=>$this->current_owner_id, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
         $is_new_user = 0;
 		if (!$user) {
             $is_new_user=1;
@@ -101,7 +101,7 @@ class LoginController extends FrontendController
         $res = $model->userInfo($params['code']??Tools::breakOff('code必填'), $params['iv']??Tools::breakOff('iv必填'), $params['encryptedData']??Tools::breakOff('encryptedData必填'));
         $scene = Yii::$app->request->get('scene',Mini::SCENE_WX_DEFAULT);
 
-        $user = UserInfo::find()->where(['scene'=>$sence, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
+        $user = UserInfo::find()->where(['scene'=>$sence, 'owner_id'=>$this->current_owner_id, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
         $is_new_user = 0;
         if (!$user) {
             $is_new_user=1;
