@@ -131,8 +131,7 @@ class Store extends \bricksasp\base\BaseActiveRecord
                 Company::deleteAll(['owner_id'=>$this->owner_id]);
                 $data['companyItem']['owner_id'] = $this->owner_id;
                 $cmodel = new Company();
-                $cmodel->load($data['companyItem']);
-                if (!$cmodel->save()) {
+                if (!$cmodel->saveData($data['companyItem'])) {
                     $this->setErrors($cmodel->errors);
                     $transaction->rollBack();
                     return false;

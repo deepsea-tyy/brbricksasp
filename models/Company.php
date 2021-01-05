@@ -108,6 +108,9 @@ class Company extends \bricksasp\base\BaseActiveRecord
 
     public function saveData($data)
     {
+        if (!$this->checkArray($data,['gps'])) {
+            return false;
+        }
         $this->load($this->formatData($data));
         return $this->save();
     }

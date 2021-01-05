@@ -156,6 +156,10 @@ class Setting extends \bricksasp\base\BaseActiveRecord
             'title' => '站长邮箱',
             'val' => '',
         ],
+        'WEB_FILE_DOMAIN' =>[
+            'title' => '文件访问域名',
+            'val' => '',
+        ],
         
         'COPYRIGHT_ON' =>[
             'title' => '开启版权',
@@ -176,10 +180,6 @@ class Setting extends \bricksasp\base\BaseActiveRecord
         'UPDATE_TIME' =>[
             'title' => '更新时间',
             'val' => '2020-11-09',
-        ],
-        'FILE_DOMAIN_URL' =>[
-            'title' => '文件访问域名',
-            'val' => '',
         ],
 
         'RUNERRANDS_WEATHER_ON' =>[
@@ -216,7 +216,7 @@ class Setting extends \bricksasp\base\BaseActiveRecord
                 $defaultSettings[$key] = $value;
             }
         }
-        $res = static::find()->andWhere(['and', ['owner_id' => $owner_id], "`key` like '{$keyPrefix}%'"])->all();
+        $res = static::find()->cache(600)->andWhere(['and', ['owner_id' => $owner_id], "`key` like '{$keyPrefix}%'"])->all();
         if ($res) {
             foreach ($res as $v) {
                 if (strpos($v->val, '[') !== false) {

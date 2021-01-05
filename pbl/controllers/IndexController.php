@@ -11,6 +11,7 @@ use bricksasp\models\SearchKeywords;
 use bricksasp\rbac\models\form\Login;
 use bricksasp\models\LogisticsCompany;
 use bricksasp\models\IndustryCategory;
+use bricksasp\models\Setting;
 
 class IndexController extends \bricksasp\base\FrontendController
 {
@@ -135,9 +136,7 @@ class IndexController extends \bricksasp\base\FrontendController
      */
     public function actionConfig()
     {
-        return $this->success([
-            'file_domain' => Yii::$app->request->hostInfo,
-        ]);
+        return $this->success(Setting::getSetting($this->current_owner_id, 'WEB_'));
     }
 
     /**

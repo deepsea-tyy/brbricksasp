@@ -116,16 +116,15 @@ class Order extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['id', 'owner_id', 'user_id', 'pay_status', 'pay_at', 'seller_id', 'complete', 'complete_at', 'confirm', 'confirm_at', 'store_id', 'ship_status', 'ship_id', 'ship_area_id', 'tax_type', 'type', 'point', 'source', 'status', 'is_comment', 'is_delete', 'receiver', 'receiver_at', 'created_at', 'updated_at'], 'integer'],
+            [['id', 'owner_id', 'user_id', 'parent_id', 'pay_status', 'pay_at', 'seller_id', 'complete', 'complete_at', 'confirm', 'confirm_at', 'store_id', 'ship_status', 'ship_id', 'ship_area_id', 'tax_type', 'type', 'point', 'source', 'status', 'is_comment', 'is_delete', 'receiver', 'receiver_at', 'created_at', 'updated_at'], 'integer'],
             [['total_price', 'pay_price', 'payed_price', 'logistics_price', 'total_weight', 'total_volume', 'point_money', 'order_pmt'], 'number'],
             [['pay_platform'], 'string', 'max' => 8],
             [['logistics_name'], 'string', 'max' => 32],
             [['logistics_id'], 'string', 'max' => 30],
-            [['ship_address'], 'string', 'max' => 200],
-            [['ship_name', 'tax_title'], 'string', 'max' => 50],
-            [['ship_phone', 'lat', 'lon'], 'string', 'max' => 16],
+            [['ship_address'], 'string', 'max' => 128],
+            [['ship_name', 'ship_phone', 'lat', 'lon'], 'string', 'max' => 16],
             [['tax_content', 'promotion_info', 'coupon', 'memo', 'mark'], 'string', 'max' => 255],
-            [['tax_code', 'ip'], 'string', 'max' => 64],
+            [['tax_code', 'tax_title', 'ip'], 'string', 'max' => 64],
             [['id'], 'unique'],
 
 
@@ -311,8 +310,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
                 $item['pay_price']  = $v->price;
             }
             $item['user_id']   = $data['user_id'];
-            $item['owner_id']   = $data['owner_id'];
-            $item['goods_id']   = $v->goods->id;
+            $item['owner_id']   = $v->goods->owner_id;
             $item['goods_id']   = $v->goods->id;
             $item['product_id'] = $v->id;
             $item['name']       = $v->name;
@@ -325,6 +323,10 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $item['num']        = $nums[$v->id];
             $item['weight']     = $v->weight * $nums[$v->id];
             $item['volume']     = $v->volume * $nums[$v->id];
+            $item['ship_area_id']= $data['ship_area_id']??'';
+            $item['ship_address']= $data['ship_address']??'';
+            $item['ship_name']   = $data['ship_name']??'';
+            $item['ship_phone']  = $data['ship_phone']??'';
             $item['created_at'] = $t;
             $item['updated_at'] = $t;
             $orderItems[$v->id] = $item;
