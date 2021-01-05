@@ -18,7 +18,7 @@ class OrderController extends BackendController
 {
     /**
      * @OA\Get(path="/shop/order/index",
-     *   summary="订单列表",
+     *   summary="商铺订单列表",
      *   tags={"shop模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
@@ -69,7 +69,7 @@ class OrderController extends BackendController
 
     /**
      * @OA\Get(path="/shop/order/view",
-     *   summary="订单详情",
+     *   summary="商铺订单详情",
      *   tags={"shop模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   @OA\Parameter(name="id",in="query",required=true,@OA\Schema(type="integer"),description="订单id"),
@@ -89,47 +89,45 @@ class OrderController extends BackendController
      * 
      * @OA\Schema(
      *   schema="OrderItemView",
-     *   title="订单详情数据结构",
-     *   allOf={
-     *     @OA\Schema(
-     *       @OA\Property(property="id",type="integer",description="id"),
-     *       @OA\Property(property="order_id",type="integer",description="订单id"),
-     *       @OA\Property(property="goods_id",type="integer",description="商品id"),
-     *       @OA\Property(property="product_id",type="integer",description="单品id"),
-     *       @OA\Property(property="name",type="string",description="商品名称"),
-     *       @OA\Property(property="barcode",type="string",description="商品条码"),
-     *       @OA\Property(property="brief",type="string",description="商品简介"),
-     *       @OA\Property(property="price",type="number",description="售价"),
-     *       @OA\Property(property="costprice",type="number",description="单品成本价单价"),
-     *       @OA\Property(property="mktprice",type="number",description="单品市场价"),
-     *       @OA\Property(property="image_id",type="string",description="图片id"),
-     *       @OA\Property(property="num",type="number",description="数量"),
-     *       @OA\Property(property="pay_price",type="number",description="支付总金额"),
-     *       @OA\Property(property="pmt_price",type="number",description="优惠总金额"),
-     *       @OA\Property(property="weight",type="string",description="总重量"),
-     *       @OA\Property(property="volume",type="string",description="总体积"),
-     *       @OA\Property(property="delivery_num",type="number",description="交货数量"),
-     *       @OA\Property(property="ship_area_id",type="number",description="收货地区ID"),
-     *       @OA\Property(property="ship_address",type="number",description="收货详细地址"),
-     *       @OA\Property(property="ship_name",type="number",description="收货人姓名"),
-     *       @OA\Property(property="ship_phone",type="number",description="收货电话"),
-     *       @OA\Property(property="logistics_name",type="number",description="配送方式名称"),
-     *       @OA\Property(property="logistics_id",type="number",description="物流号"),
-     *       @OA\Property(property="is_comment",type="integer",description="1已评论"),
-     *       @OA\Property(property="comment_at",type="integer",description="评论时间"),
-     *       @OA\Property(property="is_receive",type="integer",description="1已收货"),
-     *       @OA\Property(property="receive_at",type="integer",description="时间"),
-     *       @OA\Property(property="is_exchange",type="integer",description="1已换货"),
-     *       @OA\Property(property="exchange_at",type="integer",description="时间"),
-     *       @OA\Property(property="is_return",type="integer",description="1已退货"),
-     *       @OA\Property(property="return_at",type="integer",description="时间"),
-     *       @OA\Property(property="order",type="object",description="",
-     *         @OA\Property(property="status",type="integer",description="1正常2完成3取消4删除"),
-     *         @OA\Property(property="lat",type="string",description=""),
-     *         @OA\Property(property="lon",type="string",description=""),
-     *       ),
-     *     )
-     *   }
+     *   title="商铺订单详情数据结构",
+     *   @OA\Property(property="id",type="integer",description="id"),
+     *   @OA\Property(property="order_id",type="integer",description="订单id"),
+     *   @OA\Property(property="goods_id",type="integer",description="商品id"),
+     *   @OA\Property(property="product_id",type="integer",description="单品id"),
+     *   @OA\Property(property="name",type="string",description="商品名称"),
+     *   @OA\Property(property="barcode",type="string",description="商品条码"),
+     *   @OA\Property(property="brief",type="string",description="商品简介"),
+     *   @OA\Property(property="price",type="number",description="售价"),
+     *   @OA\Property(property="costprice",type="number",description="单品成本价单价"),
+     *   @OA\Property(property="mktprice",type="number",description="单品市场价"),
+     *   @OA\Property(property="image_id",type="string",description="图片id"),
+     *   @OA\Property(property="num",type="number",description="数量"),
+     *   @OA\Property(property="pay_price",type="number",description="支付总金额"),
+     *   @OA\Property(property="pmt_price",type="number",description="优惠总金额"),
+     *   @OA\Property(property="weight",type="string",description="总重量"),
+     *   @OA\Property(property="volume",type="string",description="总体积"),
+     *   @OA\Property(property="delivery_num",type="number",description="交货数量"),
+     *   @OA\Property(property="ship_area_id",type="number",description="收货地区ID"),
+     *   @OA\Property(property="ship_address",type="number",description="收货详细地址"),
+     *   @OA\Property(property="ship_name",type="number",description="收货人姓名"),
+     *   @OA\Property(property="ship_phone",type="number",description="收货电话"),
+     *   @OA\Property(property="logistics_name",type="number",description="配送方式名称"),
+     *   @OA\Property(property="logistics_id",type="number",description="物流号"),
+     *   @OA\Property(property="is_comment",type="integer",description="1已评论"),
+     *   @OA\Property(property="comment_at",type="integer",description="评论时间"),
+     *   @OA\Property(property="is_receive",type="integer",description="1已收货"),
+     *   @OA\Property(property="receive_at",type="integer",description="时间"),
+     *   @OA\Property(property="is_exchange",type="integer",description="1已换货"),
+     *   @OA\Property(property="exchange_at",type="integer",description="时间"),
+     *   @OA\Property(property="is_return",type="integer",description="1已退货"),
+     *   @OA\Property(property="return_at",type="integer",description="时间"),
+     *   @OA\Property(property="confirm",type="integer",description="确单状态1确认"),
+     *   @OA\Property(property="confirm_at",type="integer",description="确认时间"),
+     *   @OA\Property(property="order",type="object",description="",
+     *     @OA\Property(property="status",type="integer",description="1正常2完成3取消4删除"),
+     *     @OA\Property(property="lat",type="string",description=""),
+     *     @OA\Property(property="lon",type="string",description=""),
+     *   ),
      * )
      */
 	public function actionView() {
@@ -143,7 +141,7 @@ class OrderController extends BackendController
 
     /**
      * @OA\Post(path="/shop/order/update",
-     *   summary="修改订单",
+     *   summary="修改商铺订单",
      *   tags={"shop模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   
@@ -169,21 +167,13 @@ class OrderController extends BackendController
      * 
      * @OA\Schema(
      *   schema="OrderItemUpdate",
-     *   description="订单数据",
+     *   description="商铺订单数据",
      *   @OA\Property(property="id", type="integer", description="id"),
-     *   @OA\Property(property="ship_id",type="integer",description="用户选择收货地址id",),
      *   @OA\Property(property="ship_area_id",type="integer",description="收货地区ID"),
      *   @OA\Property(property="ship_address",type="string",description="收货详细地址"),
      *   @OA\Property(property="ship_name",type="string",description="收货人姓名"),
      *   @OA\Property(property="ship_phone",type="string",description="收货电话"),
-     *   @OA\Property(property="status",type="integer",description="1正常2完成3取消4删除"),
-     *   @OA\Property(property="memo",type="string",description="买家备注"),
-     *   @OA\Property(property="complete",type="integer",description="确单状态0未确认收货1确认收货"),
-     *   @OA\Property(property="complete_at",type="integer",description="确认收货时间"),
-     *   @OA\Property(property="confirm",type="integer",description="确单状态0未确认确单1确认确单"),
-     *   @OA\Property(property="confirm_at",type="integer",description="确认确单时间"),
-     *   @OA\Property(property="pay_price", type="number", description="支付价格"),
-     *   @OA\Property(property="pay_status", type="integer", description="支付状态1未付款2已付款3部分付款4部分退款5已退款" ),
+     *   @OA\Property(property="confirm",type="integer",description="确单状态1确认"),
      * )
      */
     public function actionUpdate()
@@ -191,27 +181,10 @@ class OrderController extends BackendController
         $params = $this->queryMapPost();
         $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
 
-        $upField = ['ship_area_id','ship_address','ship_name','ship_phone','status','memo','complete','complete_at','confirm','confirm_at'];
-        if ($this->current_login_type == Token::TOKEN_TYPE_BACKEND) {
-            array_push($upField,'pay_price','pay_status');
-        }
+        $upField = ['ship_area_id','ship_address','ship_name','ship_phone','confirm','confirm_at'];
 
-        if (!empty($params['ship_id'])) {
-            $shipAdr = ShipAddress::find()->where(['user_id'=>$this->current_user_id, 'id'=>$params['ship_id']])->one();
-            if (empty($shipAdr)) {
-                Tools::breakOff('收货地址无效');
-            }
-
-            $params['ship_area_id'] = $shipAdr->area_id;
-            $params['ship_address'] = $shipAdr->address;
-            $params['ship_name'] = $shipAdr->name;
-            $params['ship_phone'] = $shipAdr->phone;
-        }
         if (!empty($params['confirm'])) {
             $params['confirm_at'] = time();
-        }
-        if (!empty($params['complete'])) {
-            $params['complete_at'] = time();
         }
         
         if ($model->load($params) && $model->save(true,$upField)) {
@@ -224,7 +197,7 @@ class OrderController extends BackendController
     /**
      *
      * @OA\Post(path="/shop/order/delete",
-     *   summary="删除订单",
+     *   summary="删除商铺订单",
      *   tags={"shop模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   
