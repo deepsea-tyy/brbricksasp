@@ -38,6 +38,15 @@ class SysTplMsgController extends BackendController
      */
     public function actionIndex()
     {
+        // $res = SysTplMsg::send($this->current_owner_id,$this->current_user_id,[
+        //     ['value' => '16055922642064'],
+        //     ['value' => '2020年11月30日 18:36'],
+        //     ['value' => '8.00'],
+        //     ['value' => '微信支付'],
+        // ],9,SysTplMsg::PAY_SUCCESS);
+
+        //     print_r($res);exit();
+        // exit();
         $params = Yii::$app->request->get();
         $query = SysTplMsg::find();
         $query->andFilterWhere($this->ownerCondition());
@@ -82,13 +91,21 @@ class SysTplMsgController extends BackendController
      * @OA\Schema(
      *   schema="SysTplMsgCreate",
      *   description="系统模板消息",
-     *   @OA\Property(property="code", type="string", description="模版标识"),
+     *   @OA\Property(property="code", type="string", description="模板标识"),
      *   @OA\Property(property="wx_tpl_id", type="string", description="公众号模板id", example=""),
-     *   @OA\Property(property="wx_content", type="string", description="公众号模板内容"),
+     *   @OA\Property(property="wx_tpl_jump", type="object", description="模板消息跳转",
+     *     @OA\Property(property="url", type="string", description="公众号模板消息跳转H5页面链接", example=""),
+     *     @OA\Property(property="miniprogram", type="object", description="公众号模板消息跳转小程序",
+     *       @OA\Property(property="appid", type="string", description="公众号模板消息跳转小程序appid", example=""),
+     *       @OA\Property(property="path", type="string", description="公众号模板消息跳转小程序路径", example=""),
+     *     ),
+     *     @OA\Property(property="page", type="string", description="小程序模板消息跳转路径", example=""),
+     *   ),
+     *   @OA\Property(property="wx_content", type="string", description="公众号模板内容", example=""),
      *   @OA\Property(property="wx_mini_tpl_id", type="string", description="小程序模板id", example=""),
-     *   @OA\Property(property="wx_mini_content", type="string", description="小程序模板内容"),
+     *   @OA\Property(property="wx_mini_content", type="string", description="小程序模板内容", example=""),
      *   @OA\Property(property="scene", type="integer", description="1默认官方官网 2校园跑腿用户端 3校园跑腿骑手端 4其他"),
-     *   @OA\Property(property="status", type="integer", description="0关闭1小程序2公众号3全部"),
+     *   @OA\Property(property="status", type="integer", description="1小程序2公众号3全部4关闭"),
      *   @OA\Property(property="type", type="integer", description=""),
      * )
      */
@@ -98,7 +115,7 @@ class SysTplMsgController extends BackendController
         if (empty(SysTplMsg::$defaultCode[$params['code']]) || empty($params['scene'])) {
             return $this->fail('模板标识或场景无效');
         }
-        $model = SysTplMsg::find()->where(['code'=>$params['code'], 'scene'=>$params['scene'], 'owner_id'=>$this->current_owner_id])->one();
+        $model = SysTplMsg::find()->where(['code'=>$params['code'], 'owner_id'=>$this->current_owner_id])->one();
         if (!$model) {
             $model = new SysTplMsg();
         }
@@ -111,14 +128,20 @@ class SysTplMsgController extends BackendController
         ]);
         $config = $cm->config();
 
-        print_r($params);exit();
         if ($cm->app_type == Mini::TYPE_WX_MINI) { // 小程序
             $modelLitTpl = new Newtmpl($config);
             if ($model->wx_mini_tpl_id) {
                 $modelLitTpl->delTemplate($model->wx_mini_tpl_id);
             }
-            $data = $modelLitTpl->addTemplate(SysTplMsg::$defaultCode[$params['code']]['wx_mini_tpl_no'],SysTplMsg::$defaultCode[$params['code']]['wx_mini_tpl_kids'],SysTplMsg::$defaultCode[$params['code']]['wx_mini_tpl_scene']);
-            $params['wx_mini_content'] = $data['priTmplId'];
+            $data = $modelLitTpl->addTemplate(SysTplMsg::$defaultCode[$params['code']]['wx_mini_tpl_tid'],SysTplMsg::$defaultCode[$params['code']]['wx_mini_tpl_kids'],SysTplMsg::$defaultCode[$params['code']]['wx_mini_tpl_scene']);
+            $params['wx_mini_tpl_id'] = $data['priTmplId'];
+            $list = $modelLitTpl->getTemplateList();
+            foreach ($list['data'] as $tpl) {
+                if ($tpl['priTmplId'] == $params['wx_mini_tpl_id']) {
+                    $params['wx_mini_content'] = $tpl['content'];
+                    break;
+                }
+            }
         }
 
         if ($cm->app_type == Mini::TYPE_WX_OFFICIAL || $cm->app_type == Mini::TYPE_WX_SUBSCRIBE) { // 公众号
@@ -126,37 +149,24 @@ class SysTplMsgController extends BackendController
             if ($model->wx_tpl_id) {
                 $modelTpl->delPrivateTemplate($model->wx_tpl_id);
             }
-            // $data = $modelTpl->addTemplate(SysTplMsg::$defaultCode[$params['code']]['wx_mini_tpl_no']);
-            // $params['wx_tpl_id'] = $data['template_id'];
+
+            $data = $modelTpl->addTemplate(SysTplMsg::$defaultCode[$params['code']]['wx_tpl_tid']);
+            $params['wx_tpl_id'] = $data['template_id'];
+            $list = $modelTpl->getAllPrivateTemplate();
+            foreach ($list['template_list'] as $tpl) {
+                if ($tpl['template_id'] == $params['wx_tpl_id']) {
+                    $params['wx_content'] = $tpl['content'];
+                    break;
+                }
+            }
         }
 
         if ($data['errcode'] != 0) {
             return $this->fail($data);
         }
-
-
-        return $model->saveData($params) ? $this->success():$this->fail($model->errors);
-    }
-
-    /**
-     * @OA\Get(path="/backend/sys-tpl-msg/sys",
-     *   summary="系统系统模板消息",
-     *   tags={"backend模块"},
-     *   
-     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
-     *   
-     *   @OA\Response(
-     *     response=200,
-     *     description="返回数据",
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(ref="#/components/schemas/response"),
-     *     ),
-     *   ),
-     * )
-     */
-    public function actionSys()
-    {
-        return $this->success(SysTplMsg::$defaultCode);
+        if (is_array($params['wx_tpl_jump'])) {
+            $params['wx_tpl_jump'] = json_encode($params['wx_tpl_jump']);
+        }
+        return $model->saveData($params) ? $this->success($data):$this->fail($model->errors);
     }
 }

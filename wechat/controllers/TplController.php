@@ -73,7 +73,7 @@ class TplController extends \bricksasp\base\BackendController
         // return $this->success($a);
         $model = $this->getModel(Yii::$app->request->get('scene'));
     	$data = $model->getAllPrivateTemplate();
-        return $this->success($data);
+        return $this->success($data['template_list']);
     }
 
     /**

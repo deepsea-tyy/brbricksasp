@@ -4,6 +4,9 @@ namespace bricksasp\models;
 
 use Yii;
 use bricksasp\base\Tools;
+use bricksasp\models\pay\Wechat;
+use WeMini\Newtmpl;
+use WeChat\Template;
 
 /**
  * This is the model class for table "{{%sys_tpl_msg}}".
@@ -15,33 +18,45 @@ use bricksasp\base\Tools;
  * @property string|null $wx_content 公众号模板内容
  * @property string|null $wx_mini_tpl_id 小程序模版id
  * @property string|null $wx_mini_content 小程序模板内容
- * @property int|null $scene 1默认官方官网 2校园跑腿用户端 3校园跑腿骑手端 4其他
- * @property int|null $status 0关闭1小程序2公众号3全部
+ * @property string|null $wx_tpl_jump 模板消息跳转
+ * @property int|null $status 1小程序2公众号3全部4关闭
  * @property int|null $type
  * @property int|null $created_at
  * @property int|null $updated_at
  */
 class SysTplMsg extends \bricksasp\base\BaseActiveRecord
 {
+    const PAY_SUCCESS = 'PAY_SUCCESS';
+    const PAY_SUCCESS_SHARE = 'PAY_SUCCESS_SHARE';
     public static $defaultCode = [
         'PAY_SUCCESS' => [
             'title' => '付款成功提醒(通用)',
             'code' => 'PAY_SUCCESS',
-            'wx_tpl_no' => 'OPENTM207185188',
-            'wx_first' => '',
-            'wx_mark' => '',
-            'wx_mini_tpl_no' => '7490',
-            'wx_mini_tpl_kids'=>[2,4],
+            'wx_tpl_tid' => 'OPENTM207185188',
+            'wx_first' => '付款成功提醒',
+            'wx_mark' => '欢迎再次购买',
+            'wx_tpl_jump' => [
+                'url' => '',
+                'miniprogram' => [
+                    'appid'=>'',
+                    'path' =>''
+                ],
+                'page' => '',
+            ],
+            'wx_mini_tpl_cid' => '413',
+            'wx_mini_tpl_tid' => '7721',
+            'wx_mini_tpl_kids'=>[1,2,3,4],
             'wx_mini_tpl_scene'=>'付款成功提醒',
         ],
         'PAY_SUCCESS_SHARE' => [
             'title' => '分销下级付款成功提醒',
             'code' => 'PAY_SUCCESS',
-            'wx_tpl_no' => 'OPENTM414564417',
+            'wx_tpl_tid' => 'OPENTM414564417',
             'wx_first' => '',
             'wx_mark' => '',
-            'wx_mini_tpl_no' => '',
-            'wx_mini_tpl_kids'=>[],
+            'wx_mini_cid' => '',
+            'wx_mini_tid' => '',
+            'wx_mini_kids'=>[],
             'wx_mini_tpl_scene'=>'分销下级付款成功提醒',
         ],
     ];
@@ -67,10 +82,11 @@ class SysTplMsg extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['owner_id', 'user_id', 'scene', 'status', 'type', 'created_at', 'updated_at'], 'integer'],
-            [['wx_content', 'wx_mini_content'], 'string'],
+            [['owner_id', 'user_id', 'status', 'type', 'created_at', 'updated_at'], 'integer'],
+            [['wx_content', 'wx_mini_content', 'wx_tpl_jump'], 'string'],
             [['code'], 'string', 'max' => 32],
             [['wx_tpl_id', 'wx_mini_tpl_id'], 'string', 'max' => 64],
+            [['owner_id', 'code'], 'unique', 'targetAttribute' => ['owner_id', 'code']],
             [['status', 'type'], 'default', 'value' => 1],
         ];
     }
@@ -88,7 +104,6 @@ class SysTplMsg extends \bricksasp\base\BaseActiveRecord
             'wx_content' => 'Wx Content',
             'wx_mini_tpl_id' => 'Wx Mini Tpl ID',
             'wx_mini_content' => 'Wx Mini Content',
-            'scene' => 'Scene',
             'status' => 'Status',
             'type' => 'Type',
             'created_at' => 'Created At',
@@ -98,7 +113,7 @@ class SysTplMsg extends \bricksasp\base\BaseActiveRecord
 
     public function saveData($data)
     {
-        $this->load($this->formatData($data));
+        $this->load($this->formatData(array_filter($data)));
         return $this->save();
     }
 
@@ -110,61 +125,66 @@ class SysTplMsg extends \bricksasp\base\BaseActiveRecord
      * @param  string $code    模版标识
      * @return bool
      */
-    public static function send($user_id, $params, $scene, $code)
+    public static function send($owner_id,$user_id, $params, $scene, $code)
     {
-        $uinfo = UserInfo::find()->select(['owner_id'])->where(['user_id'=>$user_id])->one();
-
-        $tpl = static::find()->where(['scene'=>$scene, 'code'=>$code])->one();
+        $tpl = static::find()->where(['owner_id'=>$owner_id, 'code'=>$code])->one();
         if (!$tpl) {
             return;
         }
-        if ($tpl->open_gzh && $conn->type == UserConnect::TYPE_GZH) {//发送公众号模版
+
+        $cm = Yii::createObject([
+            'class' => Wechat::className(),
+            'owner_id' => $owner_id,
+            'user_id' => $user_id,
+            'scene' => $scene,
+        ]);
+        $config = $cm->config();
+        $uInfo = UserInfo::find()->select(['openid'])->where(['user_id'=>$user_id, 'scene'=>$scene])->one();
+        if (in_array($tpl->status, [2,3]) && ($cm->app_type == Mini::TYPE_WX_OFFICIAL || $cm->app_type == Mini::TYPE_WX_SUBSCRIBE)) { // 公众号
 
             preg_match_all('/\{\{([\S]{1,20})\.DATA\}\}+/',$tpl->wx_content,$pregs);
-            $params = array_merge([['value' => $tpl->wx_first?$tpl->wx_first:static::$defaultCode[$code]['first']]], $params, [['value' => $tpl->wx_mark?$tpl->wx_mark:static::$defaultCode[$code]['mark']]]);
+            $params = array_merge(
+                [['value' => static::$defaultCode[$code]['wx_first'], 'color'=>'#173177']], 
+                $params, 
+                [['value' => static::$defaultCode[$code]['wx_mark'], 'color'=>'#173177']]
+            );
 
             foreach ($pregs[1] as $k => $v) {
                 $send[$v] = $params[$k];
             }
-
             $data = [
-                'touser' => $conn->openid,
+                'touser' => $uInfo->openid,
                 'template_id' => $tpl->wx_tpl_id,
-                'url' => $tpl->wx_tpl_url ? $tpl->wx_tpl_url:'',
-                'miniprogram' => [
-                    'appid' => $tpl->wx_tpl_lite_appid,
-                    'path' => $tpl->wx_tpl_lite_path,
-                ],
                 'data' => $send,
             ];
-            // print_r($data);exit();
+
+            if ($tpl->wx_tpl_jump && $jump = json_decode($tpl->wx_tpl_jump,true)) {
+                if ($jump['url']) {
+                    $data['url'] = $jump['url'];
+                }
+                if ($jump['miniprogram']['appid'] && $jump['miniprogram']['path']) {
+                    $data['miniprogram'] = $jump['miniprogram'];
+                }
+            }
             $model = new Template($config);
-            $resGzh = $model->send($data);
-            return $resGzh;
+            return $model->send($data);
         }
 
-        if ($tpl->open_lite && ($conn->type == UserConnect::TYPE_MAIL || $conn->type == UserConnect::TYPE_STORE)) {//发送小程序模版
-            preg_match_all('/\{\{([\S]{1,20})\.DATA\}\}+/',$tpl->wx_lite_content,$pregs);
+        if (in_array($tpl->status, [1,3]) && $cm->app_type == Mini::TYPE_WX_MINI) { // 小程序
+            preg_match_all('/\{\{([\S]{1,20})\.DATA\}\}+/',$tpl->wx_mini_content,$pregs);
             foreach ($pregs[1] as $k => $v) {
                 $send[$v] = $params[$k];
             }
             $data = [
-                'touser' => $conn->openid,
-                'template_id' => $tpl->wx_lite_tpl_id,
-                'miniprogram_state' => 'developer',
-                'page' => 'developer',
+                'touser' => $uInfo->openid,
+                'template_id' => $tpl->wx_mini_tpl_id,
+                'miniprogram_state' => YII_DEBUG?'developer':'formal',
+                'page' => 'index',
                 'lang'=>'zh_CN',
                 'data' => $send,
             ];
-            // print_r($data);exit();
             $model = new Newtmpl($config);
-            $resGzh = $model->send($data);
-            return $resGzh;
+            return $model->send($data);
         }
-
-        if ($resSms || $resGzh || $resLite || $resWebsite) {
-            return true;
-        }
-        return fale;
     }
 }
