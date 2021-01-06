@@ -11,6 +11,7 @@ use Yii;
  * @property string|null $name 规则名称
  * @property int|null $type
  * @property string|null $rule 规则文件
+ * @property string|null $config 规则参数
  */
 class Rule extends \bricksasp\base\BaseActiveRecord
 {
@@ -29,6 +30,7 @@ class Rule extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['type'], 'integer'],
+            [['config'], 'string'],
             [['name'], 'string', 'max' => 32],
             [['rule'], 'string', 'max' => 64],
         ];
@@ -44,6 +46,7 @@ class Rule extends \bricksasp\base\BaseActiveRecord
             'name' => 'Name',
             'type' => 'Type',
             'rule' => 'Rule',
+            'config' => 'Config',
         ];
     }
 }
