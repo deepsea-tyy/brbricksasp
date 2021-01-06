@@ -236,7 +236,7 @@ class Goods extends \bricksasp\base\BaseActiveRecord
 
     public function getFileRelation()
     {
-        return $this->hasMany(FileRelation::className(), ['object_id' => 'id']);
+        return $this->hasMany(FileRelation::className(), ['object_id' => 'id'])->andWhere(['type'=>FileRelation::TYPE_GOODS]);
     }
 
     public function getImages(){
@@ -283,54 +283,60 @@ class Goods extends \bricksasp\base\BaseActiveRecord
                 return false;
             }
 
-            $images = [];
-            foreach ($data['imageItems'] as $k => $v) {
-                $image['object_id'] = $this->id;
-                $image['file_id'] = $v;
-                $image['type'] = FileRelation::TYPE_GOODS;
-                $image['sort'] = $k + 1;
-                $images[] = $image;
-            }
-            FileRelation::deleteAll(['object_id'=>$this->id,'type'=>FileRelation::TYPE_GOODS]);
-            self::getDb()->createCommand()
-            ->batchInsert(FileRelation::tableName(),array_keys(end($images)?end($images):[]),$images)
-            ->execute();
-
-            $labels = [];
-            foreach ($data['labelItems'] as $k => $v) {
-                $label['object_id'] = $this->id;
-                $label['label_id'] = $v;
-                $label['type'] = LabelRelation::TYPE_GOODS;
-                $label['sort'] = $k + 1;
-                $labels[] = $label;
+            if (!empty($data['imageItems'])) {
+                $images = [];
+                foreach ($data['imageItems'] as $k => $v) {
+                    $image['object_id'] = $this->id;
+                    $image['file_id'] = $v;
+                    $image['type'] = FileRelation::TYPE_GOODS;
+                    $image['sort'] = $k + 1;
+                    $images[] = $image;
+                }
+                FileRelation::deleteAll(['object_id'=>$this->id,'type'=>FileRelation::TYPE_GOODS]);
+                self::getDb()->createCommand()
+                ->batchInsert(FileRelation::tableName(),array_keys(end($images)?end($images):[]),$images)
+                ->execute();
             }
 
-            LabelRelation::deleteAll(['object_id'=>$this->id,'type'=>LabelRelation::TYPE_GOODS]);
-            self::getDb()->createCommand()
-            ->batchInsert(LabelRelation::tableName(),array_keys(end($labels)?end($labels):[]),$labels)
-            ->execute();
+            if (!empty($data['labelItems'])) {
+                $labels = [];
+                foreach ($data['labelItems'] as $k => $v) {
+                    $label['object_id'] = $this->id;
+                    $label['label_id'] = $v;
+                    $label['type'] = LabelRelation::TYPE_GOODS;
+                    $label['sort'] = $k + 1;
+                    $labels[] = $label;
+                }
 
-            GoodsProduct::deleteAll(['goods_id'=>$this->id]);
-            foreach ($data['productItems'] as $product) {
-                $product['goods_id']    = $this->id;
-                $product['on_shelves']    = $product['on_shelves']??$this->on_shelves;
-                $model = new GoodsProduct();
+                LabelRelation::deleteAll(['object_id'=>$this->id,'type'=>LabelRelation::TYPE_GOODS]);
+                self::getDb()->createCommand()
+                ->batchInsert(LabelRelation::tableName(),array_keys(end($labels)?end($labels):[]),$labels)
+                ->execute();
+            }
 
-                $model->load($product);
-                $model->save();
-                if ($product['imageItems']??false) {
-                    $pimages = [];
-                    foreach ($data['imageItems'] as $k => $v) {
-                        $pimage['object_id'] = $model->id;
-                        $pimage['file_id'] = $v;
-                        $pimage['type'] = FileRelation::TYPE_PRODUCT;
-                        $pimage['sort'] = $k + 1;
-                        $pimages[] = $pimage;
+            if (!empty($data['productItems'])) {
+                GoodsProduct::deleteAll(['goods_id'=>$this->id]);
+                foreach ($data['productItems'] as $product) {
+                    $product['goods_id']    = $this->id;
+                    $product['on_shelves']    = $product['on_shelves']??$this->on_shelves;
+                    $model = new GoodsProduct();
+
+                    $model->load($product);
+                    $model->save();
+                    if ($product['imageItems']??false) {
+                        $pimages = [];
+                        foreach ($data['imageItems'] as $k => $v) {
+                            $pimage['object_id'] = $model->id;
+                            $pimage['file_id'] = $v;
+                            $pimage['type'] = FileRelation::TYPE_PRODUCT;
+                            $pimage['sort'] = $k + 1;
+                            $pimages[] = $pimage;
+                        }
+                        FileRelation::deleteAll(['object_id'=>$model->id,'type'=>FileRelation::TYPE_PRODUCT]);
+                        self::getDb()->createCommand()
+                        ->batchInsert(FileRelation::tableName(),array_keys(end($pimages)?$pimages:[]),$pimages)
+                        ->execute();
                     }
-                    FileRelation::deleteAll(['object_id'=>$model->id,'type'=>FileRelation::TYPE_PRODUCT]);
-                    self::getDb()->createCommand()
-                    ->batchInsert(FileRelation::tableName(),array_keys(end($pimages)?$pimages:[]),$pimages)
-                    ->execute();
                 }
             }
                 // $transaction->rollBack();

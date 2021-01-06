@@ -162,20 +162,6 @@ class Tools extends \yii\helpers\ArrayHelper {
 		return ['day' => $d, 'data' => $new];
 	}
 
-	/**
-	 * 数组层级递归
-	 */
-	public static function limitless($data, $root_id = 0, $relation = 'parent_id', $key = 'id', $level = 0) {
-		$arr = [];
-		foreach ($data as $v) {
-			if ($v[$relation] == $root_id) {
-				$arr[] = $v;
-				$arr = array_merge($arr, static::limitless($data, $relation, $key, $v[$key], $level + 1));
-			}
-		}
-		return $arr;
-	}
-
 	public static function findChild(&$arr, $id, $relation) {
 		$childs = [];
 		foreach ($arr as $k => $v) {
@@ -282,6 +268,18 @@ class Tools extends \yii\helpers\ArrayHelper {
 	 */
 	public static function make_dir($dir) {
 		return is_dir($dir) or self::make_dir(dirname($dir)) and mkdir($dir, 0777);
+	}
+
+	/**
+	 * 删除文件
+	 * @param  string $path 文件路径
+	 * @return bool
+	 */
+	public static function deleteFile($path) {
+		if (file_exists($path)) {
+			return @unlink($path);
+		}
+		return false;
 	}
 
 	/**
@@ -411,33 +409,10 @@ class Tools extends \yii\helpers\ArrayHelper {
 	}
 
 	/**
-	 * 删除文件
-	 * @param  string $path 文件路径
-	 * @return bool
-	 */
-	public static function deleteFile($path) {
-		if (file_exists($path)) {
-			return @unlink($path);
-		}
-		return false;
-	}
-
-	/**
 	 * 使用异常中断操作
 	 */
 	public static function breakOff($msg, $status = 200) {
 		throw new \yii\web\HttpException($status, $msg);
-	}
-
-	/**
-	 * 数组中选取key
-	 */
-	public static function chooseKey(array $data, array $keys) {
-		$a = [];
-		foreach ($keys as $key) {
-			$a[$key] = $data[$key];
-		}
-		return $a;
 	}
 
 	/**
@@ -474,17 +449,6 @@ class Tools extends \yii\helpers\ArrayHelper {
 		$long = sprintf('%u', ip2long($ip));
 		$ip = $long ? array($ip, $long) : array('0.0.0.0', 0);
 		return $ip[$type];
-	}
-
-	/**
-	 * 文件访问地址
-	 */
-	public static function file_address($path='',$doman='')
-	{
-		if ($path) {
-			// return ($doman ? $doman : Config::instance()->web_url) . $path;
-		}
-		return '';
 	}
 
 	/**
@@ -598,40 +562,4 @@ class Tools extends \yii\helpers\ArrayHelper {
 	    }
 	    return $dist * $radius;
 	}
-
-
-    /**
-     * 保存微信头像到本地
-     * @param $url
-     * @return string
-     */
-    public static function saveAvatar($url){
-        $base_path = Yii::$app->basePath . '/web';
-        $file_path = '/file/' . date('Y') . '/' . date('m');
-        $dir = $base_path . $file_path;
-        Tools::make_dir($dir);
-        $extension = pathinfo($url)['extension']??'jpg';
-
-        $file_url = $file_path . '/' . md5($url) . '.' . $extension;
-        $real_path = $dir . '/' . md5($url) . '.' . $extension;
-
-        // 判断本地是否存在该文件
-        if(file_exists($file_url)){
-            return Yii::$app->params['globalParams']['fileBaseUrl'] . $file_url;
-        }
-
-        // 若不存在则获得远程图片
-        $curl = curl_init();
-        curl_setopt($curl,CURLOPT_URL,$url);
-        curl_setopt($curl,CURLOPT_RETURNTRANSFER,1);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);    // 信任任何证
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, 0);        // 表示不检查证书
-        $imagedata = curl_exec($curl);
-        curl_close($curl);
-        $tp = @fopen($real_path,'a');
-        fwrite($tp,$imagedata);
-        fclose($tp);
-
-        return Yii::$app->params['globalParams']['fileBaseUrl'].$file_url;
-    }
 }

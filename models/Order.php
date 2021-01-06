@@ -212,8 +212,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
         $transaction = self::getDb()->beginTransaction();
         try {
             $this->load($data);
-            $this->save();
-            if (!$this->id) {
+            if (!$this->save()) {
                 $transaction->rollBack();
                 Tools::breakOff('下单失败,请重试');
             }

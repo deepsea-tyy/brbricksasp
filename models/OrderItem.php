@@ -47,6 +47,8 @@ use Yii;
  */
 class OrderItem extends \bricksasp\base\BaseActiveRecord
 {
+    const COMMENT_YES = 1;
+    
     /**
      * {@inheritdoc}
      */
