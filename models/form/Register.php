@@ -111,7 +111,6 @@ class Register extends Model
                     return null;
                 }
                 $transaction->commit();
-                exit();
                 return $user;
             }catch(\Throwable $e) {
                 $transaction->rollBack();

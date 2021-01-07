@@ -11,6 +11,7 @@ use bricksasp\models\Relation;
 use bricksasp\rbac\models\User;
 use bricksasp\rbac\components\UserStatus;
 use Ramsey\Uuid\Uuid;
+use bricksasp\base\Tools;
 
 /**
  * Signup form
@@ -78,8 +79,7 @@ class Signup extends Model
             $user->status = ArrayHelper::getValue(Yii::$app->params, 'user.defaultStatus', UserStatus::ACTIVE);
             $user->setPassword($this->password);
             $user->generateAuthKey();
-            // $user->shop_id = $this->shop_id;
-            // $user->access_token = $this->shop_id ? Yii::$app->security->generateRandomString() : null;
+            $user->invite_code = Tools::random_str();
             $transaction = UserInfo::getDb()->beginTransaction();
             try {
                 if (!$user->save()) {

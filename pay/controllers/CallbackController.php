@@ -59,7 +59,7 @@ class CallbackController extends BaseController
 		        
 				file_put_contents(Yii::getAlias('@runtime') . '/logs/pay.log', $xml . PHP_EOL,FILE_APPEND);
 	            $transaction->commit();
-	            // Yii::$app->rabbit->push(new OrderDistribution(['order_id' => $model->order_id]));
+	            Yii::$app->queue->push(new OrderDistribution(['order_id' => $model->order_id]));
 				return $this->asXml(['return_code' => 'SUCCESS', 'return_msg' => 'OK']);
 			} catch (Exception $e) {
                 $transaction->rollBack();
