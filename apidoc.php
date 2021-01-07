@@ -3,8 +3,8 @@
 /**
  * @OA\Info(
  *   version="1.0",
- *   title="比翼云 接口测试中心",
- *   description="比翼云 接口文档 标签命名规范：板块名称-功能模块-接口功能",
+ *   title="bricksasp 接口测试中心",
+ *   description="bricksasp 接口文档 标签命名规范：板块名称-功能模块-接口功能",
  *   @OA\Contact(name="BRICKSASP",email="649909457@qq.com",),
  * ),
  * @OA\Server(url="http://localhost:8080",description="本地开发地址",),

@@ -322,10 +322,11 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $item['num']        = $nums[$v->id];
             $item['weight']     = $v->weight * $nums[$v->id];
             $item['volume']     = $v->volume * $nums[$v->id];
-            $item['ship_area_id']= $data['ship_area_id']??'';
+            $item['ship_area_id']= $data['ship_area_id']??0;
             $item['ship_address']= $data['ship_address']??'';
             $item['ship_name']   = $data['ship_name']??'';
             $item['ship_phone']  = $data['ship_phone']??'';
+            $item['pmt_price']  = 0;
             $item['created_at'] = $t;
             $item['updated_at'] = $t;
             $orderItems[$v->id] = $item;
@@ -375,7 +376,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
             }
 
             $data['total_price'] = $data['total_price']??0 + $orderItems[$v->id]['price'];
-            $data['pay_price'] = $data['pay_price']??0 + $orderItems[$v->id]['pmt_price'];
+            $data['pay_price'] = $data['pay_price'] - $orderItems[$v->id]['pmt_price'];
             
             if ($orderCp || $itemCp) {
                 $useCoupon[] = $orderCp? $orderCp->toArray() : $itemCp->toArray();

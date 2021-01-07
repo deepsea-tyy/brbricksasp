@@ -13,6 +13,7 @@ use Yii;
  * @property int|null $order_id
  * @property int|null $goods_id
  * @property int|null $product_id
+ * @property string|null $code 核销码
  * @property string|null $name 商品名称
  * @property string|null $barcode 商品条码
  * @property string|null $brief 商品简介
@@ -71,6 +72,7 @@ class OrderItem extends \bricksasp\base\BaseActiveRecord
             [['image_id'], 'string', 'max' => 64],
             [['ship_address'], 'string', 'max' => 128],
             [['ship_name', 'ship_phone'], 'string', 'max' => 16],
+            [['code'], 'string', 'max' => 8],
         ];
     }
 

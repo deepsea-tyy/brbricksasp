@@ -8,6 +8,7 @@ use bricksasp\base\Tools;
 /**
  * This is the model class for table "{{%user_info}}".
  *
+ * @property int $id
  * @property int $user_id
  * @property int|null $owner_id
  * @property int|null $show_id
@@ -56,10 +57,6 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
         ];
     }
 
-    public static function primaryKey(){
-        return ['user_id'];
-    }
-
     /**
      * {@inheritdoc}
      */
@@ -72,7 +69,6 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
             [['name', 'nickname', 'vip'], 'string', 'max' => 32],
             [['last_login_ip', 'last_login_area', 'mark'], 'string', 'max' => 64],
             [['openid', 'country', 'province', 'city', 'unionid', 'uuid'], 'string', 'max' => 128],
-            [['user_id'], 'unique'],
             [['scene', 'type'], 'default', 'value' => Mini::SCENE_WX_DEFAULT],
         ];
     }

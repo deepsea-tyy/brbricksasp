@@ -236,9 +236,9 @@ class UserController extends BackendController {
 	public function actionSignup() {
 		$model = new Signup();
 
-		if ($model->load($this->queryMap(Yii::$app->getRequest()->post()), '')) {
+		if ($model->load($this->queryMapPost(), '')) {
 			if ($user = $model->signup()) {
-				if (Yii::$app->getRequest()->post('lognin') == 1) {
+				if (Yii::$app->request->post('lognin') == 1) {
 					return $this->success($user->generateApiToken($user->id));
 				}
 				return $this->success();
@@ -254,7 +254,7 @@ class UserController extends BackendController {
 	 */
 	public function actionRequestPasswordReset() {
 		$model = new PasswordResetRequest();
-		if ($model->load(Yii::$app->getRequest()->post()) && $model->validate()) {
+		if ($model->load(Yii::$app->request->post()) && $model->validate()) {
 			if ($model->sendEmail()) {
 				Yii::$app->getSession()->setFlash('success', 'Check your email for further instructions.');
 
@@ -280,7 +280,7 @@ class UserController extends BackendController {
 			throw new BadRequestHttpException($e->getMessage());
 		}
 
-		if ($model->load(Yii::$app->getRequest()->post()) && $model->validate() && $model->resetPassword()) {
+		if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
 			Yii::$app->getSession()->setFlash('success', 'New password was saved.');
 
 			return $this->goHome();
@@ -297,7 +297,7 @@ class UserController extends BackendController {
 	 */
 	public function actionChangePassword() {
 		$model = new ChangePassword();
-		if ($model->load(Yii::$app->getRequest()->post()) && $model->change()) {
+		if ($model->load(Yii::$app->request->post()) && $model->change()) {
 			return $this->goHome();
 		}
 

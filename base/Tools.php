@@ -518,25 +518,6 @@ class Tools extends \yii\helpers\ArrayHelper {
 	}
 
 	/**
-	 * 随机字符串
-	 * @param  string      $str
-	 * @param  int|integer $len
-	 * @return string         
-	 */
-	public static function random_str(?string $str='',?int $len=1)
-	{
-		$s = '';
-		$l = mb_strlen($str);
-		for ($i=0; $i < $len; $i++) { 
-			$k = mt_rand(0,$l);
-			if ($k == $l) {
-				$k = $k-1;
-			}
-			$s .= $str[$k];
-		}
-		return $s;
-	}
-	/**
 	 * @param $lat1
 	 * @param $lon1
 	 * @param $lat2
@@ -562,4 +543,27 @@ class Tools extends \yii\helpers\ArrayHelper {
 	    }
 	    return $dist * $radius;
 	}
+
+    /**
+     * @param int $randLength 长度
+     * @param int $addtime 是否加入当前时间戳
+     * @param int $includenumber 是否包含数字
+     * @return string
+     */
+    public static function random_str($randLength = 8, $includenumber = 1)
+    {
+        if ($includenumber) {
+            $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHJKLMNPQEST123456789';
+        } else {
+            $chars = 'abcdefghijklmnopqrstuvwxyz';
+        }
+        $len = strlen($chars);
+        $randStr = '';
+        for ($i = 0; $i < $randLength; $i++) {
+            $randStr .= $chars[mt_rand(0, $len - 1)];
+        }
+
+        return $randStr;
+
+    }
 }

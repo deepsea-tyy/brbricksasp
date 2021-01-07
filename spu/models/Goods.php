@@ -322,20 +322,25 @@ class Goods extends \bricksasp\base\BaseActiveRecord
                     $model = new GoodsProduct();
 
                     $model->load($product);
-                    $model->save();
-                    if ($product['imageItems']??false) {
-                        $pimages = [];
-                        foreach ($data['imageItems'] as $k => $v) {
-                            $pimage['object_id'] = $model->id;
-                            $pimage['file_id'] = $v;
-                            $pimage['type'] = FileRelation::TYPE_PRODUCT;
-                            $pimage['sort'] = $k + 1;
-                            $pimages[] = $pimage;
+                    if ($model->save()) {
+                        if ($product['imageItems']??false) {
+                            $pimages = [];
+                            foreach ($data['imageItems'] as $k => $v) {
+                                $pimage['object_id'] = $model->id;
+                                $pimage['file_id'] = $v;
+                                $pimage['type'] = FileRelation::TYPE_PRODUCT;
+                                $pimage['sort'] = $k + 1;
+                                $pimages[] = $pimage;
+                            }
+                            FileRelation::deleteAll(['object_id'=>$model->id,'type'=>FileRelation::TYPE_PRODUCT]);
+                            self::getDb()->createCommand()
+                            ->batchInsert(FileRelation::tableName(),array_keys(end($pimages)?$pimages:[]),$pimages)
+                            ->execute();
                         }
-                        FileRelation::deleteAll(['object_id'=>$model->id,'type'=>FileRelation::TYPE_PRODUCT]);
-                        self::getDb()->createCommand()
-                        ->batchInsert(FileRelation::tableName(),array_keys(end($pimages)?$pimages:[]),$pimages)
-                        ->execute();
+                    }else{
+                        $this->setErrors($model->errors);
+                        $transaction->rollBack();
+                        return false;
                     }
                 }
             }

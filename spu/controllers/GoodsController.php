@@ -232,7 +232,7 @@ class GoodsController extends BackendController
      *   @OA\Property(property="place_delivery", type="integer", description="发货地areaid"),
      *   @OA\Property(property="imageItems", type="array", description="图片数组",items={}),
      *   @OA\Property(property="labelItems", type="array", description="标签数组",items={}),
-     *   @OA\Property(property="productItems", type="array", description="单品数组 查看goodsProduct单品结构",items={}),
+     *   @OA\Property(property="productItems", type="array", description="单品数组", @OA\Items(ref="#/components/schemas/goodsProduct")),
      *   @OA\Property(property="specItems", type="array", description="规格详情",items={}),
      *   @OA\Property(property="paramItems", type="array", description="参数详情",items={}),
      * )
@@ -249,7 +249,7 @@ class GoodsController extends BackendController
      *   @OA\Property(property="mktprice", type="number", description="市场价"),
      *   @OA\Property(property="distprice", type="number", description="分销价格"),
      *   @OA\Property(property="is_vip_discount", type="integer", description="1参与会员折扣"),
-     *   @OA\Property(property="vip_discount", type="number", description="折扣0.1-10"),
+     *   @OA\Property(property="vip_discount", type="string", description="折扣0.1-10"),
      *   @OA\Property(property="vip_price", type="number", description="会员价格"),
      *   @OA\Property(property="vip", type="integer", description="会员限购等级"),
      *   @OA\Property(property="on_shelves", type="integer", description="0未上架1上架2下架"),
