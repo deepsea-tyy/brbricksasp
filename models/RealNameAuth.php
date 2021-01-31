@@ -71,6 +71,16 @@ class RealNameAuth extends \bricksasp\base\BaseActiveRecord
         ];
     }
 
+    public function getIdCardFrontalPhoto()
+    {
+        return $this->hasOne(File::className(), ['id'=>'id_card_frontal_photo']);
+    }
+
+    public function getIdCardReversePhoto()
+    {
+        return $this->hasOne(File::className(), ['id'=>'id_card_reverse_photo']);
+    }
+
     public function saveData($data)
     {
         $this->load($this->formatData($data));

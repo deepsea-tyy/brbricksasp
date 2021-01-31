@@ -10,6 +10,15 @@ use bricksasp\base\BackendController;
 
 class RealNameAuthController extends BackendController
 {
+    public function loginAction()
+    {
+        return [
+            'view',
+            'create',
+            'update',
+        ];
+    }
+
     /**
      * @OA\Get(path="/user/real-name-auth/index",
      *   summary="实名认证列表",
@@ -72,8 +81,10 @@ class RealNameAuthController extends BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(empty($params['user_id']) ? [] : ['user_id'=>$params['user_id']]));
+        $model = $this->findModel($this->updateCondition(['user_id'=>$params['user_id']??$this->current_user_id]));
         $data = $model->toArray();
+        $data['frontalPhoto'] = $model->idCardFrontalPhoto;
+        $data['ReversePhoto'] = $model->idCardReversePhoto;
         
         return $this->success($data);
     }

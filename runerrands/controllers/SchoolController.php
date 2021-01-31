@@ -9,13 +9,20 @@ use yii\data\ActiveDataProvider;
 
 class SchoolController extends \bricksasp\base\BackendController
 {
-
 	public function noLoginAction()
 	{
 		return [
 			'index',
 		];
 	}
+
+    public function loginAction()
+    {
+        return [
+            'view',
+            // 'update',
+        ];
+    }
 
     /**
      * @OA\Get(path="/runerrands/school/index",
@@ -78,8 +85,10 @@ class SchoolController extends \bricksasp\base\BackendController
     {
         $params = Yii::$app->request->get();
         $model = $this->findModel(['id'=>$params['id'] ?? 0]);
-        
-        return $this->success($model);
+        if ($model->parent_id) {
+            $school = $this->findModel(['id'=>$model->parent_id]);
+        }
+        return $this->success(['school'=>empty($school)?$model:$school, 'area'=>empty($school)?[]:$model]);
     }
 
     /**

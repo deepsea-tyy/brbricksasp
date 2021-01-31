@@ -70,7 +70,8 @@ class CompositeAuth extends \yii\filters\auth\AuthMethod {
 				}
 				Tools::breakOff(50004);
 			}
+			Tools::breakOff(50005);
 		}
-		Tools::breakOff(50005);
+		Tools::breakOff(50001);
 	}
 }

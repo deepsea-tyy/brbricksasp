@@ -313,6 +313,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
             $item['goods_id']   = $v->goods->id;
             $item['product_id'] = $v->id;
             $item['name']       = $v->name;
+            $item['spec']       = $v->spec;
             $item['barcode']    = $v->barcode;
             $item['brief']      = $v->goods->brief;
             $item['price']      = $v->price;

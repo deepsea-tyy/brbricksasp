@@ -15,9 +15,11 @@ class UserInfoController extends BackendController
 	public function loginAction()
 	{
 		return [
-			'update',
+			'view',
+            'update',
 		];
 	}
+
     /**
      * @OA\Get(path="/user/user-info/index",
      *   summary="用户信息列表",
@@ -105,11 +107,9 @@ class UserInfoController extends BackendController
      */
     public function actionView()
     {
-        $model = $this->findModel(Yii::$app->request->get('id'));
+        $model = $this->findModel(Yii::$app->request->get('id')??['user_id'=>$this->current_user_id]);
         $data = $model->toArray();
-        $position = $model->positionItems ?? [];
-        $data['position'] = array_column($position,'id');
-        $data['file'] = $model->file ?? [];
+        $data['file'] = $model->file;
         return $this->success($data);
     }
 

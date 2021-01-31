@@ -23,12 +23,24 @@ class LoginController extends FrontendController
 	}
 
     /**
-     * @OA\Get(path="/user/login/code2",
+     * @OA\Post(path="/user/login/code2",
      *   summary="小程序code2Session 登录凭证校验",
      *   tags={"user模块"},
      *   
-     *   @OA\Parameter(name="code",in="query",@OA\Schema(type="integer"),description="小程序用户登录凭证"),
-     *   @OA\Parameter(name="scene",in="query",@OA\Schema(type="integer"),description="应用场景1默认官方官网 2校园跑腿用户端 3校园跑腿骑手端 4其他",example=1),
+     *   @OA\RequestBody(
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         @OA\Property(property="code", type="string", description="小程序用户登录凭证"),
+     *         @OA\Property(property="scene", type="integer", description="应用场景1默认官方官网 2校园跑腿用户端 3校园跑腿骑手端 4其他",example=1),
+     *         @OA\Property(property="uinfo", type="object", description="用户信息",
+     *           @OA\Property(property="gender", type="integer", description="性别"),
+     *           @OA\Property(property="avatarUrl", type="string", description="头像"),
+     *           @OA\Property(property="nickname", type="string", description="昵称"),
+     *         ),
+     *       )
+     *     )
+     *   ),
      *   
      *   @OA\Response(
      *     response=200,
@@ -47,20 +59,21 @@ class LoginController extends FrontendController
     public function actionCode2()
     {
 		$model = Crypt::instance($this->wxConfig($this->current_owner_id));
-		$res = $model->session(Yii::$app->request->get('code')??Tools::breakOff('code必填'));
-        $scene = Yii::$app->request->get('scene',Mini::SCENE_WX_DEFAULT);
+		$res = $model->session(Yii::$app->request->post('code')??Tools::breakOff('code必填'));
+        $scene = Yii::$app->request->post('scene',Mini::SCENE_WX_DEFAULT);
 
-		$user = UserInfo::find()->where(['scene'=>$sence, 'owner_id'=>$this->current_owner_id, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
+		$user = UserInfo::find()->where(['scene'=>$scene, 'platform'=>Mini::PLATFORM_WX, 'owner_id'=>$this->current_owner_id, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
         $is_new_user = 0;
 		if (!$user) {
             $is_new_user=1;
             $reg = new Register(['scenario' => Register::TYPE_WX_MINI]);
-            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$sence]),'');
+            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$scene, 'platform'=>Mini::PLATFORM_WX]),'');
             $user = $reg->signup();
             if (!$user) {
                 return $this->fail($reg->errors);
             }
 		}
+        $user->saveData(Yii::$app->request->post('uinfo',[]));
         return $this->success(array_merge(User::generateApiToken($user->user_id, 1),['is_new_user'=>$is_new_user]),'登录成功');
     }
 
@@ -77,6 +90,11 @@ class LoginController extends FrontendController
      *         @OA\Property(property="iv", type="string", description="小程序iv"),
      *         @OA\Property(property="encryptedData", type="string", description="小程序encryptedData"),
      *         @OA\Property(property="scene", type="integer", description="应用场景1默认官方官网 2校园跑腿用户端 3校园跑腿骑手端 4其他",example=1),
+     *         @OA\Property(property="uinfo", type="object", description="用户信息",
+     *           @OA\Property(property="gender", type="integer", description="性别"),
+     *           @OA\Property(property="avatarUrl", type="string", description="头像"),
+     *           @OA\Property(property="nickname", type="string", description="昵称"),
+     *         ),
      *       )
      *     )
      *   ),
@@ -101,17 +119,18 @@ class LoginController extends FrontendController
         $res = $model->userInfo($params['code']??Tools::breakOff('code必填'), $params['iv']??Tools::breakOff('iv必填'), $params['encryptedData']??Tools::breakOff('encryptedData必填'));
         $scene = Yii::$app->request->get('scene',Mini::SCENE_WX_DEFAULT);
 
-        $user = UserInfo::find()->where(['scene'=>$sence, 'owner_id'=>$this->current_owner_id, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
+        $user = UserInfo::find()->where(['scene'=>$scene, 'platform'=>Mini::PLATFORM_WX, 'owner_id'=>$this->current_owner_id, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
         $is_new_user = 0;
         if (!$user) {
             $is_new_user=1;
             $reg = new Register(['scenario' => Register::TYPE_WX_MINI]);
-            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$sence, 'mobile'=> $res['purePhoneNumber']]),'');
+            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$scene, 'platform'=>Mini::PLATFORM_WX, 'mobile'=> $res['purePhoneNumber']]),'');
             $user = $reg->signup();
             if (!$user) {
                 return $this->fail($reg->errors);
             }
         }
+        $user->saveData(Yii::$app->request->post('uinfo',[]));
         return $this->success(array_merge(User::generateApiToken($user->user_id, 1),['is_new_user'=>$is_new_user]),'登录成功');
     }
 

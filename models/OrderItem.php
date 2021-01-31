@@ -15,6 +15,7 @@ use Yii;
  * @property int|null $product_id
  * @property string|null $code 核销码
  * @property string|null $name 商品名称
+ * @property string|null $spec 商品规格
  * @property string|null $barcode 商品条码
  * @property string|null $brief 商品简介
  * @property float|null $price 售价
@@ -68,7 +69,7 @@ class OrderItem extends \bricksasp\base\BaseActiveRecord
             [['price', 'costprice', 'mktprice', 'pay_price', 'pmt_price', 'weight', 'volume'], 'number'],
             [['name', 'logistics_name'], 'string', 'max' => 32],
             [['barcode', 'logistics_id'], 'string', 'max' => 30],
-            [['brief'], 'string', 'max' => 255],
+            [['brief', 'spec'], 'string', 'max' => 255],
             [['image_id'], 'string', 'max' => 64],
             [['ship_address'], 'string', 'max' => 128],
             [['ship_name', 'ship_phone'], 'string', 'max' => 16],

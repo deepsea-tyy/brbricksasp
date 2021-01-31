@@ -10,6 +10,14 @@ use bricksasp\base\BackendController;
 
 class StudentAuthController extends BackendController
 {
+    public function loginAction()
+    {
+        return [
+            'view',
+            'update',
+        ];
+    }
+
     /**
      * @OA\Get(path="/user/student-auth/index",
      *   summary="学生认证列表",
@@ -72,7 +80,7 @@ class StudentAuthController extends BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(empty($params['user_id']) ? [] : ['user_id'=>$params['user_id']]));
+        $model = $this->findModel($this->updateCondition(['user_id'=>$params['user_id']??$this->current_user_id]));
         $data = $model->toArray();
         
         return $this->success($data);

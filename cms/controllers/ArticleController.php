@@ -55,8 +55,7 @@ class ArticleController extends BackendController
      */
     public function actionIndex()
     {
-        $params = Yii::$app->request->get();
-        $params = array_merge($params,$this->ownerCondition());
+        $params = $this->queryMapGet();
         if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
             $fields = ['id', 'title', 'subtitle', 'image', 'brief', 'content', 'release_at'];
         }else{

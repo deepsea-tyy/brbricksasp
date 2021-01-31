@@ -4,6 +4,7 @@ namespace bricksasp\models;
 
 use Yii;
 use bricksasp\base\Tools;
+use bricksasp\models\File;
 
 /**
  * This is the model class for table "{{%user_info}}".
@@ -109,19 +110,43 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
         ];
     }
 
-    public function gerUser()
+    public function getUser()
     {
         return $this->hasOne(User::className(),['id'=>'user_id']);
+    }
+
+    public function getFile()
+    {
+        return $this->hasOne(File::className(),['id'=>'avatar']);
+    }
+
+    public function getStudentAuth()
+    {
+        return $this->hasOne(StudentAuth::className(),['user_id'=>'user_id']);
     }
 
     public function saveData($data)
     {
         $this->load($this->formatData($data));
-        if ($data['avatarUrl']) {
-            Tools::download_file($data['avatarUrl'],'wx'.$data['current_user_id'] . '.jpg', Yii::$app->basePath . '/web/file/avatar');
-            $data['avatar'] = '/file/avatar/'.'wx'.$data['current_user_id'] . '.jpg';
+        if (!empty($data['avatarUrl'])) {
+            $file_id = Tools::get_sn(10);
+            Tools::download_file($data['avatarUrl'],$file_id . '.jpg', Yii::$app->basePath . '/web/file/avatar');
+            $img = getimagesize(Yii::$app->basePath . '/web/file/avatar/' . $file_id . '.jpg');
+            $model = new File();
+            $model->load([
+                'id' => $file_id,
+                'name' => 'wx_avatar'.$this->user_id,
+                'mime' => 'image/jpeg',
+                'ext' => 'jpg',
+                'file_url' => '/file/avatar/' . $file_id . '.jpg',
+                'photo_width' => empty($img[0]) ? 0 : $img[0],
+                'photo_hight' => empty($img[1]) ? 0 : $img[1],
+                'user_id' => $this->user_id,
+                'owner_id' => $this->owner_id,
+            ]);
+            $model->save();
+            $this->avatar = $model->id;
         }
-        $this->load($data);
         return $this->save();
     }
 }
