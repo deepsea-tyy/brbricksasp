@@ -84,7 +84,7 @@ class RealNameAuthController extends BackendController
         $model = $this->findModel($this->updateCondition(['user_id'=>$params['user_id']??$this->current_user_id]));
         $data = $model->toArray();
         $data['frontalPhoto'] = $model->idCardFrontalPhoto;
-        $data['ReversePhoto'] = $model->idCardReversePhoto;
+        $data['reversePhoto'] = $model->idCardReversePhoto;
         
         return $this->success($data);
     }

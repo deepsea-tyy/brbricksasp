@@ -4,10 +4,10 @@ namespace bricksasp\runerrands\controllers;
 
 use Yii;
 use bricksasp\base\Tools;
-use bricksasp\models\School;
+use bricksasp\models\SchoolAround;
 use yii\data\ActiveDataProvider;
 
-class SchoolController extends \bricksasp\base\BackendController
+class SchoolAroundController extends \bricksasp\base\BackendController
 {
 	public function noLoginAction()
 	{
@@ -20,19 +20,19 @@ class SchoolController extends \bricksasp\base\BackendController
     public function loginAction()
     {
         return [
-            // 'update',
+            'update',
         ];
     }
 
     /**
-     * @OA\Get(path="/runerrands/school/index",
-     *   summary="学校列表",
+     * @OA\Get(path="/runerrands/school-around/index",
+     *   summary="学校周边列表",
      *   tags={"跑腿模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
-     *   @OA\Parameter(name="area",in="query",@OA\Schema(type="integer"),description="返回校区"),
+     *   @OA\Parameter(name="school_id",in="query",@OA\Schema(type="integer"),description="学校id"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -47,11 +47,12 @@ class SchoolController extends \bricksasp\base\BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query =  School::find();
+        $query =  SchoolAround::find();
+        $query->andFilterWhere(['school_id'=>$params['school_id']??Tools::breakOff('未找学校相应到数据')]);
         $query->andFilterWhere(['like', 'name', $params['name']??null]);
 
-        if (!empty($params['area'])) {
-            $query->with(['area']);
+        if (!empty($params['school'])) {
+            $query->with(['school']);
         }
 
         $dataProvider = new ActiveDataProvider([
@@ -59,10 +60,10 @@ class SchoolController extends \bricksasp\base\BackendController
         ]);
 
         $list = [];
-        if (!empty($params['area'])) {
+        if (!empty($params['school'])) {
             foreach ($dataProvider->models as $item) {
                 $row = $item->toArray();
-                $row['area'] = $item->area;
+                $row['school'] = $item->school;
                 $list[] = $row;
             }
         }
@@ -77,8 +78,8 @@ class SchoolController extends \bricksasp\base\BackendController
     }
 
     /**
-     * @OA\Get(path="/runerrands/school/view",
-     *   summary="学校详情",
+     * @OA\Get(path="/runerrands/school-around/view",
+     *   summary="学校周边详情",
      *   tags={"跑腿模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
@@ -91,7 +92,7 @@ class SchoolController extends \bricksasp\base\BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       
-     *       @OA\Schema(ref="#/components/schemas/SchoolUpdate"),
+     *       @OA\Schema(ref="#/components/schemas/SchoolAroundUpdate"),
      *     ),
      *   ),
      * )
@@ -101,14 +102,14 @@ class SchoolController extends \bricksasp\base\BackendController
         $params = Yii::$app->request->get();
         $model = $this->findModel(['id'=>$params['id'] ?? 0]);
         if ($model->parent_id) {
-            $school = $this->findModel(['id'=>$model->parent_id]);
+            $SchoolAround = $this->findModel(['id'=>$model->parent_id]);
         }
-        return $this->success(['school'=>empty($school)?$model:$school, 'area'=>empty($school)?[]:$model]);
+        return $this->success(['SchoolAround'=>empty($SchoolAround)?$model:$SchoolAround, 'area'=>empty($SchoolAround)?[]:$model]);
     }
 
     /**
-     * @OA\Post(path="/runerrands/school/create",
-     *   summary="创建学校",
+     * @OA\Post(path="/runerrands/school-around/create",
+     *   summary="创建学校周边",
      *   tags={"跑腿模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
@@ -116,7 +117,7 @@ class SchoolController extends \bricksasp\base\BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/SchoolCreate"
+     *         ref="#/components/schemas/SchoolAroundCreate"
      *       )
      *     )
      *   ),
@@ -132,23 +133,22 @@ class SchoolController extends \bricksasp\base\BackendController
      * )
      *
      * @OA\Schema(
-     *   schema="SchoolCreate",
-     *   description="学校",
-     *   @OA\Property(property="name", type="string", description="学校名称"),
-     *   @OA\Property(property="code", type="integer", description="学校标识码"),
-     *   @OA\Property(property="parent_id", type="integer", description="0主校区 其他表示分校区"),
-     *   @OA\Property(property="level", type="string", description="1本科2专科",),
-     *   @OA\Property(property="city", type="string", description="学校所在城市",),
-     *   @OA\Property(property="address", type="string", description="学校详细地址",),
-     *   @OA\Property(property="logo", type="string", description="logo",),
-     *   @OA\Property(property="mark", type="string", description="备注",),
+     *   schema="SchoolAroundCreate",
+     *   description="学校周边",
+     *   @OA\Property(property="name", type="string", description="地点名称"),
+     *   @OA\Property(property="logo", type="string", description="logo"),
+     *   @OA\Property(property="address", type="string", description="详细地址"),
+     *   @OA\Property(property="area_id", type="integer", description="1本科2专科",),
+     *   @OA\Property(property="type", type="integer", description="1取快递2外卖代拿3跑腿",),
+     *   @OA\Property(property="lat", type="string", description="",),
+     *   @OA\Property(property="lon", type="string", description="",),
      *   required={"name"}
      * )
      */
     public function actionCreate()
     {
         $params = $this->queryMapPost();
-        $model = new School();
+        $model = new SchoolAround();
         if ($model->saveData($params)) {
             return $this->success();
         }
@@ -157,8 +157,8 @@ class SchoolController extends \bricksasp\base\BackendController
     }
 
     /**
-     * @OA\Post(path="/runerrands/school/update",
-     *   summary="修改学校",
+     * @OA\Post(path="/runerrands/school-around/update",
+     *   summary="修改学校周边",
      *   tags={"跑腿模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
      *   
@@ -166,7 +166,7 @@ class SchoolController extends \bricksasp\base\BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/SchoolUpdate"
+     *         ref="#/components/schemas/SchoolAroundUpdate"
      *       )
      *     )
      *   ),
@@ -183,13 +183,13 @@ class SchoolController extends \bricksasp\base\BackendController
      * 
      * 
      * @OA\Schema(
-     *   schema="SchoolUpdate",
-     *   description="学校数据",
+     *   schema="SchoolAroundUpdate",
+     *   description="学校周边数据",
      *   allOf={
      *     @OA\Schema(
      *       @OA\Property(property="id", type="integer", description="id"),
      *     ),
-     *     @OA\Schema(ref="#/components/schemas/SchoolCreate"),
+     *     @OA\Schema(ref="#/components/schemas/SchoolAroundCreate"),
      *   }
      * )
      */
@@ -206,8 +206,8 @@ class SchoolController extends \bricksasp\base\BackendController
     }
 
     /**
-     * @OA\Post(path="/runerrands/school/delete",
-     *   summary="删除学校",
+     * @OA\Post(path="/runerrands/school-around/delete",
+     *   summary="删除学校周边",
      *   tags={"跑腿模块"},
      *   
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
@@ -236,18 +236,18 @@ class SchoolController extends \bricksasp\base\BackendController
     public function actionDelete()
     {
         $params = $this->queryMapPost();
-        return School::deleteAll(['id'=>$params['ids']??0]) ? $this->success() : $this->fail();
+        return SchoolAround::deleteAll(['id'=>$params['ids']??0]) ? $this->success() : $this->fail();
     }
 
     /**
-     * Finds the School model based on its primary key value.
+     * Finds the SchoolAround model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.
      * @param integer $id
-     * @return School the loaded model
+     * @return SchoolAround the loaded model
      */
     protected function findModel($id)
     {
-        if (($model = School::findOne($id)) !== null) {
+        if (($model = SchoolAround::findOne($id)) !== null) {
             return $model;
         }
 

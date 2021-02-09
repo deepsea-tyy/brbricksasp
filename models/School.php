@@ -71,6 +71,11 @@ class School extends \bricksasp\base\BaseActiveRecord
         ];
     }
 
+    public function getArea()
+    {
+        return $this->hasMany(School::className(),['id'=>'parent_id']);
+    }
+
     public function saveData($data)
     {
         $this->load($this->formatData($data));

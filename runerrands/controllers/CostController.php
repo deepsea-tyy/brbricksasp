@@ -13,7 +13,7 @@ class CostController extends \bricksasp\base\BackendController
 	public function noLoginAction()
 	{
 		return [
-			'index',
+			'view',
 		];
 	}
 
@@ -40,7 +40,6 @@ class CostController extends \bricksasp\base\BackendController
     {
         $params = Yii::$app->request->get();
         $query =  RunerrandsCost::find();
-        $query->andFilterWhere(['like', 'name', $params['name']??null]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -76,7 +75,7 @@ class CostController extends \bricksasp\base\BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
+        $model = $this->findModel(array_filter($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']])));
         $data = $model->toArray();
         $data['weithtCost'] = $model->weithtCost;
         return $this->success($data);

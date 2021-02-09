@@ -80,4 +80,10 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
     {
         $this->errors = $errors;
     }
+    
+    public function saveData($data)
+    {
+        $this->load($this->formatData($data));
+        return $this->save();
+    }
 }

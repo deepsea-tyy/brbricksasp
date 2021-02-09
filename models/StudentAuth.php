@@ -51,6 +51,7 @@ class StudentAuth extends \bricksasp\base\BaseActiveRecord
             [['student_id_card_frontal_photo', 'student_id_card_reverse_photo'], 'string', 'max' => 64],
             [['refuse_reasons'], 'string', 'max' => 255],
             [['user_id'], 'unique'],
+            [['status'], 'default', 'value' => 0],
         ];
     }
 
@@ -74,6 +75,26 @@ class StudentAuth extends \bricksasp\base\BaseActiveRecord
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
+    }
+
+    public function getStudentIdCardFrontalPhoto()
+    {
+        return $this->hasOne(File::className(), ['id'=>'student_id_card_frontal_photo']);
+    }
+
+    public function getStudentIdCardReversePhoto()
+    {
+        return $this->hasOne(File::className(), ['id'=>'student_id_card_reverse_photo']);
+    }
+
+    public function getSchool()
+    {
+        return $this->hasOne(School::className(), ['id'=>'school_id']);
+    }
+
+    public function getSchoolArea()
+    {
+        return $this->hasOne(School::className(), ['id'=>'school_area_id']);
     }
     
     public function saveData($data)

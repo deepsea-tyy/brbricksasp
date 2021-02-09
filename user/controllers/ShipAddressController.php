@@ -18,6 +18,17 @@ class ShipAddressController extends BackendController
         return [];
     }
 
+    public function loginAction()
+    {
+        return [
+            'index',
+            'view',
+            'create',
+            'update',
+            'delete',
+        ];
+    }
+
     /**
      * @OA\Get(path="/user/ship-address/index",
      *   summary="收货地址列表",
@@ -41,9 +52,6 @@ class ShipAddressController extends BackendController
     {
         $params = Yii::$app->request->get();
         $query =  ShipAddress::find();
-        $query->andFilterWhere([
-            'status' => $params['status']??null,
-        ]);
         $query->andFilterWhere($this->ownerCondition());
 
         $dataProvider = new ActiveDataProvider([
@@ -82,14 +90,8 @@ class ShipAddressController extends BackendController
     {
         $params = Yii::$app->request->get();
         $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
-        $data = $model->toArray();
         
-        if ($model->company) {
-            $data['company'] = $model->company->toArray();
-            $data['company']['gps'] = json_decode($model->company->gps,true);
-        }
-        $data['companyQualifications'] = $model->companyQualifications;
-        return $this->success($data);
+        return $this->success($model);
     }
 
     /**
@@ -126,6 +128,7 @@ class ShipAddressController extends BackendController
      *   @OA\Property(property="phone", type="string", description="收货电话",),
      *   @OA\Property(property="is_default", type="integer", description="是否默认 1是"),
      *   @OA\Property(property="school", type="string", description="学校名称"),
+     *   @OA\Property(property="school_area", type="string", description="学校校区"),
      *   @OA\Property(property="building_no", type="string", description="楼号"),
      *   @OA\Property(property="floor", type="integer", description="楼层"),
      *   @OA\Property(property="house_number", type="integer", description="门牌号"),

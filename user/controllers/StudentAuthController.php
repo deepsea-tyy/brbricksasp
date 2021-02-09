@@ -4,6 +4,7 @@ namespace bricksasp\user\controllers;
 
 use Yii;
 use bricksasp\base\Tools;
+use bricksasp\models\redis\Token;
 use bricksasp\models\StudentAuth;
 use yii\data\ActiveDataProvider;
 use bricksasp\base\BackendController;
@@ -14,6 +15,7 @@ class StudentAuthController extends BackendController
     {
         return [
             'view',
+            'create',
             'update',
         ];
     }
@@ -82,6 +84,10 @@ class StudentAuthController extends BackendController
         $params = Yii::$app->request->get();
         $model = $this->findModel($this->updateCondition(['user_id'=>$params['user_id']??$this->current_user_id]));
         $data = $model->toArray();
+        $data['frontalPhoto'] = $model->studentIdCardFrontalPhoto;
+        $data['reversePhoto'] = $model->studentIdCardReversePhoto;
+        $data['school'] = $model->school;
+        $data['schoolArea'] = $model->schoolArea;
         
         return $this->success($data);
     }
@@ -180,6 +186,9 @@ class StudentAuthController extends BackendController
         $params = $this->queryMapPost();
         $model = $this->findModel($this->updateCondition(empty($params['user_id']) ? [] : ['user_id'=>$params['user_id']]));
 
+        if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
+            $params['status'] = 0;
+        }
         if ($model->saveData($params)) {
             return $this->success();
         }

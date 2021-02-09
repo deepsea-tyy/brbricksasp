@@ -49,6 +49,7 @@ class RealNameAuth extends \bricksasp\base\BaseActiveRecord
             [['id_card_frontal_photo', 'id_card_reverse_photo'], 'string', 'max' => 64],
             [['refuse_reasons'], 'string', 'max' => 255],
             [['user_id'], 'unique'],
+            [['status'], 'default', 'value' => 0],
         ];
     }
 

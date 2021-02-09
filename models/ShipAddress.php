@@ -17,7 +17,7 @@ use Yii;
  * @property int|null $is_default 1是
  * @property string|null $school 学校名称
  * @property string|null $building_no 楼号
- * @property int|null $floor 楼层
+ * @property string|null $floor 楼层
  * @property int|null $house_number 门牌号
  * @property int|null $created_at
  * @property int|null $updated_at
@@ -45,11 +45,12 @@ class ShipAddress extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['owner_id', 'user_id', 'area_id', 'is_default', 'floor', 'house_number', 'created_at', 'updated_at'], 'integer'],
+            [['owner_id', 'user_id', 'area_id', 'is_default', 'house_number', 'created_at', 'updated_at'], 'integer'],
             [['address'], 'string', 'max' => 128],
-            [['name', 'building_no'], 'string', 'max' => 4],
+            [['name'], 'string', 'max' => 8],
+            [['building_no','floor'], 'string', 'max' => 8],
             [['phone'], 'string', 'max' => 16],
-            [['school'], 'string', 'max' => 32],
+            [['school', 'school_area'], 'string', 'max' => 32],
         ];
     }
 
@@ -79,6 +80,9 @@ class ShipAddress extends \bricksasp\base\BaseActiveRecord
     public function saveData($data)
     {
         $this->load($this->formatData($data));
+        if (!empty($data['is_default']) && $data['is_default'] == 1) {
+            ShipAddress::updateAll(['is_default'=>null],['user_id'=>$data['current_user_id']]);
+        }
         return $this->save();
     }
 }
