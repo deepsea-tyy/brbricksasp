@@ -13,7 +13,7 @@ use yii\db\Expression;
 
 class CouponController extends \bricksasp\base\BackendController
 {
-    public function checkLoginAction()
+    public function loginAction()
     {
         return [
             'index',

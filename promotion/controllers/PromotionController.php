@@ -17,7 +17,7 @@ use yii\data\ActiveDataProvider;
  */
 class PromotionController extends BackendController
 {
-    public function checkLoginAction()
+    public function loginAction()
     {
         return [
             'index',
