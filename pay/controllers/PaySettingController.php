@@ -14,6 +14,13 @@ use bricksasp\models\form\OrderValidate;
  */
 class PaySettingController extends BackendController
 {
+    public function loginAction()
+    {
+        return [
+            'pay-params'
+        ];
+    }
+
     /**
      * @OA\Get(path="/pay/pay-setting/index",
      *   summary="支付设置列表",
@@ -236,6 +243,7 @@ class PaySettingController extends BackendController
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *   
      *   @OA\Parameter(name="order_id",in="query",required=true,@OA\Schema(type="integer"),description="订单id"),
+     *   @OA\Parameter(name="scene",in="query",required=true,@OA\Schema(type="integer"),description="2跑腿"),
      *   @OA\Parameter(name="pay_platform",in="query",required=true,@OA\Schema(type="string",default="2"),description="支付方式 2微信3支付宝"),
      *   @OA\Parameter(name="pay_type",in="query",required=true,@OA\Schema(type="string",default="qr"),description="支付类型 微信 对应(app:app支付,bar:刷卡支付,lite:小程序支付,pub:公众号,qr:扫码支付,wap:H5手机网站支付) 支付宝 对应(app:app支付,bar:刷卡支付,qr:扫码支付,wap:支付宝手机网站支付,web:电脑支付（即时到账）)"),
      *   @OA\Response(

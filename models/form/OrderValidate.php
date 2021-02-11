@@ -16,7 +16,7 @@ class OrderValidate extends \bricksasp\base\FormValidate
     public function rules()
     {
         return [
-            [['store_id', 'lat', 'lon','ship_id', 'status', 'pay_now', 'show_id', 'pay_platform'], 'number'],
+            [['store_id', 'lat', 'lon','ship_id', 'status', 'pay_now', 'show_id', 'pay_platform','scene'], 'number'],
             [['pay_type'], 'string'],
             [['pay_platform'], 'in', 'range'=> [2, 3]],
             [['pay_type'], 'in', 'range'=> ['app', 'bar', 'lite', 'pub', 'qr', 'wap', 'web']],
@@ -40,8 +40,8 @@ class OrderValidate extends \bricksasp\base\FormValidate
     public function scenarios()
     {
         return [
-            self::CREATE_ORDER => ['cart_ids', 'coupon_ids', 'buy_now', 'ship_id', 'store_id', 'lat', 'lon', 'pay_now', 'show_id', 'pay_platform', 'pay_type'],
-            self::CREATE_BILL => ['pay_platform', 'pay_type', 'order_id'],
+            self::CREATE_ORDER => ['cart_ids', 'coupon_ids', 'buy_now', 'ship_id', 'store_id', 'lat', 'lon', 'pay_now', 'show_id', 'pay_platform', 'pay_type','scene'],
+            self::CREATE_BILL => ['pay_platform', 'pay_type', 'order_id','scene'],
         ];
     }
 

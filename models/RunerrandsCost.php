@@ -49,6 +49,7 @@ class RunerrandsCost extends \bricksasp\base\BaseActiveRecord
         return [
             [['user_id', 'owner_id', 'platform_perc', 'stationmaster_perc', 'settlement_type', 'settlement_date', 'created_at', 'updated_at'], 'integer'],
             [['basic_cost', 'lunch_time_cost', 'dinner_time_cost', 'difficulty_cost', 'weather_cist', 'settlement_least'], 'number'],
+            [['basic_cost', 'lunch_time_cost', 'dinner_time_cost', 'difficulty_cost', 'weather_cist', 'settlement_least'], 'default', 'value'=>0],
         ];
     }
 

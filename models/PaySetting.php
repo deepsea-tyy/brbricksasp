@@ -109,17 +109,19 @@ class PaySetting extends \bricksasp\base\BaseActiveRecord
             'pay_type' => $pay_type,
             'ip' => Yii::$app->request->userIp,
         ]);
-        if ($model->save()) {
-            if ($data['pay_platform'] == 2) {
-                $pay = Yii::createObject([
-                    'class' => Wechat::className(),
-                    'money' => $price,
-                    'owner_id' => $data['current_owner_id'],
-                    'user_id' => $model->user_id,
-                    'pay_id' => $model->id,
-                    'ip' => $model->ip,
-                ]);
-            }
+        if (!$model->save()) {
+            Tools::breakOff('请重试');
+        }
+        if ($data['pay_platform'] == 2) {
+            $pay = Yii::createObject([
+                'class' => Wechat::className(),
+                'money' => $price,
+                'owner_id' => $data['current_owner_id'],
+                'user_id' => $model->user_id,
+                'pay_id' => $model->id,
+                'ip' => $model->ip,
+                'scene' => $data['scene']??null,
+            ]);
         }
         return $pay->$pay_type();
     }

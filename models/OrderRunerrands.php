@@ -5,6 +5,7 @@ namespace bricksasp\models;
 use Yii;
 use bricksasp\base\Tools;
 use bricksasp\promotion\models\PromotionCoupon;
+use bricksasp\promotion\models\PromotionCondition;
 
 /**
  * This is the model class for table "{{%order_runerrands}}".
@@ -35,11 +36,10 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['order_id', 'weight', 'gender', 'overtime'], 'integer'],
+            [['order_id', 'weight', 'gender', 'overtime','time'], 'integer'],
             [['content'], 'string'],
             [['tip'], 'number'],
-            [['start_place', 'end_place'], 'string', 'max' => 128],
-            [['time'], 'string', 'max' => 255],
+            [['start_place', 'end_place'], 'safe'/*, 'max' => 128*/],
         ];
     }
 
@@ -79,9 +79,10 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
                     $transaction->rollBack();
                     return false;
                 }
+                PromotionCoupon::updateAll(['status'=>PromotionCoupon::STATUS_USED],['id'=>$data['coupon_ids'],'owner_id'=>$data['owner_id']]);
 
                 $transaction->commit();
-                return true;
+                return $model;
             }else{
                 $this->setErrors($model->errors);
                 $transaction->rollBack();
@@ -101,17 +102,13 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
             return false;
         }
         $data = parent::formatData($data);
-        $student = StudentAuth::find()->select(['school_id','school_area_id'])->where(['user_id'=>$data['user_id']])->one();
-        $schoolRel = StoreRelation::find()->where(['type'=>StoreRelation::TYPE_SCHOOL, 'object_id'=>$student->school_area_id??$student->school_id])->one();
-        if ($schoolRel) {
-            $data['owner_id'] = $schoolRel->owner_id;
-        }
-
+        $student = StudentAuth::find()->with(['owner', 'costSetting'])->where(['user_id'=>$data['user_id']])->one();
         $cost = RunerrandsCost::find()->with(['weithtCost'])->where(['owner_id'=>$data['owner_id']])->one();
-        $setting = Setting::getSetting($data['owner_id'],'RUNERRANDS');//RUNERRANDS_WEATHER_ON
+        
+        $data['owner_id'] = $student->owner->owner_id ?? $data['owner_id'];
 
         $data['total_price'] = $cost->basic_cost;
-        if ($setting['RUNERRANDS_WEATHER_ON']['val']??0) {//天气
+        if ($student->costSetting->is_weather_cist) {//天气
             $data['total_price'] += $cost->weather_cist;
         }
 
@@ -124,10 +121,10 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
             }
         }
         $hour = date('H',time());
-        if ($hour < 13 && $hour>=11) {//时段
+        if (($student->costSetting->is_lunch_cost??1) && $hour < 13 && $hour>=11) {//时段
             $data['total_price'] += $cost->lunch_time_cost;
         }
-        if ($hour < 19 && $hour>=17) {
+        if (($student->costSetting->is_dinner_cost??1) && $hour < 19 && $hour>=17) {
             $data['total_price'] += $cost->dinner_time_cost;
         }
 
@@ -138,7 +135,9 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
                 $data['ship_address'] = $shipAdr->address;
                 $data['ship_name'] = $shipAdr->name;
                 $data['ship_phone'] = $shipAdr->phone;
-                if ($shipAdr->floor >=5) {
+                $fs = ['一', '二', '三', '四'];
+                $f = mb_substr($shipAdr->floor, 0,1);
+                if ($f && !in_array($f, $fs)) {
                     $data['total_price'] += $cost->difficulty_cost;
                 }
             }
@@ -154,17 +153,16 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
             $model = new PromotionCoupon();
             $coupon =  $model->checkEffectiveness($data['coupon_ids'],$data['owner_id']);
             foreach ($coupon as $item) {
-                if ($item->result_type == PromotionCondition::RESULT_FIX_REDUCE) {
-                    $data['pay_price'] = $data['total_price'] - $item->result;
+                if ($item->condition->result_type == PromotionCondition::RESULT_ORDER_FIX_REDUCE) {
+                    $data['pay_price'] = $data['total_price'] - $item->condition->result;
                 }
-                if ($item->result_type == PromotionCondition::RESULT_DISCOUNT) {
-                    $data['pay_price'] = $data['total_price'] * $item->result / 10;
+                if ($item->condition->result_type == PromotionCondition::RESULT_ORDER_DISCOUNT) {
+                    $data['pay_price'] = $data['total_price'] * $item->condition->result / 10;
                 }
-                if ($item->result_type == PromotionCondition::RESULT_ONE_PRICE) {
-                    $data['pay_price'] = $item->result;
+                if ($item->condition->result_type == PromotionCondition::RESULT_ORDER_ONE_PRICE) {
+                    $data['pay_price'] = $item->condition->result;
                 }
             }
-            PromotionCoupon::updateAll(['status'=>PromotionCoupon::STATUS_USED],['id'=>$data['coupon_ids'],'owner_id'=>$data['owner_id']]);
         }
 
         return $data;

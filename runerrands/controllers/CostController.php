@@ -6,11 +6,13 @@ use Yii;
 use bricksasp\base\Tools;
 use yii\data\ActiveDataProvider;
 use bricksasp\models\RunerrandsCost;
+use bricksasp\models\StudentAuth;
+use bricksasp\models\redis\Token;
 
 class CostController extends \bricksasp\base\BackendController
 {
 
-	public function noLoginAction()
+	public function loginAction()
 	{
 		return [
 			'view',
@@ -75,9 +77,14 @@ class CostController extends \bricksasp\base\BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel(array_filter($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']])));
+        $map = empty($params['id']) ? ['owner_id'=>$this->current_owner_id] : ['id'=>$params['id']];
+        $model = $this->findModel($map);
         $data = $model->toArray();
         $data['weithtCost'] = $model->weithtCost;
+        if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
+            $std = StudentAuth::find()->where(['user_id'=>$this->current_user_id])->one();
+            $data['setting'] = $std->costSetting;
+        }
         return $this->success($data);
     }
 

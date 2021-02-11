@@ -96,6 +96,16 @@ class StudentAuth extends \bricksasp\base\BaseActiveRecord
     {
         return $this->hasOne(School::className(), ['id'=>'school_area_id']);
     }
+
+    public function getOwner()
+    {
+        return $this->hasOne(StoreRelation::className(), ['object_id'=>'school_id'])->andWhere(['type'=>StoreRelation::TYPE_SCHOOL]);
+    }
+
+    public function getCostSetting()
+    {
+        return $this->hasOne(SchoolCostSetting::className(), ['school_id'=>$this->school_area_id?'school_area_id':'school_id']);
+    }
     
     public function saveData($data)
     {

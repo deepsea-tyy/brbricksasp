@@ -10,13 +10,16 @@ use bricksasp\models\OrderRunerrands;
 
 class OrderController extends \bricksasp\base\BackendController
 {
-
-	public function noLoginAction()
-	{
-		return [
-			'index',
-		];
-	}
+    public function loginAction()
+    {
+        return [
+            'index',
+            'view',
+            'create',
+            'update',
+            'delete',
+        ];
+    }
 
     /**
      * @OA\Get(path="/runerrands/order/index",
@@ -110,7 +113,6 @@ class OrderController extends \bricksasp\base\BackendController
      * @OA\Schema(
      *   schema="OrderRunerrandsCreate",
      *   description="跑腿订单",
-     *   @OA\Property(property="order_id", type="number", description="order_id"),
      *   @OA\Property(property="content", type="string", description="办事内容"),
      *   @OA\Property(property="start_place", type="string", description="起始地"),
      *   @OA\Property(property="end_place", type="string", description="目的地",),
@@ -130,8 +132,8 @@ class OrderController extends \bricksasp\base\BackendController
     {
         $params = $this->queryMapPost();
         $model = new OrderRunerrands();
-        if ($model->saveData($params)) {
-            return $this->success();
+        if ($order = $model->saveData($params)) {
+            return $this->success(['id'=>$order->id]);
         }
 
         return $this->fail($model->errors);

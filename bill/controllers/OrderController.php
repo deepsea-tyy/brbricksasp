@@ -5,7 +5,6 @@ use Yii;
 use bricksasp\base\Tools;
 use bricksasp\models\Order;
 use bricksasp\models\OrderItem;
-use bricksasp\models\PlaceOrder;
 use bricksasp\models\ShipAddress;
 use bricksasp\models\redis\Token;
 use bricksasp\base\BackendController;
@@ -236,8 +235,8 @@ class OrderController extends BackendController
     				if ($vtro->validate()) {
     					$payData['order_id'] = $model->id;
     					$payData['money'] = $model->pay_amount;
-    					$payData['owner_id'] = $params['owner_id'];
-    					$payData['user_id'] = $params['user_id'];
+    					$payData['owner_id'] = $model->owner_id;
+    					$payData['user_id'] = $model->user_id;
     					$payData['orderItems'] = $model->orderItems;
     					$res = PlaceOrder::newBill(ucfirst(str_replace('pay', '', $params['payment_code'])), $params['payment_type'], $payData);
     					$res['order_id'] = $model->id;

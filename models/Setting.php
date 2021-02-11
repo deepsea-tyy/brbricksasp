@@ -182,11 +182,6 @@ class Setting extends \bricksasp\base\BaseActiveRecord
             'val' => '2020-11-09',
         ],
 
-        'RUNERRANDS_WEATHER_ON' =>[
-            'title' => '开启特色天气费',
-            'val' => 1,
-        ],
-
     ];
 
     /**

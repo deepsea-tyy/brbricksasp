@@ -99,18 +99,6 @@ class PromotionCoupon extends \bricksasp\base\BaseActiveRecord
         return $this->hasOne(Promotion::className(), ['id' => 'promotion_id']);
     }
 
-    public function getStore(){
-        return $this->hasOne(Store::className(),['owner_id'=>'owner_id'])->select(['logo','name','id','owner_id','address','phone']);
-    }
-
-    public function getOrder(){
-        return $this->hasOne(Order::className(),['id'=>'order_id'])->select(['id','created_at']);
-    }
-
-    public function getUserInfo(){
-        return $this->hasOne(UserInfo::className(),['user_id'=>'user_id'])->select(['nickname','user_id','avatar']);
-    }
-
     public function getCondition(){
         return $this->hasOne(PromotionCondition::className(),['promotion_id'=>'id'])->via('promotion');
     }
@@ -143,47 +131,5 @@ class PromotionCoupon extends \bricksasp\base\BaseActiveRecord
             }
         }
         return $coupons;
-    }
-
-    /**
-     * 优惠券列表
-     * @param $params
-     * @param $field
-     * @param $with
-     * @param $status
-     * @param $orderby
-     * @return array|\yii\db\ActiveRecord[]
-     */
-    public function couponList($params,$field,$with,$status,$orderby){
-        if($params['login_type'] == Token::TOKEN_TYPE_FRONTEND){
-            $userWhere = ['user_id'=>$params['user_id']];
-        }else{
-            $userWhere = [];
-        }
-        if($status == PromotionCoupon::STATUS_NO){
-
-            $where = ['>','end_at',time()];
-            $data = PromotionCoupon::find()->with($with)->select($field)
-                ->andWhere(['status'=>$status])
-                ->andWhere($where)
-                ->andFilterWhere($userWhere)
-                ->orderBy($orderby)
-                ->asArray()->all();
-        }else{
-            $data = PromotionCoupon::find()->with($with)->select($field)
-                ->andFilterWhere($userWhere)
-                ->andWhere(['status'=>$status])
-                ->orWhere( ['and','user_id = '.$params['user_id'],'end_at < '.time()])
-                ->orderBy($orderby)
-                ->asArray()->all();
-        }
-
-        foreach($data as $k=>$v){
-            if($v['condition']){
-                $data[$k]['condition']['condition_type_name'] = PromotionCondition::TYPE_NAME[$v['condition']['condition_type']];
-                $data[$k]['condition']['result_type_name'] = PromotionCondition::RESULT_TYPE_NAME[$v['condition']['result_type']];
-            }
-        }
-        return $data;
     }
 }

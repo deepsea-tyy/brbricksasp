@@ -24,13 +24,18 @@ class Wechat extends BaseObject implements PayInterface
     public $body;
     public $app_type;
 
-    public function config()
+    public function config($type=null)
     {
         if (empty($this->scene)) {
             $this->scene = Mini::SCENE_WX_DEFAULT;
         }
 
-        $app = Mini::find()->where(['owner_id'=>$this->owner_id, 'platform'=>Mini::PLATFORM_WX, 'scene'=>$this->scene])->one();
+        $app = Mini::find()->andFilterWhere([
+            'platform'=>Mini::PLATFORM_WX, 
+            'type'=>$type,
+            'owner_id'=>$this->owner_id,
+            'scene'=>$this->scene
+        ])->one();
         $paySet = PaySetting::find()->where(['owner_id'=> $this->owner_id, 'platform'=>Mini::PLATFORM_WX])->one();
         if (!$app || !$paySet || ($paySet && !$paySet->config)) {
             Tools::breakOff(950002);
@@ -66,8 +71,7 @@ class Wechat extends BaseObject implements PayInterface
     }
 
     public function lite(){
-        $cfg = $this->config();
-
+        $cfg = $this->config(Mini::TYPE_WX_MINI);
         $user = UserInfo::find()->select(['openid'])->where(['user_id'=>$this->user_id])->one();
         $payModel = new Pay($cfg);
 

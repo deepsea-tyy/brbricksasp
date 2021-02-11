@@ -3,24 +3,17 @@
 namespace bricksasp\promotion\controllers;
 
 use Yii;
+use yii\db\Expression;
 use bricksasp\spu\models\Goods;
 use yii\data\ActiveDataProvider;
-use bricksasp\models\redis\Token;
 use bricksasp\promotion\models\Promotion;
 use bricksasp\promotion\models\PromotionCoupon;
 use bricksasp\promotion\models\PromotionCondition;
-use yii\db\Expression;
+use bricksasp\models\StudentAuth;
+use bricksasp\base\Tools;
 
 class CouponController extends \bricksasp\base\BackendController
 {
-    public function loginAction()
-    {
-        return [
-            'index',
-            'view'
-        ];
-    }
-
     public function noLoginAction()
     {
         return [
@@ -29,11 +22,28 @@ class CouponController extends \bricksasp\base\BackendController
         ];
     }
 
+    public function checkLoginAction()
+    {
+        return [
+            'index',
+            'view'
+        ];
+    }
+
+    public function loginAction()
+    {
+        return [
+            'receive',
+            'user-coupon',
+        ];
+    }
+
     /**
      * @OA\Get(path="/promotion/coupon/index",
      *   summary="优惠券列表",
      *   tags={"促销模块"},
      *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
+     *   @OA\Parameter(name="scene",in="query",@OA\Schema(type="string"),description="1默认2跑腿优惠券"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -66,13 +76,21 @@ class CouponController extends \bricksasp\base\BackendController
      */
     public function actionIndex()
     {
-        $map = [
-            'and',
-            ['owner_id'=>$this->current_owner_id, 'type' => Promotion::TYPE_COUPON, 'status' => Promotion::STATUS_YES],
-            ['and', ['>=', 'end_at', time()], ['<=', 'start_at', time()] ]
-        ];
+        $scene = Yii::$app->request->get('scene',1);
+        if ($scene == 2) {
+            $model = StudentAuth::find()->with(['owner'])->where(['user_id'=>$this->current_user_id])->one();
+            $owner_id = $model ? ($model->owner->owner_id??Tools::breakOff('未进行实名认证')) : Tools::breakOff(50001);
+        }else{
+            $owner_id = $this->current_owner_id;
+        }
         $field = ['id','name','instruction','code','start_at','end_at','exclusion','receive_num','participant_num','num'];
-        $list = Promotion::find()->select($field)->with(['condition'])->where($map)->asArray()->all();
+        $list = Promotion::find()->select($field)->with(['condition'])
+            ->andFilterWhere(['owner_id'=>$owner_id, 'type' => Promotion::TYPE_COUPON, 'status' => Promotion::STATUS_YES])
+            ->andFilterWhere(['and', ['>=', 'end_at', time()], ['<=', 'start_at', time()] ])
+            ->andFilterWhere(['scene' => $scene])
+            ->orderBy('id desc')
+            ->asArray()->all();
+
         $userCoupon = [];
         if ($this->current_user_id) {
             $userCoupon = PromotionCoupon::find()->select(['promotion_id'])->where(['owner_id'=>$this->current_owner_id, 'user_id'=>$this->current_user_id])->asArray()->all();
@@ -252,18 +270,39 @@ class CouponController extends \bricksasp\base\BackendController
     public function actionUserCoupon()
     {
         $params = $this->queryMapGet();
-        $field = ['promotion_id', 'id', 'code', 'status', 'start_at', 'end_at','owner_id'];
-        $with = ['promotion', 'condition','store'];
-        $promotionCoupon = new PromotionCoupon();
-        $orderby = ['created_at'=>SORT_DESC];
-        //未使用优惠券列表
-        $data = $promotionCoupon->couponList($params,$field,$with,PromotionCoupon::STATUS_NO,$orderby);
-        $result['coupon_list'] = $data;
-        //已使用优惠券列表
-        $orderUsed = ['use_at'=>SORT_DESC];
-        $used = $promotionCoupon->couponList($params,$field,$with,PromotionCoupon::STATUS_USED,$orderUsed);
-        $result['used_list'] = $used;
-        return $this->success($result);
+        $fields = ['promotion_id', 'id', 'code', 'status', 'start_at', 'end_at','owner_id'];
+        $with = ['promotion', 'condition'];
+        $query = PromotionCoupon::find()->select($fields)->with($with);
+        $query->andFilterWhere($this->ownerCondition());
+
+        $query->andFilterWhere(['status'=> empty($params['status']) ? 0 : 1]);
+        $query->andFilterWhere(['>','end_at',time()]);
+        $query->orderBy('id desc');
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+        ]);
+
+        $list = [];
+        foreach ($dataProvider->models as $item) {
+            $r = $item->toArray();
+            foreach ($with as $v) {
+                $r[$v] = $item->$v->toArray();
+            }
+            if($r['condition']){
+                $r['condition']['content_type_name'] = PromotionCondition::CONDITION_NAME[$r['condition']['content_type']]??'';
+                $r['condition']['result_type_name'] = PromotionCondition::RESULT_NAME[$r['condition']['result_type']]??'';
+            }
+            $list[] = $r;
+        }
+
+        return $this->success([
+          'list' => $list,
+          'pageCount' => $dataProvider->pagination->pageCount,
+          'totalCount' => $dataProvider->pagination->totalCount,
+          'page' => $dataProvider->pagination->page + 1,
+          'pageSize' => $dataProvider->pagination->limit,
+        ]);
     }
 
     /**
