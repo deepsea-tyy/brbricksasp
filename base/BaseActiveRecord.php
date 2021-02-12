@@ -34,8 +34,8 @@ class BaseActiveRecord extends \yii\db\ActiveRecord
 
     public function formatData($data)
     {
-        $data['owner_id'] = $data['current_owner_id']??($data['owner_id']??$this->owner_id);
-        $data['user_id'] = $data['current_user_id']??($data['user_id']??$this->user_id);
+        $data['owner_id'] = $data['current_owner_id']??($data['owner_id']??($this->hasProperty('owner_id',false)?$this->owner_id:null));
+        $data['user_id'] = $data['current_user_id']??($data['user_id']??($this->hasProperty('user_id',false)?$this->user_id:null));
 
         $start_at = $end_at = $release_at = null;
         if (!empty($data['start_at']) && !is_numeric($data['start_at'])) {

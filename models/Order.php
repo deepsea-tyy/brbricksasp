@@ -27,7 +27,7 @@ use bricksasp\models\ShoppingCart;
  * @property float|null $logistics_price 配送费用
  * @property string|null $logistics_id 物流号
  * @property int|null $seller_id 店铺id
- * @property int|null $complete 确单状态0未确认收货1确认收货
+ * @property int|null $complete 确单状态1确认收货
  * @property int|null $complete_at
  * @property int|null $confirm 确单状态发货前0未确认确单1确认确单
  * @property int|null $confirm_at 确认订单时间
@@ -54,7 +54,7 @@ use bricksasp\models\ShoppingCart;
  * @property string|null $ip 下单IP
  * @property string|null $mark 卖家备注
  * @property int|null $source 订单来源1pc 2wechat
- * @property int|null $status 1正常2完成3取消4删除
+ * @property int|null $status 1正常2取消
  * @property int|null $is_comment 1已评论
  * @property int|null $is_delete
  * @property string|null $lat
@@ -77,12 +77,10 @@ class Order extends \bricksasp\base\BaseActiveRecord
 
     const SHIP_STATUS_NO = 1; //未发货
     const SHIP_STATUS_YES = 2; //已发货
-    const CONFIRM_NO = 1; //未确认收货
+    const CONFIRM_NO = 1; //确认订单
 
     const STATUS_NORMAL = 1; //订单状态 正常
-    const STATUS_COMPLETE = 2; //订单状态 完成
-    const STATUS_CANCEL = 3; //订单状态 取消
-    const STATUS_DELETE = 4; //订单状态 用户删除
+    const STATUS_CANCEL = 2; //订单状态 取消
 
     const PAY_NO = 1; // 未付款
     const PAY_ALL = 2; // 已付款
@@ -195,9 +193,24 @@ class Order extends \bricksasp\base\BaseActiveRecord
         return $this->hasMany(OrderItem::className(),['order_id'=>'id']);
     }
 
+    public function getRunerrands()
+    {
+        return $this->hasOne(OrderRunerrands::className(),['order_id'=>'id']);
+    }
+
+    public function getRider()
+    {
+        return $this->hasOne(RunerrandsRider::className(),['user_id'=>'receiver']);
+    }
+
     public function getGoods()
     {
         return $this->hasMany(Goods::className(), ['id'=>'goods_id'])->via('orderItem');
+    }
+
+    public function getShipAddress()
+    {
+        return $this->hasMany(ShipAddress::className(), ['id'=>'ship_id']);
     }
 
     public function getProduct()

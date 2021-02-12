@@ -27,9 +27,6 @@ use bricksasp\models\File;
  * @property int|null $vip_duration
  * @property int|null $platform 用户类型 1站内用户2微信用户3支付宝用户4抖音用户
  * @property string|null $openid
- * @property string|null $country
- * @property string|null $province
- * @property string|null $city
  * @property string|null $unionid
  * @property int|null $level 级别
  * @property int|null $company_id 公司id
@@ -69,7 +66,7 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
             [['avatar'], 'string', 'max' => 255],
             [['name', 'nickname', 'vip'], 'string', 'max' => 32],
             [['last_login_ip', 'last_login_area', 'mark'], 'string', 'max' => 64],
-            [['openid', 'country', 'province', 'city', 'unionid', 'uuid'], 'string', 'max' => 128],
+            [['openid', 'unionid', 'uuid'], 'string', 'max' => 128],
             [['scene', 'type'], 'default', 'value' => Mini::SCENE_WX_DEFAULT],
         ];
     }
@@ -97,9 +94,6 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
             'vip_duration' => 'Vip Duration',
             'platform' => 'Platform',
             'openid' => 'Open ID',
-            'country' => 'Country',
-            'province' => 'Province',
-            'city' => 'City',
             'unionid' => 'Unionid',
             'level' => 'Level',
             'company_id' => 'Company ID',
@@ -145,6 +139,9 @@ class UserInfo extends \bricksasp\base\BaseActiveRecord
                 'owner_id' => $this->owner_id,
             ]);
             $model->save();
+            if ($this->avatar) {
+                File::remove($this->avatar);
+            }
             $this->avatar = $model->id;
         }
         return $this->save();

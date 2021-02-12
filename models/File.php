@@ -80,6 +80,16 @@ class File extends \bricksasp\base\BaseActiveRecord
         ];
     }
 
+    public static function remove($id)
+    {
+        $model = File::findOne($id);
+        if ($model) {
+            $model->delete();
+            @unlink(Yii::$app->basePath . '/web' . $model->file_url);
+        }
+        return true;
+    }
+
     public function saveData($data)
     {
         $this->load($this->formatData($data));

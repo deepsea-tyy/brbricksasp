@@ -17,7 +17,7 @@ use bricksasp\rbac\components\UserStatus;
 class Register extends Model
 {
     const TYPE_WX_MINI = 'wx_mini';
-    const TYPE_WX_MINI = 'wx_offi';
+    const TYPE_WX_OFFICIAL = 'wx_offi';
 
     public $username;
     public $access_token;
@@ -32,6 +32,7 @@ class Register extends Model
     public $key;
     public $scene; // Mini::scene类型
     public $type; // Mini::type类型
+    public $platform; // Mini::type类型
 
     /**
      * 使用场景
@@ -39,7 +40,7 @@ class Register extends Model
     public function scenarios()
     {
         return [
-            self::TYPE_WX_MINI => ['current_owner_id', 'openid', 'scene', 'mobile','type'],
+            self::TYPE_WX_MINI => ['current_owner_id', 'openid', 'scene', 'mobile','type','platform'],
         ];
     }
 
@@ -49,7 +50,7 @@ class Register extends Model
     public function rules()
     {
         return [
-            [['current_owner_id', 'scene', 'type'], 'integer'],
+            [['current_owner_id', 'scene', 'type', 'platform'], 'integer'],
             [['current_owner_id', 'openid', 'scene'], 'required'],
             [['username','openid'], 'string'],
             [['type'], 'validType'],
@@ -58,9 +59,9 @@ class Register extends Model
 
     public function validType()
     {
-        if ($this->scene == Mini::TYPE_WX_MINI) {
+        if ($this->type == Mini::TYPE_WX_MINI) {
             $this->username = 'wx_mini' . Yii::$app->security->generateRandomString(12);
-        }elseif ($this->scene == Mini::TYPE_WX_OFFICIAL) {
+        }elseif ($this->type == Mini::TYPE_WX_OFFICIAL) {
             $this->username = 'wx_offi' . Yii::$app->security->generateRandomString(12);
         }
         // if ($this->type == 2) {
@@ -82,11 +83,11 @@ class Register extends Model
             $user->password_hash = Yii::$app->security->generatePasswordHash($this->password ??$this->username);
             $user->auth_key =Yii::$app->security->generateRandomString();
             $user->mobile =$this->mobile;
-            $user->shop_id = $this->shop_id;
             $user->access_token = $this->access_token;
             $transaction = UserInfo::getDb()->beginTransaction();
             try {
                 if (!$user->save()) {
+                    $this->setErrors($user->errors);
                     return null;
                 }
                 
@@ -98,6 +99,7 @@ class Register extends Model
                     'uuid'=>str_replace('-', '', $uuid->toString()),
                     'openid'=>$this->openid,
                     'scene'=>$this->scene,
+                    'platform'=>$this->platform,
                 ]);
 
                 $userFund = new UserFund();
@@ -111,12 +113,17 @@ class Register extends Model
                     return null;
                 }
                 $transaction->commit();
-                return $user;
+                return $userInfo;
             }catch(\Throwable $e) {
                 $transaction->rollBack();
                 throw $e;
             }
         }
         return null;
+    }
+
+    protected function setErrors(array $errors)
+    {
+        $this->errors = $errors;
     }
 }

@@ -83,7 +83,7 @@ class CostController extends \bricksasp\base\BackendController
         $data['weithtCost'] = $model->weithtCost;
         if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
             $std = StudentAuth::find()->where(['user_id'=>$this->current_user_id])->one();
-            $data['setting'] = $std->costSetting;
+            $data['setting'] = $std->costSetting??[];
         }
         return $this->success($data);
     }

@@ -58,19 +58,19 @@ class LoginController extends FrontendController
      */
     public function actionCode2()
     {
-		$model = Crypt::instance($this->wxConfig($this->current_owner_id));
-		$res = $model->session(Yii::$app->request->post('code')??Tools::breakOff('code必填'));
         $scene = Yii::$app->request->post('scene',Mini::SCENE_WX_DEFAULT);
+		$model = Crypt::instance($this->wxConfig($this->current_owner_id, $scene));
+		$res = $model->session(Yii::$app->request->post('code')??Tools::breakOff('code必填'));
 
 		$user = UserInfo::find()->where(['scene'=>$scene, 'platform'=>Mini::PLATFORM_WX, 'owner_id'=>$this->current_owner_id, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
         $is_new_user = 0;
 		if (!$user) {
             $is_new_user=1;
             $reg = new Register(['scenario' => Register::TYPE_WX_MINI]);
-            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$scene, 'platform'=>Mini::PLATFORM_WX]),'');
+            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$scene, 'type'=>Mini::TYPE_WX_MINI, 'platform'=>Mini::PLATFORM_WX]),'');
             $user = $reg->signup();
             if (!$user) {
-                return $this->fail($reg->errors);
+                return $this->fail($reg->errors?$reg->errors:$user->errors);
             }
 		}
         $user->saveData(Yii::$app->request->post('uinfo',[]));
@@ -115,16 +115,16 @@ class LoginController extends FrontendController
     public function actionLoginByPhone()
     {
         $params = Yii::$app->request->post();
-        $model = Crypt::instance($this->wxConfig($this->current_owner_id));
-        $res = $model->userInfo($params['code']??Tools::breakOff('code必填'), $params['iv']??Tools::breakOff('iv必填'), $params['encryptedData']??Tools::breakOff('encryptedData必填'));
         $scene = Yii::$app->request->get('scene',Mini::SCENE_WX_DEFAULT);
+        $model = Crypt::instance($this->wxConfig($this->current_owner_id, $scene));
+        $res = $model->userInfo($params['code']??Tools::breakOff('code必填'), $params['iv']??Tools::breakOff('iv必填'), $params['encryptedData']??Tools::breakOff('encryptedData必填'));
 
         $user = UserInfo::find()->where(['scene'=>$scene, 'platform'=>Mini::PLATFORM_WX, 'owner_id'=>$this->current_owner_id, 'openid'=>$res['openid']??Tools::breakOff('code无效')])->one();
         $is_new_user = 0;
         if (!$user) {
             $is_new_user=1;
             $reg = new Register(['scenario' => Register::TYPE_WX_MINI]);
-            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$scene, 'platform'=>Mini::PLATFORM_WX, 'mobile'=> $res['purePhoneNumber']]),'');
+            $reg->load($this->sysParams(['openid'=>$res['openid'], 'scene'=>$scene, 'type'=>Mini::TYPE_WX_MINI, 'platform'=>Mini::PLATFORM_WX, 'mobile'=> $res['purePhoneNumber']]),'');
             $user = $reg->signup();
             if (!$user) {
                 return $this->fail($reg->errors);

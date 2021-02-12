@@ -29,6 +29,10 @@ class OrderController extends \bricksasp\base\BackendController
      *   
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
+     *   @OA\Parameter(name="complete",in="query",@OA\Schema(type="integer"),description="完成"),
+     *   @OA\Parameter(name="pay_status",in="query",@OA\Schema(type="integer"),description="支付状态"),
+     *   @OA\Parameter(name="receiver",in="query",@OA\Schema(type="integer"),description="接单人"),
+     *   @OA\Parameter(name="delivery",in="query",@OA\Schema(type="integer"),description="接单列表"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -43,14 +47,32 @@ class OrderController extends \bricksasp\base\BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query =  OrderRunerrands::find();
-        $query->andFilterWhere(['like', 'name', $params['name']??null]);
+        $query = Order::find()->with(['runerrands']);
+        $query->andFilterWhere($this->updateCondition(['type'=>[2,3,4,5]]));
+        $query->andFilterWhere(['complete'=>$params['complete']??null]);
+        $query->andFilterWhere(['pay_status'=>$params['pay_status']??null]);
+        $query->orderBy('created_at desc');
+        if (!empty($params['delivery'])) {
+            $query->andWhere(['pay_status'=>Order::PAY_ALL, 'receiver'=>null, 'status'=>Order::STATUS_NORMAL]);
+        }
+        if (!empty($params['pay_status']) && $params['pay_status'] == Order::PAY_ALL && !empty($params['receiver'])) {//代接单
+            $query->andFilterWhere(['not', ['receiver' => null]]);
+        }else{
+            $query->andFilterWhere(['receiver'=>empty($params['receiver'])?null:$this->current_user_id]);
+        }
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
+
+        $list=[];
+        foreach ($dataProvider->models as $item) {
+            $row = $item->toArray();
+            $row['runerrands'] = $item->runerrands;
+            $list[] = $row;
+        }
         return $this->success([
-          'list' => $dataProvider->models,
+          'list' => $list,
           'pageCount' => $dataProvider->pagination->pageCount,
           'totalCount' => $dataProvider->pagination->totalCount,
           'page' => $dataProvider->pagination->page + 1,
@@ -82,7 +104,12 @@ class OrderController extends \bricksasp\base\BackendController
         $params = Yii::$app->request->get();
         $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
         
-        return $this->success($model);
+        $data = $model->toArray();
+        $data['runerrands'] = $model->runerrands;
+        $data['shipAddress'] = $model->shipAddress;
+        $data['rider'] = $model->rider;
+
+        return $this->success($data);
     }
 
     /**
@@ -149,7 +176,9 @@ class OrderController extends \bricksasp\base\BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         ref="#/components/schemas/OrderRunerrandsUpdate"
+     *         @OA\Property(property="id",type="integer",example="1",description="id",),
+     *         @OA\Property(property="status",type="integer",example="1",description="1正常2取消",),
+     *         @OA\Property(property="complete",type="integer",example="1",description="1确认收货",),
      *       )
      *     )
      *   ),
@@ -178,42 +207,17 @@ class OrderController extends \bricksasp\base\BackendController
      */
     public function actionUpdate()
     {
-
-        return $this->fail('未开放功能');
-    }
-
-    /**
-     * @OA\Post(path="/runerrands/order/delete",
-     *   summary="删除跑腿订单",
-     *   tags={"跑腿模块"},
-     *   
-     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
-     *   
-     *   @OA\RequestBody(
-     *     @OA\MediaType(
-     *       mediaType="application/json",
-     *       @OA\Schema(
-     *         @OA\Property(property="ids", type="array", description="ids", @OA\Items()),
-     *       )
-     *     )
-     *   ),
-     *   
-     *   @OA\Response(
-     *     response=200,
-     *     description="返回数据",
-     *     @OA\MediaType(
-     *         mediaType="application/json",
-     *         @OA\Schema(ref="#/components/schemas/response"),
-     *     ),
-     *   ),
-     * )
-     *
-     * 
-     */
-    public function actionDelete()
-    {
         $params = $this->queryMapPost();
-        return OrderRunerrands::deleteAll(['id'=>$params['ids']??0]) ? $this->success() : $this->fail();
+        $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
+        if (!empty($params['status'])) {
+            $model->status = $params['status'];
+        }
+        if (!empty($params['status'])) {
+            $model->complete = 1;
+            $model->complete_at = time();
+        }
+
+        return $model->save()? $this->success() : $this->fail('请重试');
     }
 
     /**
@@ -224,7 +228,7 @@ class OrderController extends \bricksasp\base\BackendController
      */
     protected function findModel($id)
     {
-        if (($model = OrderRunerrands::findOne($id)) !== null) {
+        if (($model = Order::findOne($id)) !== null) {
             return $model;
         }
 

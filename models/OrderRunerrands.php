@@ -36,9 +36,10 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
+            [['content', 'end_place'], 'required'],
             [['order_id', 'weight', 'gender', 'overtime','time'], 'integer'],
             [['content'], 'string'],
-            [['tip'], 'number'],
+            [['tip', 'samount'], 'number'],
             [['start_place', 'end_place'], 'safe'/*, 'max' => 128*/],
         ];
     }
@@ -50,15 +51,21 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
     {
         return [
             'order_id' => 'Order ID',
-            'content' => 'Content',
-            'start_place' => 'Start Place',
-            'end_place' => 'End Place',
+            'content' => '服务内容',
+            'start_place' => '取货地点',
+            'end_place' => '服务地点',
             'time' => 'Time',
             'weight' => 'Weight',
-            'gender' => 'Gender',
-            'overtime' => 'Overtime',
-            'tip' => 'Tip',
+            'gender' => '性别',
+            'overtime' => '超时时间',
+            'tip' => '小费',
+            'samount' => '服务金额',
         ];
+    }
+
+    public function getOrder()
+    {
+        return $this->hasOne(Order::className(),['id'=>'order_id'])->select(['id','created_at','pay_price','pay_status','complete','status']);
     }
 
     public function saveData($data)
@@ -163,6 +170,7 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
                     $data['pay_price'] = $item->condition->result;
                 }
             }
+            $data['coupon'] = json_encode($coupon);
         }
 
         return $data;
