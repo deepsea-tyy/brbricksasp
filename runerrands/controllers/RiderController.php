@@ -6,6 +6,7 @@ use Yii;
 use bricksasp\base\Tools;
 use bricksasp\models\RunerrandsRider;
 use yii\data\ActiveDataProvider;
+use bricksasp\rbac\models\User;
 
 class RiderController extends \bricksasp\base\BackendController
 {
@@ -13,6 +14,8 @@ class RiderController extends \bricksasp\base\BackendController
 	{
 		return [
 			'index',
+            'login',
+            'repassword',
 		];
 	}
 
@@ -234,4 +237,72 @@ class RiderController extends \bricksasp\base\BackendController
 
         Tools::breakOff(40001);
     }
+
+    /**
+     * @OA\Post(path="/runerrands/rider/login",
+     *   summary="骑手登录",
+     *   tags={"跑腿模块"},
+     *   
+     *   @OA\RequestBody(
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         @OA\Property(property="phone", type="integer", description="phone"),
+     *         @OA\Property(property="password", type="string", description="password"),
+     *       )
+     *     )
+     *   ),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionLogin()
+    {
+        $phone = Yii::$app->request->post('phone');
+        $password = Yii::$app->request->post('password');
+        $model = $this->findModel(['phone'=>$phone, 'password'=>md5($password)]);
+        $data = User::generateApiToken($model->user_id, 1);
+        $data['school_id'] = $model->school_id;
+        return $this->success($data,'登录成功');
+    }
+
+    /**
+     * @OA\Post(path="/runerrands/rider/repassword",
+     *   summary="骑手登录",
+     *   tags={"跑腿模块"},
+     *   
+     *   @OA\RequestBody(
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         @OA\Property(property="phone", type="integer", description="phone"),
+     *         @OA\Property(property="password", type="string", description="password"),
+     *       )
+     *     )
+     *   ),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionRepassword()
+    {
+        $phone = Yii::$app->request->post('phone');
+        $password = Yii::$app->request->post('password');
+        $model = $this->findModel(['phone'=>$phone, 'password'=>md5($password)]);
+    }
+
 }

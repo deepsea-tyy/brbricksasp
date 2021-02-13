@@ -37,7 +37,7 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['content', 'end_place'], 'required'],
-            [['order_id', 'weight', 'gender', 'overtime','time'], 'integer'],
+            [['order_id', 'weight', 'gender', 'overtime','time', 'school_id', 'school_area_id'], 'integer'],
             [['content'], 'string'],
             [['tip', 'samount'], 'number'],
             [['start_place', 'end_place'], 'safe'/*, 'max' => 128*/],
@@ -112,6 +112,12 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
         $student = StudentAuth::find()->with(['owner', 'costSetting'])->where(['user_id'=>$data['user_id']])->one();
         $cost = RunerrandsCost::find()->with(['weithtCost'])->where(['owner_id'=>$data['owner_id']])->one();
         
+        if ($student->status!=1) {
+            Tools::breakOff(400001);
+        }
+
+        $data['school_id'] = $student->school_id;
+        $data['school_area_id'] = $student->school_area_id;
         $data['owner_id'] = $student->owner->owner_id ?? $data['owner_id'];
 
         $data['total_price'] = $cost->basic_cost;

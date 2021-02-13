@@ -18,6 +18,8 @@ class OrderController extends \bricksasp\base\BackendController
             'create',
             'update',
             'delete',
+            'delivery',
+            'complete',
         ];
     }
 
@@ -29,9 +31,9 @@ class OrderController extends \bricksasp\base\BackendController
      *   
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
-     *   @OA\Parameter(name="complete",in="query",@OA\Schema(type="integer"),description="完成"),
+     *   @OA\Parameter(name="complete",in="query",@OA\Schema(type="integer"),description="1确认取货2确认送货3确认收货"),
      *   @OA\Parameter(name="pay_status",in="query",@OA\Schema(type="integer"),description="支付状态"),
-     *   @OA\Parameter(name="receiver",in="query",@OA\Schema(type="integer"),description="接单人"),
+     *   @OA\Parameter(name="receiver",in="query",@OA\Schema(type="integer"),description="1待抢"),
      *   @OA\Parameter(name="delivery",in="query",@OA\Schema(type="integer"),description="接单列表"),
      *   
      *   @OA\Response(
@@ -47,19 +49,32 @@ class OrderController extends \bricksasp\base\BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query = Order::find()->with(['runerrands']);
+        $query = Order::find();
+        $with = ['runerrands'];
         $query->andFilterWhere($this->updateCondition(['type'=>[2,3,4,5]]));
-        $query->andFilterWhere(['complete'=>$params['complete']??null]);
-        $query->andFilterWhere(['pay_status'=>$params['pay_status']??null]);
         $query->orderBy('created_at desc');
-        if (!empty($params['delivery'])) {
-            $query->andWhere(['pay_status'=>Order::PAY_ALL, 'receiver'=>null, 'status'=>Order::STATUS_NORMAL]);
+        if (empty($params['delivery'])) {
+            $query->andFilterWhere(['pay_status'=>$params['pay_status']??null]);
+            $query->andFilterWhere(['complete'=>$params['complete']??null]);
+            if (!empty($params['pay_status']) && $params['pay_status'] == Order::PAY_ALL && !empty($params['receiver'])) {
+                $query->andFilterWhere(['not', ['receiver' => null]]);
+            }
+        }else {//代接单
+            $with[] = 'shipAddress';
+            $with[] = 'runerrandsWeight';
+            $with[] = 'runerrandsStartPlace';
+            $map = ['pay_status'=>Order::PAY_ALL, 'receiver'=>null, 'status'=>Order::STATUS_NORMAL];
+            if ($params['delivery'] == 1) {//待抢
+                $ods = OrderRunerrands::find()->select(['order_id'])->where(['school_id'=>$params['school_id']??Tools::breakOff(50001)])->asArray()->all();
+                $map['id'] = array_column($ods,'order_id');
+            }else{
+                $map['receiver'] = $this->current_user_id;
+                $map['complete'] = empty($params['complete'])?null : explode(',',$params['complete']);
+            }
+            // var_dump($map);exit();
+            $query->andWhere($map);
         }
-        if (!empty($params['pay_status']) && $params['pay_status'] == Order::PAY_ALL && !empty($params['receiver'])) {//代接单
-            $query->andFilterWhere(['not', ['receiver' => null]]);
-        }else{
-            $query->andFilterWhere(['receiver'=>empty($params['receiver'])?null:$this->current_user_id]);
-        }
+        $query->with($with);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -68,7 +83,9 @@ class OrderController extends \bricksasp\base\BackendController
         $list=[];
         foreach ($dataProvider->models as $item) {
             $row = $item->toArray();
-            $row['runerrands'] = $item->runerrands;
+            foreach ($with as $field) {
+                $row[$field] = $item->$field;
+            }
             $list[] = $row;
         }
         return $this->success([
@@ -178,7 +195,7 @@ class OrderController extends \bricksasp\base\BackendController
      *       @OA\Schema(
      *         @OA\Property(property="id",type="integer",example="1",description="id",),
      *         @OA\Property(property="status",type="integer",example="1",description="1正常2取消",),
-     *         @OA\Property(property="complete",type="integer",example="1",description="1确认收货",),
+     *         @OA\Property(property="complete",type="integer",example="1",description="1确认取货2确认收货",),
      *       )
      *     )
      *   ),
@@ -212,8 +229,8 @@ class OrderController extends \bricksasp\base\BackendController
         if (!empty($params['status'])) {
             $model->status = $params['status'];
         }
-        if (!empty($params['status'])) {
-            $model->complete = 1;
+        if (!empty($params['complete'])) {
+            $model->complete = 2;
             $model->complete_at = time();
         }
 
@@ -236,10 +253,9 @@ class OrderController extends \bricksasp\base\BackendController
     }
 
     /**
-     *
      * @OA\Post(path="/runerrands/order/delivery",
-     *   summary="跑腿送货",
-     *   tags={"bill模块"},
+     *   summary="跑腿抢单送货",
+     *   tags={"跑腿模块"},
      *   @OA\Parameter(name="X-Token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
      *
      *   @OA\RequestBody(
@@ -267,12 +283,46 @@ class OrderController extends \bricksasp\base\BackendController
         $order_id = $params['order_id'];
         $key = 'graborder' . $order_id;
         if (Yii::$app->redis->setnx($key,1)) {
-            if (Order::updateAll(['receiver' => $this->current_user_id, 'receiver_at'=>time()],['id'=>$order_id, 'status'=>0]) === false) {
+            if (Order::updateAll(['receiver' => $this->current_user_id, 'receiver_at'=>time()],['id'=>$order_id, 'receiver'=>null]) === false) {
                 Yii::$app->redis->del($key);
                 return $this->fail('请重试');
             }
+            Yii::$app->redis->del($key);
+            return $this->success();
         }
         Yii::$app->redis->del($key);
         return $this->fail('差一点点运气，该单已被抢走～～');
+    }
+
+    /**
+     * @OA\Post(path="/runerrands/order/complete",
+     *   summary="跑腿送货状态",
+     *   tags={"跑腿模块"},
+     *   @OA\Parameter(name="X-Token",in="header",@OA\Schema(type="string"),required=true,description="用户请求token"),
+     *
+     *   @OA\RequestBody(
+     *     required=true,
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         @OA\Property(property="order_id",type="integer",description="订单id")
+     *         @OA\Property(property="complete",type="integer",description="1确认取货2确认送货")
+     *       )
+     *     )
+     *   ),
+     *
+     *   @OA\Response(
+     *     response=200,
+     *     description="响应结构",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionComplete() {
+        $params = $this->queryMapPost();
+        return Order::updateAll(['complete' => $params['complete']],['id'=>$params['order_id']??Tools::breakOff('订单号有误')]) === false ? $this->fail('请重试'):$this->success();
     }
 }

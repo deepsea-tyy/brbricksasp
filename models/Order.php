@@ -198,6 +198,16 @@ class Order extends \bricksasp\base\BaseActiveRecord
         return $this->hasOne(OrderRunerrands::className(),['order_id'=>'id']);
     }
 
+    public function getRunerrandsWeight()
+    {
+        return $this->hasOne(RunerrandsCostWeight::className(),['id'=>'weight'])->via('runerrands');
+    }
+
+    public function getRunerrandsStartPlace()
+    {
+        return $this->hasOne(SchoolAround::className(),['id'=>'start_place'])->via('runerrands');
+    }
+
     public function getRider()
     {
         return $this->hasOne(RunerrandsRider::className(),['user_id'=>'receiver']);
@@ -210,7 +220,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
 
     public function getShipAddress()
     {
-        return $this->hasMany(ShipAddress::className(), ['id'=>'ship_id']);
+        return $this->hasOne(ShipAddress::className(), ['id'=>'ship_id']);
     }
 
     public function getProduct()
