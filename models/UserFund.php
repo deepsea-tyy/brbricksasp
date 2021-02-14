@@ -16,6 +16,7 @@ use Yii;
  * @property int|null $exp 经验值
  * @property int|null $credit 信用分
  * @property int|null $version
+ * @property int|null $out_amount
  */
 class UserFund extends \bricksasp\base\BaseActiveRecord
 {
@@ -35,7 +36,7 @@ class UserFund extends \bricksasp\base\BaseActiveRecord
         return [
             [['user_id'], 'required'],
             [['user_id', 'score', 'exp', 'credit', 'version'], 'integer'],
-            [['amount', 'discount_amount', 'use_amount', 'coin'], 'number'],
+            [['amount', 'discount_amount', 'use_amount', 'coin', 'out_amount'], 'number'],
             [['user_id'], 'unique'],
         ];
     }

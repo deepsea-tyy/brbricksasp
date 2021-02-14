@@ -4,6 +4,7 @@ namespace bricksasp\user\controllers;
 use Yii;
 use bricksasp\base\Tools;
 use bricksasp\models\UserInfo;
+use bricksasp\models\UserFund;
 use yii\data\ActiveDataProvider;
 use bricksasp\base\BackendController;
 
@@ -17,6 +18,7 @@ class UserInfoController extends BackendController
 		return [
 			'view',
             'update',
+            'fund',
 		];
 	}
 
@@ -111,6 +113,30 @@ class UserInfoController extends BackendController
         $data = $model->toArray();
         $data['file'] = $model->file;
         return $this->success($data);
+    }
+
+    /**
+     * @OA\Get(path="/user/user-info/fund",
+     *   summary="用户资产详情",
+     *   tags={"user模块"},
+     *   
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="integer"),description="id"),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       
+     *       @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionFund()
+    {
+        $model = UserFund::findOne(Yii::$app->request->get('id')??['user_id'=>$this->current_user_id]);
+        return $this->success($model);
     }
 
     /**

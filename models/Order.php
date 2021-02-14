@@ -61,6 +61,7 @@ use bricksasp\models\ShoppingCart;
  * @property string|null $lon
  * @property int|null $receiver 接单人
  * @property int|null $receiver_at 接单时间
+ * @property int|null $transit 中转人
  * @property int|null $created_at 创建时间
  * @property int|null $updated_at 更新时间
  */
@@ -114,7 +115,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['id', 'owner_id', 'user_id', 'parent_id', 'pay_status', 'pay_at', 'seller_id', 'complete', 'complete_at', 'confirm', 'confirm_at', 'store_id', 'ship_status', 'ship_id', 'ship_area_id', 'tax_type', 'type', 'point', 'source', 'status', 'is_comment', 'is_delete', 'receiver', 'receiver_at', 'created_at', 'updated_at'], 'integer'],
+            [['id', 'owner_id', 'user_id', 'parent_id', 'pay_status', 'pay_at', 'seller_id', 'complete', 'complete_at', 'confirm', 'confirm_at', 'store_id', 'ship_status', 'ship_id', 'ship_area_id', 'tax_type', 'type', 'point', 'source', 'status', 'is_comment', 'is_delete', 'receiver', 'receiver_at', 'transit', 'created_at', 'updated_at'], 'integer'],
             [['total_price', 'pay_price', 'payed_price', 'logistics_price', 'total_weight', 'total_volume', 'point_money', 'order_pmt'], 'number'],
             [['pay_platform'], 'string', 'max' => 8],
             [['logistics_name'], 'string', 'max' => 32],

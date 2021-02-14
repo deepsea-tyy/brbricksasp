@@ -41,6 +41,7 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
             [['content'], 'string'],
             [['tip', 'samount'], 'number'],
             [['start_place', 'end_place'], 'safe'/*, 'max' => 128*/],
+            [['phone'], 'checkPhone',],
         ];
     }
 
@@ -61,6 +62,13 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
             'tip' => '小费',
             'samount' => '服务金额',
         ];
+    }
+
+    public function checkPhone()
+    {
+        if ($this->type == Order::TYPE_SCHOOL_OTHER && !Tools::is_mobile($this->phone)) {
+            $this->addError('phone','请输入正确的联系电话');
+        }
     }
 
     public function getOrder()
@@ -175,8 +183,10 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
                 if ($item->condition->result_type == PromotionCondition::RESULT_ORDER_ONE_PRICE) {
                     $data['pay_price'] = $item->condition->result;
                 }
+                $data['coupon'][] = $item->condition;
             }
-            $data['coupon'] = json_encode($coupon);
+            $data['coupon'] = json_encode($data['coupon']??[]);
+            $data['order_pmt'] = $data['total_price'] - $data['pay_price'];
         }
 
         return $data;

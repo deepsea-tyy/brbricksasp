@@ -4,8 +4,9 @@ namespace bricksasp\runerrands\controllers;
 
 use Yii;
 use bricksasp\base\Tools;
-use yii\data\ActiveDataProvider;
 use bricksasp\models\Order;
+use yii\data\ActiveDataProvider;
+use bricksasp\models\RunerrandsCost;
 use bricksasp\models\OrderRunerrands;
 
 class OrderController extends \bricksasp\base\BackendController
@@ -119,12 +120,19 @@ class OrderController extends \bricksasp\base\BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(empty($params['id']) ? [] : ['id'=>$params['id']]));
+        $model = $this->findModel($params['id']??null);
         
         $data = $model->toArray();
         $data['runerrands'] = $model->runerrands;
         $data['shipAddress'] = $model->shipAddress;
         $data['rider'] = $model->rider;
+        $data['runerrandsWeight'] = $model->runerrandsWeight;
+        $data['runerrandsStartPlace'] = $model->runerrandsStartPlace;
+        $cost = RunerrandsCost::findOne(['owner_id'=>$this->current_owner_id]);
+
+        $platform_perc_price = $model->pay_price * ($cost->platform_perc + $cost->stationmaster_perc)/100;
+        $data['platform_perc_price'] = $platform_perc_price;
+        $data['getMoney'] = number_format($model->pay_price - $platform_perc_price, 2, '.', '');
 
         return $this->success($data);
     }
@@ -307,6 +315,9 @@ class OrderController extends \bricksasp\base\BackendController
      *       @OA\Schema(
      *         @OA\Property(property="order_id",type="integer",description="订单id")
      *         @OA\Property(property="complete",type="integer",description="1确认取货2确认送货")
+     *         @OA\Property(property="transit",type="integer",description="1转单")
+     *         @OA\Property(property="transit_user",type="integer",description="定向接单人")
+     *         @OA\Property(property="cancel",type="integer",description="1取消")
      *       )
      *     )
      *   ),
@@ -323,6 +334,15 @@ class OrderController extends \bricksasp\base\BackendController
      */
     public function actionComplete() {
         $params = $this->queryMapPost();
+        if (!empty($params['transit'])) {
+            return Order::updateAll(['transit' => $params['current_user_id']],['id'=>$params['order_id']??Tools::breakOff('订单号有误')]) === false ? $this->fail('请重试'):$this->success();
+        }
+        if (!empty($params['transit_user'])) {
+            return Order::updateAll(['receiver' => $params['transit_user']],['id'=>$params['order_id']??Tools::breakOff('订单号有误')]) === false ? $this->fail('请重试'):$this->success();
+        }
+        if (!empty($params['cancel'])) {
+            return Order::updateAll(['receiver' => null],['id'=>$params['order_id']??Tools::breakOff('订单号有误')]) === false ? $this->fail('请重试'):$this->success();
+        }
         return Order::updateAll(['complete' => $params['complete']],['id'=>$params['order_id']??Tools::breakOff('订单号有误')]) === false ? $this->fail('请重试'):$this->success();
     }
 }

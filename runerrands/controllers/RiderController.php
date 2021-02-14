@@ -55,6 +55,7 @@ class RiderController extends \bricksasp\base\BackendController
         $query->andFilterWhere($this->ownerCondition());
         $query->andFilterWhere(['school_id'=>$params['school_id']??Tools::breakOff('未找学校相应到数据')]);
         $query->andFilterWhere(['like', 'name', $params['name']??null]);
+        $query->andFilterWhere(['status'=>$params['status']??1]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
