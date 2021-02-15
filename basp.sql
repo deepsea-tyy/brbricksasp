@@ -11,7 +11,7 @@
  Target Server Version : 50731
  File Encoding         : 65001
 
- Date: 11/02/2021 21:45:28
+ Date: 15/02/2021 21:04:44
 */
 
 SET NAMES utf8mb4;
@@ -720,6 +720,7 @@ CREATE TABLE `basp_order` (
   `lon` char(16) DEFAULT NULL,
   `receiver` int(11) DEFAULT NULL COMMENT '接单人',
   `receiver_at` int(11) DEFAULT NULL COMMENT '接单时间',
+  `transit` int(11) DEFAULT NULL COMMENT '中转人',
   `created_at` int(11) DEFAULT NULL,
   `updated_at` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
@@ -806,8 +807,22 @@ CREATE TABLE `basp_order_runerrands` (
   `gender` tinyint(1) DEFAULT NULL,
   `overtime` tinyint(2) DEFAULT NULL COMMENT '超时 小时',
   `tip` decimal(10,2) DEFAULT NULL COMMENT '小费',
+  `samount` decimal(10,2) DEFAULT NULL COMMENT '代购金额',
+  `school_id` int(11) DEFAULT NULL,
+  `school_area_id` int(11) DEFAULT NULL,
+  `phone` char(16) DEFAULT NULL,
   UNIQUE KEY `order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='跑腿';
+
+-- ----------------------------
+-- Table structure for basp_order_runerrands_cancel
+-- ----------------------------
+DROP TABLE IF EXISTS `basp_order_runerrands_cancel`;
+CREATE TABLE `basp_order_runerrands_cancel` (
+  `order_id` bigint(20) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `created_at` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for basp_order_setting
@@ -1043,6 +1058,32 @@ CREATE TABLE `basp_runerrands_cost_weight` (
   `price` decimal(10,2) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for basp_runerrands_rider
+-- ----------------------------
+DROP TABLE IF EXISTS `basp_runerrands_rider`;
+CREATE TABLE `basp_runerrands_rider` (
+  `user_id` int(11) NOT NULL,
+  `owner_id` int(11) DEFAULT NULL,
+  `school_id` int(11) DEFAULT NULL,
+  `school_area_id` int(11) DEFAULT NULL,
+  `name` varchar(8) DEFAULT NULL,
+  `phone` char(11) DEFAULT NULL,
+  `has_car` tinyint(1) DEFAULT NULL,
+  `status` tinyint(1) DEFAULT NULL,
+  `refuse_reasons` text,
+  `password` char(64) DEFAULT NULL,
+  `tmp_msg` tinyint(1) DEFAULT NULL COMMENT '1订阅消息通知',
+  `work_status` tinyint(1) DEFAULT NULL COMMENT '1接单中',
+  `day_order` tinyint(3) DEFAULT NULL COMMENT '日单数',
+  `total_order` int(11) DEFAULT NULL COMMENT '累计单数',
+  `day_money` decimal(10,2) DEFAULT '0.00',
+  `total_amount` decimal(10,2) DEFAULT '0.00',
+  `created_at` int(11) DEFAULT NULL,
+  `updated_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='骑手表';
 
 -- ----------------------------
 -- Table structure for basp_school
@@ -1355,7 +1396,26 @@ CREATE TABLE `basp_user` (
   UNIQUE KEY `basp_user_password_reset_token_uindex` (`password_reset_token`),
   UNIQUE KEY `basp_user_email_uindex` (`email`),
   UNIQUE KEY `basp_user_mobile_uindex` (`mobile`)
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4;
+
+-- ----------------------------
+-- Table structure for basp_user_draw_money
+-- ----------------------------
+DROP TABLE IF EXISTS `basp_user_draw_money`;
+CREATE TABLE `basp_user_draw_money` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `owner_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `money` decimal(10,2) DEFAULT NULL,
+  `status` tinyint(1) DEFAULT NULL COMMENT '1提现成功',
+  `commission` decimal(10,2) DEFAULT NULL,
+  `platform` tinyint(1) DEFAULT NULL COMMENT '1微信2支付宝',
+  `draw_type` tinyint(1) DEFAULT NULL COMMENT '1零钱',
+  `scene` tinyint(2) DEFAULT NULL COMMENT '1跑腿',
+  `created_at` int(11) DEFAULT NULL,
+  `updated_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1000000000000000016 DEFAULT CHARSET=utf8mb4 COMMENT='提现表';
 
 -- ----------------------------
 -- Table structure for basp_user_fund
@@ -1371,6 +1431,7 @@ CREATE TABLE `basp_user_fund` (
   `exp` int(11) DEFAULT '0' COMMENT '经验值',
   `credit` int(11) DEFAULT '0' COMMENT '信用分',
   `version` int(11) DEFAULT '1',
+  `out_amount` decimal(10,2) DEFAULT '0.00' COMMENT '累计提现',
   PRIMARY KEY (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户资金表';
 
@@ -1379,12 +1440,20 @@ CREATE TABLE `basp_user_fund` (
 -- ----------------------------
 DROP TABLE IF EXISTS `basp_user_fund_log`;
 CREATE TABLE `basp_user_fund_log` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) DEFAULT NULL,
   `owner_id` int(11) DEFAULT NULL,
-  `point` varchar(32) DEFAULT NULL,
-  `type` tinyint(2) DEFAULT NULL,
-  `created_at` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='积分纪录';
+  `point` decimal(10,2) DEFAULT NULL,
+  `status` tinyint(1) DEFAULT NULL COMMENT '1入账2出账',
+  `type` tinyint(2) DEFAULT NULL COMMENT '1money2积分3信用分',
+  `object_id` bigint(20) DEFAULT NULL COMMENT '来源id',
+  `object_type` tinyint(2) DEFAULT NULL COMMENT '1订单2提现',
+  `perc` decimal(10,2) DEFAULT NULL COMMENT '抽成',
+  `scene` tinyint(5) DEFAULT NULL COMMENT '1跑腿',
+  `amount` decimal(10,2) DEFAULT NULL COMMENT '账户余额',
+  `created_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COMMENT='资产变动流水表';
 
 -- ----------------------------
 -- Table structure for basp_user_info
@@ -1409,9 +1478,6 @@ CREATE TABLE `basp_user_info` (
   `vip_duration` int(11) DEFAULT NULL COMMENT 'vip结束时间',
   `platform` tinyint(3) DEFAULT NULL COMMENT '用户类型 1站内用户2微信用户3支付宝用户4抖音用户',
   `openid` varchar(128) DEFAULT NULL,
-  `country` varchar(128) DEFAULT NULL,
-  `province` varchar(128) DEFAULT NULL,
-  `city` varchar(128) DEFAULT NULL,
   `unionid` varchar(128) DEFAULT NULL,
   `level` tinyint(3) DEFAULT NULL COMMENT '级别',
   `company_id` int(11) DEFAULT NULL COMMENT '公司id',
@@ -1425,7 +1491,7 @@ CREATE TABLE `basp_user_info` (
   PRIMARY KEY (`id`) USING BTREE,
   KEY `user_id` (`user_id`) USING BTREE,
   KEY `owner_id` (`owner_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for basp_user_vip

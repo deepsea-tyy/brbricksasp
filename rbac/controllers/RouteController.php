@@ -89,7 +89,7 @@ class RouteController extends BackendController
      *   summary="刷新路由缓存",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\Response(
      *     response=200,

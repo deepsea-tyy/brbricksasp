@@ -20,6 +20,7 @@ class UserFundController extends BackendController
         return [
             'log',
             'draw-money',
+            'draw-money-list'
         ];
     }
 
@@ -253,7 +254,10 @@ class UserFundController extends BackendController
      *   
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
-     *   @OA\Parameter(name="object_type",in="query",@OA\Schema(type="integer"),description="1跑腿"),
+     *   @OA\Parameter(name="status",in="query",@OA\Schema(type="integer"),description="1入账2出账"),
+     *   @OA\Parameter(name="object_type",in="query",@OA\Schema(type="integer"),description="1订单2提现"),
+     *   @OA\Parameter(name="scene",in="query",@OA\Schema(type="integer"),description="1跑腿",example=1),
+     *   @OA\Parameter(name="dateTime",in="query",@OA\Schema(type="integer"),description="默认当月"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -269,12 +273,16 @@ class UserFundController extends BackendController
     {
         $params = Yii::$app->request->get();
         $query =  UserFundLog::find();
-        $query->andFilterWhere([
-            'status' => $params['status']??null,
-        ]);
         $query->andFilterWhere($this->ownerCondition());
         $query->andFilterWhere(['object_type'=>$params['object_type']??null]);
-
+        $query->andFilterWhere(['status'=>$params['status']??null]);
+        $query->andFilterWhere(['scene'=>$params['scene']??null]);
+        
+        $params['dateTime'] = empty($params['dateTime'])? time() : $params['dateTime'];
+        $start = strtotime(date('Y-m',$params['dateTime']));
+        $end = strtotime(date('Y-m',$params['dateTime']) . ' +1 month');
+        $query->andFilterWhere(['between', 'created_at', $start, $end]);
+        
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
@@ -317,18 +325,62 @@ class UserFundController extends BackendController
      *   description="提现",
      *   @OA\Property(property="money", type="number", description="提现金额"),
      *   @OA\Property(property="status", type="number", description="1提现成功2拒绝"),
-     *   @OA\Property(property="commission", type="number", description="手续费"),
+     *   @OA\Property(property="platform", type="integer", description="1微信2支付宝"),
+     *   @OA\Property(property="draw_type", type="integer", description="1零钱"),
+     *   @OA\Property(property="scene", type="integer", description="1跑腿",example=1),
      * )
      */
     public function actionDrawMoney()
     {
         $params = $this->queryMapPost();
-        print_r($params);exit();
         $model = new DrawMoney();
         if ($model->saveData($params)) {
             return $this->success();
         }
 
         return $this->fail($model->errors);
+    }
+
+    /**
+     * @OA\Get(path="/user/user-fund/draw-money-list",
+     *   summary="会员提现列表",
+     *   tags={"user模块"},
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
+     *   
+     *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
+     *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
+     *   @OA\Parameter(name="status",in="query",@OA\Schema(type="integer"),description="1提现成功2撤销"),
+     *   @OA\Parameter(name="scene",in="query",@OA\Schema(type="integer"),description="1跑腿",example=1),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/pagination"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionDrawMoneyList()
+    {
+        $params = Yii::$app->request->get();
+        $query =  DrawMoney::find()->asArray();
+        $query->andFilterWhere($this->ownerCondition());
+        $query->andFilterWhere([
+            'status'=>$params['status']??null,
+            'scene'=>$params['scene']??1,
+        ]);
+        
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+        ]);
+        return $this->success([
+          'list' => $dataProvider->models,
+          'pageCount' => $dataProvider->pagination->pageCount,
+          'totalCount' => $dataProvider->pagination->totalCount,
+          'page' => $dataProvider->pagination->page + 1,
+          'pageSize' => $dataProvider->pagination->limit,
+        ]);
     }
 }

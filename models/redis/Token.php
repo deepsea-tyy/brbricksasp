@@ -105,7 +105,7 @@ eof;
      */
     public static function destroyToken($token)
     {
-        return self::getDb()->executeCommand('DEL', [$model->keyPrefix() . ':' . $token]);
+        return self::getDb()->executeCommand('DEL', [self::keyPrefix() . ':' . $token]);
     }
 
 

@@ -25,6 +25,7 @@ class RiderController extends \bricksasp\base\BackendController
             'view',
             'create',
             'update',
+            'rank',
         ];
     }
 
@@ -306,4 +307,34 @@ class RiderController extends \bricksasp\base\BackendController
         $model = $this->findModel(['phone'=>$phone, 'password'=>md5($password)]);
     }
 
+    /**
+     * @OA\Get(path="/runerrands/rider/rank",
+     *   summary="骑手排行",
+     *   tags={"跑腿模块"},
+     *   
+     *   @OA\Parameter(name="school_id",in="query",@OA\Schema(type="integer"),description="学校id"),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       
+     *       @OA\Schema(ref="#/components/schemas/RunerrandsRiderUpdate"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionRank()
+    {
+        $school_id = Yii::$app->request->get('school_id');
+        $models = RunerrandsRider::find()->with(['userInfo'])->where(['school_id'=>$school_id??Tools::breakOff(50001)])->orderBy('total_amount desc')->all();
+        $list = [];
+        foreach ($models as $item) {
+            $row = $item->toArray();
+            $row['file'] = $item->userInfo->file??[];
+            $list[] = $row;
+        }
+        return $this->success($list);
+    }
 }

@@ -313,10 +313,10 @@ class OrderController extends \bricksasp\base\BackendController
      *     @OA\MediaType(
      *       mediaType="application/json",
      *       @OA\Schema(
-     *         @OA\Property(property="order_id",type="integer",description="订单id")
-     *         @OA\Property(property="complete",type="integer",description="1确认取货2确认送货")
-     *         @OA\Property(property="transit",type="integer",description="1转单")
-     *         @OA\Property(property="transit_user",type="integer",description="定向接单人")
+     *         @OA\Property(property="order_id",type="integer",description="订单id"),
+     *         @OA\Property(property="complete",type="integer",description="1确认取货2确认送货"),
+     *         @OA\Property(property="transit",type="integer",description="1转单"),
+     *         @OA\Property(property="transit_user",type="integer",description="定向接单人"),
      *         @OA\Property(property="cancel",type="integer",description="1取消")
      *       )
      *     )

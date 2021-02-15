@@ -44,7 +44,7 @@ class RoleController extends ItemController
      *   summary="角色对应菜单",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\Response(
      *     response=200,
@@ -80,7 +80,7 @@ class RoleController extends ItemController
      * @OA\Get(path="/rbac/role/index",
      *   summary="角色列表",
      *   tags={"管理后台权限接口"},
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   @OA\Response(
      *     response=200,
      *     description="响应结构",
@@ -103,7 +103,7 @@ class RoleController extends ItemController
      *   summary="创建角色",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\RequestBody(
      *     required=true,
@@ -136,7 +136,7 @@ class RoleController extends ItemController
      *   summary="删除角色",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *
      *   @OA\Parameter(required=true,description="角色名称",name="id",in="query",@OA\Schema(type="string")),
      *   
@@ -159,7 +159,7 @@ class RoleController extends ItemController
      *   summary="角色权限详情",
      *   tags={"管理后台权限接口"},
      *
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *
      *   @OA\Parameter(required=true,description="角色名称",name="id",in="query",@OA\Schema(type="string")),
      *   
@@ -182,7 +182,7 @@ class RoleController extends ItemController
      *   summary="给角色授权",
      *   tags={"管理后台权限接口"},
      *
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\Parameter(required=true,description="角色名称",name="id",in="query",@OA\Schema(type="string")),
      *   @OA\RequestBody(
@@ -216,7 +216,7 @@ class RoleController extends ItemController
      *   summary="移除角色权限",
      *   tags={"管理后台权限接口"},
      *
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\Parameter(required=true,description="id",name="id",in="query",@OA\Schema(type="string")),
      *   @OA\RequestBody(
@@ -281,7 +281,7 @@ class RoleController extends ItemController
      *   summary="路由列表",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\Response(
      *     response=200,
@@ -303,7 +303,7 @@ class RoleController extends ItemController
      *   summary="添加路由",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\RequestBody(
      *     required=true,
@@ -336,7 +336,7 @@ class RoleController extends ItemController
      *   summary="新建路由",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\RequestBody(
      *     required=true,
@@ -368,7 +368,7 @@ class RoleController extends ItemController
      *   summary="规则列表",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\RequestBody(
      *     required=true,
@@ -401,7 +401,7 @@ class RoleController extends ItemController
      *   summary="新建规则",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\RequestBody(
      *     required=true,
@@ -436,7 +436,7 @@ class RoleController extends ItemController
      *   summary="删除规则",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   @OA\Parameter(required=true,description="规则名称",name="id",in="query",@OA\Schema(type="string")),
      *   
      *   @OA\Response(
@@ -460,7 +460,7 @@ class RoleController extends ItemController
      *   summary="菜单列表",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   
      *   @OA\Response(
@@ -483,7 +483,7 @@ class RoleController extends ItemController
      *   summary="创建菜单",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\RequestBody(
      *     required=true,
@@ -523,7 +523,7 @@ class RoleController extends ItemController
      *   summary="删除菜单",
      *   tags={"管理后台权限接口"},
      *   
-     *   @OA\Parameter(required=true,description="用户请求token",name="auth-token",in="header",@OA\Schema(type="string")),
+     *   @OA\Parameter(required=true,description="用户请求token",name="access-token",in="header",@OA\Schema(type="string")),
      *   
      *   @OA\Parameter(required=true,description="菜单id",name="id",in="query",@OA\Schema(type="integer")),
      *   

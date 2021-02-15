@@ -53,6 +53,7 @@ class UserController extends BackendController {
 		return [
 			'info',
 			'index',
+			'logout',
 		];
 	}
 
@@ -193,13 +194,8 @@ class UserController extends BackendController {
      * )
 	 */
 	public function actionLogout() {
-        $tokenHeader = Yii::$app->request->getHeaders()->get('auth-token');
-        if ($tokenHeader) {
-        	User::destroyApiToken($tokenHeader);
-			Yii::$app->getUser()->logout();
-			return $this->success();
-        }
-		Tools::breakOff(40005);
+    	User::destroyApiToken(Yii::$app->request->getHeaders()->get('access-token'));
+		Tools::breakOff(50001);
 	}
 
 	/**

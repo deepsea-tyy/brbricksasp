@@ -21,7 +21,7 @@
             data: {name: "xu", foo: 'bar'},
             cache: false,
             headers: { 
-                "auth-token":token,
+                "access-token":token,
                 // "Content-Type": "application/x-www-form-urlencoded"  //multipart/form-data;boundary=--xxxxxxx   application/json
             },                
             success: function(res){
