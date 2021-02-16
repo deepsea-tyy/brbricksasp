@@ -60,9 +60,9 @@ class OrderController extends \bricksasp\base\BackendController
         $query->orderBy('created_at desc');
         if (empty($params['delivery'])) {
             $query->andFilterWhere(['pay_status'=>$params['pay_status']??null]);
-            $query->andFilterWhere(['complete'=>$params['complete']??null]);
-            if (!empty($params['pay_status']) && $params['pay_status'] == Order::PAY_ALL && !empty($params['receiver'])) {
-                $query->andFilterWhere(['not', ['receiver' => null]]);
+            $query->andFilterWhere(['complete'=>empty($params['complete'])?null:explode(',',$params['complete'])]);
+            if (isset($params['complete'])||isset($params['pay_status'])) {
+                $query->andWhere(isset($params['complete'])?['not', ['receiver' => null]]:['receiver' => null]);
             }
         }else {//代接单
             $with[] = 'shipAddress';

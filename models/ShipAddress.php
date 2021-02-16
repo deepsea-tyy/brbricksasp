@@ -3,6 +3,7 @@
 namespace bricksasp\models;
 
 use Yii;
+use bricksasp\base\Tools;
 
 /**
  * This is the model class for table "{{%ship_address}}".
@@ -51,6 +52,7 @@ class ShipAddress extends \bricksasp\base\BaseActiveRecord
             [['building_no','floor'], 'string', 'max' => 8],
             [['phone'], 'string', 'max' => 16],
             [['school', 'school_area'], 'string', 'max' => 32],
+            [['phone'], 'checkPhone'],
         ];
     }
 
@@ -66,7 +68,7 @@ class ShipAddress extends \bricksasp\base\BaseActiveRecord
             'area_id' => 'Area ID',
             'address' => 'Address',
             'name' => 'Name',
-            'phone' => 'Phone',
+            'phone' => '手机号',
             'is_default' => 'Is Default',
             'school' => 'School',
             'building_no' => 'Building No',
@@ -75,6 +77,13 @@ class ShipAddress extends \bricksasp\base\BaseActiveRecord
             'created_at' => 'Created At',
             'updated_at' => 'Updated At',
         ];
+    }
+
+    public function checkPhone()
+    {
+        if (!Tools::is_mobile($this->phone)) {
+            $this->addError('phone', '手机号不正确');
+        }
     }
 
     public function saveData($data)

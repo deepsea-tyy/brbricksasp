@@ -82,7 +82,10 @@ class StudentAuthController extends BackendController
     public function actionView()
     {
         $params = Yii::$app->request->get();
-        $model = $this->findModel($this->updateCondition(['user_id'=>$params['user_id']??$this->current_user_id]));
+        $model = StudentAuth::findOne($this->updateCondition(['user_id'=>$params['user_id']??$this->current_user_id]));
+        if (!$model) {
+            Tools::breakOff(empty($params['auth']) ? 400001 : 40001);
+        }
         $data = $model->toArray();
         $data['frontalPhoto'] = $model->studentIdCardFrontalPhoto;
         $data['reversePhoto'] = $model->studentIdCardReversePhoto;

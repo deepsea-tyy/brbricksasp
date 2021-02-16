@@ -137,7 +137,7 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
         $data['owner_id'] = $student->owner->owner_id ?? $data['owner_id'];
 
         $data['total_price'] = $cost->basic_cost;
-        if ($student->costSetting->is_weather_cist) {//天气
+        if ($student->costSetting->is_weather_cist??0) {//天气
             $data['total_price'] += $cost->weather_cist;
         }
 
