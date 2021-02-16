@@ -14,11 +14,15 @@ use bricksasp\promotion\models\PromotionCondition;
  * @property string|null $content
  * @property string|null $start_place 起始地
  * @property string|null $end_place 目的地
- * @property string|null $time 办事时间
+ * @property int|null $time 办事时间
  * @property int|null $weight 重量
  * @property int|null $gender
  * @property int|null $overtime 超时 小时
  * @property float|null $tip 小费
+ * @property float|null $samount 代购金额
+ * @property int|null $school_id
+ * @property int|null $school_area_id
+ * @property string|null $phone
  */
 class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
 {
@@ -36,12 +40,12 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
     public function rules()
     {
         return [
-            [['content', 'end_place'], 'required'],
-            [['order_id', 'weight', 'gender', 'overtime','time', 'school_id', 'school_area_id'], 'integer'],
+            [['order_id', 'time', 'weight', 'gender', 'overtime', 'school_id', 'school_area_id'], 'integer'],
             [['content'], 'string'],
             [['tip', 'samount'], 'number'],
-            [['start_place', 'end_place'], 'safe'/*, 'max' => 128*/],
-            [['phone'], 'checkPhone',],
+            [['start_place', 'end_place'], 'checkLength',],
+            [['phone'], 'string', 'max' => 16],
+            [['order_id'], 'unique'],
         ];
     }
 
@@ -64,10 +68,10 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
         ];
     }
 
-    public function checkPhone()
+    public function checkLength()
     {
-        if ($this->type == Order::TYPE_SCHOOL_OTHER && !Tools::is_mobile($this->phone)) {
-            $this->addError('phone','请输入正确的联系电话');
+        if (mb_strlen($this->start_place)>128 || mb_strlen($this->end_place)>128) {
+            $this->addError(mb_strlen($this->start_place)>128?'start_place':'end_place','不得大于128字符。');
         }
     }
 
@@ -79,6 +83,10 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
     public function saveData($data)
     {
         if (!$this->checkArray($data,['coupon_ids'])) {
+            return false;
+        }
+        if ($data['type'] == Order::TYPE_SCHOOL_OTHER && !Tools::is_mobile($data['phone'])) {
+            $this->addError('phone','请输入正确的联系电话');
             return false;
         }
         $data = $this->formatData($data);
@@ -102,7 +110,7 @@ class OrderRunerrands extends \bricksasp\base\BaseActiveRecord
                 $this->setErrors($model->errors);
                 $transaction->rollBack();
             }
-            return false;            
+            return false;
         } catch(\Throwable $e) {
             $transaction->rollBack();
             Tools::breakOff($e->getMessage());

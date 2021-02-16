@@ -7,6 +7,7 @@ use Yii;
 /**
  * This is the model class for table "{{%user_fund_log}}".
  *
+ * @property int $id
  * @property int|null $user_id
  * @property int|null $owner_id
  * @property float|null $point
@@ -14,8 +15,9 @@ use Yii;
  * @property int|null $type 1money2积分3信用分
  * @property int|null $object_id 来源id
  * @property int|null $object_type 1订单2提现
+ * @property float|null $perc 抽成
  * @property int|null $scene 1跑腿
- * @property float|null $amount
+ * @property float|null $amount 账户余额
  * @property int|null $created_at
  */
 class UserFundLog extends \bricksasp\base\BaseActiveRecord

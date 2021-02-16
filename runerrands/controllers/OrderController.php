@@ -8,6 +8,10 @@ use bricksasp\models\Order;
 use yii\data\ActiveDataProvider;
 use bricksasp\models\RunerrandsCost;
 use bricksasp\models\OrderRunerrands;
+use bricksasp\models\UserFundLog;
+use bricksasp\models\UserFund;
+use bricksasp\models\OrderSettle;
+use bricksasp\models\RunerrandsRider;
 
 class OrderController extends \bricksasp\base\BackendController
 {
@@ -238,11 +242,60 @@ class OrderController extends \bricksasp\base\BackendController
             $model->status = $params['status'];
         }
         if (!empty($params['complete'])) {
-            $model->complete = 2;
+            $model->complete = 3;
             $model->complete_at = time();
         }
 
-        return $model->save()? $this->success() : $this->fail('请重试');
+        $transaction = $model::getDb()->beginTransaction();
+        try {
+            if ($model->save()) {
+                $settle = OrderSettle::find()->where(['order_id'=>$model->id])->one();
+                if ($model->complete == 3 && !$settle) {
+                    $fund = UserFund::find()->where(['user_id'=>$model->receiver])->one();
+                    $cost = RunerrandsCost::find()->where(['owner_id'=>$model->owner_id])->one();
+
+                    $rate = $cost->platform_perc+$cost->stationmaster_perc;
+                    $perc = $model->pay_price * $rate /100;
+                    $money = $model->pay_price - $perc;
+                    $settle = new OrderSettle();
+                    $settle->load([
+                        'owner_id'=>$model->owner_id,
+                        'user_id'=>$model->receiver,
+                        'order_id'=>$model->id,
+                        'status'=>1,
+                        'money'=>$money,
+                    ]);
+                    
+
+                    $log = new UserFundLog();
+                    $log->load([
+                        'owner_id'=>$model->owner_id,
+                        'user_id'=>$model->receiver,
+                        'status'=>1,
+                        'type'=>1,
+                        'point'=>$money,
+                        'object_id'=>$model->id,
+                        'object_type'=>1,
+                        'perc'=>$perc,
+                        'amount' => $fund->amount + $money,
+                    ]);
+
+                    if (!$settle->save() 
+                        || !$log->save() 
+                        || !UserFund::updateAllCounters(['amount'=>$money],['user_id'=>$model->receiver])
+                        || !RunerrandsRider::updateAllCounters(['total_amount'=>$money,'total_order'=>1],['user_id'=>$model->receiver])
+                    ) {
+                        $transaction->rollBack();
+                        Tools::breakOff('请重试');
+                    }
+                }
+                $transaction->commit();
+                return $this->success();
+            }
+        } catch(\Throwable $e) {
+            $transaction->rollBack();
+        }
+        return $this->fail('请重试');
     }
 
     /**

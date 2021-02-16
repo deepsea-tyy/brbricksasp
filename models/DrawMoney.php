@@ -82,10 +82,6 @@ class DrawMoney extends \bricksasp\base\BaseActiveRecord
             $this->addError('money', '账户金额不足');
             return false;
         }
-        $cost = RunerrandsCost::find()->where(['owner_id'=>$data['current_owner_id']])->one();
-
-        $rate = $cost->platform_perc+$cost->stationmaster_perc;
-        $perc = $data['money'] * $rate /100;
 
         $this->load($this->formatData($data));
         $transaction = self::getDb()->beginTransaction();
@@ -103,7 +99,6 @@ class DrawMoney extends \bricksasp\base\BaseActiveRecord
                 'point'=>$this->money,
                 'object_id'=>$this->id,
                 'object_type'=>2,
-                'perc'=>$perc,
                 'platform' => $data['platform']??null,
                 'draw_type'=>$data['draw_type']??null,
                 'amount' => $fund->amount - $this->money,

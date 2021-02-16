@@ -269,7 +269,10 @@ class RiderController extends \bricksasp\base\BackendController
     {
         $phone = Yii::$app->request->post('phone');
         $password = Yii::$app->request->post('password');
-        $model = $this->findModel(['phone'=>$phone, 'password'=>md5($password)]);
+        $model = RunerrandsRider::findOne(['phone'=>$phone, 'password'=>md5($password)]);
+        if (!$model) {
+            return $this->fail('账号或密码错误');
+        }
         $data = User::generateApiToken($model->user_id, 1);
         $data['school_id'] = $model->school_id;
         return $this->success($data,'登录成功');
