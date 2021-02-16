@@ -11,7 +11,7 @@
  Target Server Version : 50731
  File Encoding         : 65001
 
- Date: 15/02/2021 21:04:44
+ Date: 16/02/2021 15:16:14
 */
 
 SET NAMES utf8mb4;
@@ -838,6 +838,22 @@ CREATE TABLE `basp_order_setting` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
+-- Table structure for basp_order_settle
+-- ----------------------------
+DROP TABLE IF EXISTS `basp_order_settle`;
+CREATE TABLE `basp_order_settle` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `owner_id` int(11) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `order_id` bigint(20) DEFAULT NULL,
+  `money` decimal(10,2) DEFAULT NULL,
+  `status` tinyint(1) DEFAULT NULL,
+  `created_at` int(11) DEFAULT NULL,
+  `updated_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COMMENT='订单结算表';
+
+-- ----------------------------
 -- Table structure for basp_pay_setting
 -- ----------------------------
 DROP TABLE IF EXISTS `basp_pay_setting`;
@@ -1191,7 +1207,7 @@ CREATE TABLE `basp_ship_address` (
   `created_at` int(11) DEFAULT NULL,
   `updated_at` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COMMENT='收货地址';
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COMMENT='收货地址';
 
 -- ----------------------------
 -- Table structure for basp_shopping_cart
@@ -1396,7 +1412,7 @@ CREATE TABLE `basp_user` (
   UNIQUE KEY `basp_user_password_reset_token_uindex` (`password_reset_token`),
   UNIQUE KEY `basp_user_email_uindex` (`email`),
   UNIQUE KEY `basp_user_mobile_uindex` (`mobile`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for basp_user_draw_money
@@ -1453,7 +1469,7 @@ CREATE TABLE `basp_user_fund_log` (
   `amount` decimal(10,2) DEFAULT NULL COMMENT '账户余额',
   `created_at` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COMMENT='资产变动流水表';
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COMMENT='资产变动流水表';
 
 -- ----------------------------
 -- Table structure for basp_user_info
@@ -1491,7 +1507,7 @@ CREATE TABLE `basp_user_info` (
   PRIMARY KEY (`id`) USING BTREE,
   KEY `user_id` (`user_id`) USING BTREE,
   KEY `owner_id` (`owner_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for basp_user_vip
