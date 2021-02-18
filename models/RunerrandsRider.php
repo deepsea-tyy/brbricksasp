@@ -4,6 +4,7 @@ namespace bricksasp\models;
 
 use Yii;
 use bricksasp\base\Tools;
+use bricksasp\models\redis\Token;
 
 /**
  * This is the model class for table "{{%runerrands_rider}}".
@@ -24,6 +25,7 @@ use bricksasp\base\Tools;
  * @property int|null $total_order 累计单数
  * @property float|null $day_money
  * @property float|null $total_amount
+ * @property int|null $passa_at 审核通过时间
  * @property int|null $created_at
  * @property int|null $updated_at
  */
@@ -51,7 +53,7 @@ class RunerrandsRider extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['school_id', 'name', 'phone', 'has_car', 'password'], 'required'],
-            [['user_id', 'owner_id', 'school_id', 'school_area_id', 'has_car', 'status', 'tmp_msg', 'work_status', 'day_order', 'total_order', 'created_at', 'updated_at'], 'integer'],
+            [['user_id', 'owner_id', 'school_id', 'school_area_id', 'has_car', 'status', 'tmp_msg', 'work_status', 'day_order', 'total_order', 'passa_at','created_at', 'updated_at'], 'integer'],
             [['refuse_reasons'], 'string'],
             [['day_money', 'total_amount'], 'number'],
             [['name'], 'string', 'max' => 8],
@@ -92,14 +94,29 @@ class RunerrandsRider extends \bricksasp\base\BaseActiveRecord
         return $this->hasOne(UserInfo::className(),['user_id'=>'user_id'])->select(['user_id','avatar'])->with(['file']);
     }
 
+    public function getSchool()
+    {
+        return $this->hasOne(School::className(), ['id'=>'school_id'])->select(['id', 'name']);
+    }
+
+    public function getSchoolArea()
+    {
+        return $this->hasOne(School::className(), ['id'=>'school_area_id'])->select(['id', 'name']);
+    }
+
     public function formatData($data)
     {
         $data = parent::formatData($data);
-        $sc = StoreRelation::find()->where(['object_id'=>$data['school_id']??null,'type'=>StoreRelation::TYPE_SCHOOL])->one();
-        if (!$sc) {
-            Tools::breakOff('学校未开放');
+        if ($this->isNewRecord && Token::TOKEN_TYPE_FRONTEND == $data['current_login_type']) {
+            $sc = StoreRelation::find()->where(['object_id'=>$data['school_id']??null,'type'=>StoreRelation::TYPE_SCHOOL])->one();
+            if (!$sc) {
+                Tools::breakOff('学校未开放');
+            }
+            $data['owner_id'] = $sc->owner_id;
         }
-        $data['owner_id'] = $sc->owner_id;
+        if (!empty($data['status']) && $data['status'] == 1) {
+            $data['passa_at'] = time();
+        }
         return $data;
     }
 }

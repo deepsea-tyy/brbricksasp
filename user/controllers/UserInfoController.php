@@ -57,7 +57,7 @@ class UserInfoController extends BackendController
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query->with(['file'])->joinWith([
-			    'orders' => function ($query) {
+			    'order' => function ($query) {
 			        $query->onCondition(['order.status' => Order::STATUS_ACTIVE]);
 			    },
 			]),

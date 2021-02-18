@@ -182,7 +182,7 @@ class RiderController extends \bricksasp\base\BackendController
     public function actionUpdate()
     {
         $params = $this->queryMapPost();
-        $model = $this->findModel(['user_id'=>$params['id'] ?? $this->current_user_id]);
+        $model = $this->findModel(['user_id'=>$params['user_id'] ?? $this->current_user_id]);
 
         if ($model->saveData($params)) {
             return $this->success();

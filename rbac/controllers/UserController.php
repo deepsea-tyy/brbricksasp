@@ -4,18 +4,10 @@ namespace bricksasp\rbac\controllers;
 use Yii;
 use yii\helpers\Url;
 use yii\mail\BaseMailer;
-use yii\base\UserException;
 use yii\filters\VerbFilter;
-use yii\base\InvalidParamException;
-use yii\web\BadRequestHttpException;
 use bricksasp\rbac\components\Configs;
-use bricksasp\rbac\components\UserStatus;
-use bricksasp\rbac\models\form\ChangePassword;
 use bricksasp\rbac\models\form\Login;
-use bricksasp\rbac\models\form\PasswordResetRequest;
-use bricksasp\rbac\models\form\ResetPassword;
 use bricksasp\rbac\models\form\Signup;
-use bricksasp\rbac\models\searchs\User as UserSearch;
 use bricksasp\rbac\models\User;
 use bricksasp\models\redis\Token;
 use bricksasp\base\BackendController;
@@ -27,24 +19,6 @@ use GatewayClient\Gateway;
  * User controller
  */
 class UserController extends BackendController {
-	private $_oldMailPath;
-
-	/**
-	 * @inheritdoc
-	 */
-	public function behaviors() {
-		return array_merge(parent::behaviors(), [
-			'verbs' => [
-				'class' => VerbFilter::className(),
-				'actions' => [
-					'delete' => ['post'],
-					'logout' => ['post'],
-					'activate' => ['post'],
-				],
-			],
-		]);
-	}
-
 	/**
 	 * 登录可访问 其他需授权
 	 * @return array
@@ -110,28 +84,16 @@ class UserController extends BackendController {
     }
 
 	/**
-	 * @inheritdoc
+	 * 用户信息
+	 * @return array
 	 */
-	public function beforeAction($action) {
-		if (parent::beforeAction($action)) {
-			if (Yii::$app->has('mailer') && ($mailer = Yii::$app->getMailer()) instanceof BaseMailer) {
-				/* @var $mailer BaseMailer */
-				$this->_oldMailPath = $mailer->getViewPath();
-				$mailer->setViewPath('@bricksasp/rbac/mail');
-			}
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * @inheritdoc
-	 */
-	public function afterAction($action, $result) {
-		if ($this->_oldMailPath !== null) {
-			Yii::$app->getMailer()->setViewPath($this->_oldMailPath);
-		}
-		return parent::afterAction($action, $result);
+	public function actionInfo() {
+		$info = [
+			'id' => $this->current_user_id,
+			'roles' => array_keys(Yii::$app->authManager->getRolesByUser(Yii::$app->user->getId())),
+            'avatar' => 'http://www.bricksasp.com/static/img/beian2.gif'
+		];
+		return $this->success($info);
 	}
 
 	/**
@@ -242,100 +204,5 @@ class UserController extends BackendController {
 		}
 
 		return $this->fail($model->errors);
-	}
-
-	/**
-	 * Request reset password
-	 * @return string
-	 */
-	public function actionRequestPasswordReset() {
-		$model = new PasswordResetRequest();
-		if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-			if ($model->sendEmail()) {
-				Yii::$app->getSession()->setFlash('success', 'Check your email for further instructions.');
-
-				return $this->goHome();
-			} else {
-				Yii::$app->getSession()->setFlash('error', 'Sorry, we are unable to reset password for email provided.');
-			}
-		}
-
-		return $this->render('requestPasswordResetToken', [
-			'model' => $model,
-		]);
-	}
-
-	/**
-	 * Reset password
-	 * @return string
-	 */
-	public function actionResetPassword($token) {
-		try {
-			$model = new ResetPassword($token);
-		} catch (InvalidParamException $e) {
-			throw new BadRequestHttpException($e->getMessage());
-		}
-
-		if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
-			Yii::$app->getSession()->setFlash('success', 'New password was saved.');
-
-			return $this->goHome();
-		}
-
-		return $this->render('resetPassword', [
-			'model' => $model,
-		]);
-	}
-
-	/**
-	 * Reset password
-	 * @return string
-	 */
-	public function actionChangePassword() {
-		$model = new ChangePassword();
-		if ($model->load(Yii::$app->request->post()) && $model->change()) {
-			return $this->goHome();
-		}
-
-		return $this->render('change-password', [
-			'model' => $model,
-		]);
-	}
-
-	/**
-	 * Activate new user
-	 * @param integer $id
-	 * @return type
-	 * @throws UserException
-	 * @throws NotFoundHttpException
-	 */
-	public function actionActivate($id) {
-		/* @var $user User */
-		$user = $this->findModel($id);
-		if ($user->status == UserStatus::INACTIVE) {
-			$user->status = UserStatus::ACTIVE;
-			if ($user->save()) {
-				return $this->goHome();
-			} else {
-				$errors = $user->firstErrors;
-				throw new UserException(reset($errors));
-			}
-		}
-		return $this->goHome();
-	}
-
-	/**
-	 * Finds the User model based on its primary key value.
-	 * If the model is not found, a 404 HTTP exception will be thrown.
-	 * @param integer $id
-	 * @return User the loaded model
-	 * @throws NotFoundHttpException if the model cannot be found
-	 */
-	protected function findModel($id) {
-		if (($model = User::findOne($id)) !== null) {
-			return $model;
-		} else {
-			Tools::breakOff(40001);
-		}
 	}
 }

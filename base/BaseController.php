@@ -25,7 +25,7 @@ class BaseController extends \yii\web\Controller
 		];
 		Yii::$container->set('yii\data\Pagination', $paginationSettings);
 	}
-
+/*
    public function behaviors()
    {
        return [
@@ -39,7 +39,7 @@ class BaseController extends \yii\web\Controller
                ]
            ]
        ];
-   }
+   }*/
 
 	/**
 	 * 免登录访问

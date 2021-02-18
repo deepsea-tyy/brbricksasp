@@ -12,7 +12,7 @@ use Yii;
  * @property int|null $parent_id 0表示主店 其他表示分店
  * @property string|null $name 店铺名称
  * @property int|null $industry_id 行业分类id
- * @property int|null $type 1商铺2供货商3学校
+ * @property int|null $type 1商铺2供货商3学校站长
  * @property int|null $nature 经营性质1旗舰店2专营店3专卖店
  * @property string|null $brand 经营品牌
  * @property string|null $logo
@@ -29,6 +29,10 @@ use Yii;
  * @property int|null $status 0未审核1通过2拒绝
  * @property string|null $refuse_reasons 拒绝原因
  * @property int|null $is_delete
+ * @property int|null $start_at 开始有效时间
+ * @property int|null $end_at 结束有效时间
+ * @property float|null $total_amount
+ * @property float|null $out_amount
  * @property int|null $created_at
  * @property int|null $updated_at
  */
@@ -56,14 +60,15 @@ class Store extends \bricksasp\base\BaseActiveRecord
     {
         return [
             [['owner_id'], 'required'],
-            [['owner_id', 'user_id', 'parent_id', 'industry_id', 'type', 'nature', 'return_area_id', 'area_id', 'status', 'is_delete', 'created_at', 'updated_at'], 'integer'],
+            [['owner_id', 'user_id', 'parent_id', 'industry_id', 'type', 'nature', 'return_area_id', 'area_id', 'status', 'is_delete', 'start_at','end_at','created_at', 'updated_at'], 'integer'],
+            [['total_amount', 'out_amount'], 'number'],
             [['name', 'brand'], 'string', 'max' => 32],
             [['logo', 'return_address', 'address'], 'string', 'max' => 64],
             [['brief', 'tm_url', 'jd_url', 'own_site_url', 'refuse_reasons'], 'string', 'max' => 255],
             [['contacts'], 'string', 'max' => 4],
             [['contacts_phone'], 'string', 'max' => 20],
             [['owner_id'], 'unique'],
-            [['parent_id'], 'default', 'value' => 0],
+            [['parent_id', 'total_amount', 'out_amount'], 'default', 'value' => 0],
         ];
     }
 
@@ -106,6 +111,16 @@ class Store extends \bricksasp\base\BaseActiveRecord
     public function getCompanyQualifications()
     {
         return $this->hasOne(CompanyQualifications::className(), ['owner_id'=>'owner_id']);
+    }
+
+    public function getSchoolRelation()
+    {
+        return $this->hasOne(StoreRelation::className(), ['owner_id'=>'owner_id']);
+    }
+
+    public function getSchool()
+    {
+        return $this->hasOne(School::className(), ['id'=>'object_id'])->select(['id','name'])->via('schoolRelation');
     }
 
     public function saveData($data)

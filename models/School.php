@@ -76,6 +76,11 @@ class School extends \bricksasp\base\BaseActiveRecord
         return $this->hasMany(School::className(),['id'=>'parent_id']);
     }
 
+    public function getSchool()
+    {
+        return $this->hasMany(School::className(),['parent_id'=>'id']);
+    }
+
     public function saveData($data)
     {
         $this->load($this->formatData($data));

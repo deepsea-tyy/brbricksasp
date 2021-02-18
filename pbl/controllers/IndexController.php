@@ -12,6 +12,7 @@ use bricksasp\rbac\models\form\Login;
 use bricksasp\models\LogisticsCompany;
 use bricksasp\models\IndustryCategory;
 use bricksasp\models\Setting;
+use bricksasp\models\File;
 
 class IndexController extends \bricksasp\base\FrontendController
 {
@@ -29,6 +30,7 @@ class IndexController extends \bricksasp\base\FrontendController
             'hot-keywords',
             'get-logistics',
             'config',
+            'file',
         ];
     }
 
@@ -310,5 +312,34 @@ class IndexController extends \bricksasp\base\FrontendController
             return $token == false ? $this->fail(Yii::t('messages',50002), 50002) : $this->success(['token' => $token]);
         };
         return $this->fail($model->errors);
+    }
+
+    /**
+     * Login
+     * @OA\get(path="/pbl/index/file",
+     *   summary="统一文件访问",
+     *   tags={"pbl模块"},
+     *   
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="string"),description="文件id"),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="响应结构",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response")
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionFile()
+    {
+        $id = Yii::$app->request->get('id');
+        if ($id) {
+            if ($model = File::findOne($id)) {
+                return $this->redirect($model->file_url);
+            }
+        }
+        return $this->redirect('/default.jpeg');
     }
 }

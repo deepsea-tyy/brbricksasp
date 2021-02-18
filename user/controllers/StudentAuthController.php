@@ -6,6 +6,8 @@ use Yii;
 use bricksasp\base\Tools;
 use bricksasp\models\redis\Token;
 use bricksasp\models\StudentAuth;
+use bricksasp\models\RunerrandsRider;
+use bricksasp\models\Store;
 use yii\data\ActiveDataProvider;
 use bricksasp\base\BackendController;
 
@@ -28,6 +30,8 @@ class StudentAuthController extends BackendController
      *   
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
+     *   @OA\Parameter(name="is_rider",in="query",@OA\Schema(type="integer"),description="1骑手"),
+     *   @OA\Parameter(name="is_incharge",in="query",@OA\Schema(type="integer"),description="1站长"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -42,17 +46,45 @@ class StudentAuthController extends BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
+        $with = ['schoolArea','school','realName','uinfo','user','orders'];
         $query =  StudentAuth::find();
         $query->andFilterWhere([
             'status' => $params['status']??null,
         ]);
         $query->andFilterWhere($this->ownerCondition());
+        $query->orderBy('status asc');
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
+        if (isset($params['is_rider'])) {
+            $ids = RunerrandsRider::find()->select(['user_id'])->asArray()->all();
+            $query->andFilterWhere([
+                'user_id' => array_column($ids,'user_id'),
+            ]);
+        }
+        if (isset($params['is_incharge'])) {
+            $ids = Store::find()->select(['user_id'])->where(['type'=>3])->asArray()->all();
+            $query->andFilterWhere([
+                'user_id' => array_column($ids,'user_id')?array_column($ids,'user_id'):[0],
+            ]);
+        }
+
+        $list = [];
+        foreach ($dataProvider->models as $item) {
+            $row = $item->toArray();
+            foreach ($with as $field) {
+                if ($field == 'orders') {
+                    $row['orderCount'] = $item->$field ? number_format(array_sum(array_column($item->$field, 'pay_price')), 2, '.', ''):0;
+                    $row['orderNum'] = $item->$field ? count($item->$field):0;
+                    continue;
+                }
+                $row[$field] = $item->$field;
+            }
+            $list[] = $row;
+        }
         return $this->success([
-          'list' => $dataProvider->models,
+          'list' => $list,
           'pageCount' => $dataProvider->pagination->pageCount,
           'totalCount' => $dataProvider->pagination->totalCount,
           'page' => $dataProvider->pagination->page + 1,
@@ -86,11 +118,43 @@ class StudentAuthController extends BackendController
         if (!$model) {
             Tools::breakOff(empty($params['auth']) ? 400001 : 40001);
         }
+
         $data = $model->toArray();
-        $data['frontalPhoto'] = $model->studentIdCardFrontalPhoto;
-        $data['reversePhoto'] = $model->studentIdCardReversePhoto;
         $data['school'] = $model->school;
         $data['schoolArea'] = $model->schoolArea;
+        if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
+            $data['frontalPhoto'] = $model->studentIdCardFrontalPhoto;
+            $data['reversePhoto'] = $model->studentIdCardReversePhoto;
+        }else{
+            $data['realName'] = $model->realName;
+            $data['realName'] = $model->realName;
+            $data['uinfo'] = $model->uinfo;
+            $data['user'] = $model->user;
+            $data['fund'] = $model->fund;
+            if ($model->rider) {
+                $rider = $model->rider->toArray();
+                $rider['school'] = $model->rider->school;
+                $rider['schoolArea'] = $model->rider->schoolArea;
+                $data['rider'] = $rider;
+            }
+            if ($model->store) {
+                $store = $model->store->toArray();
+                if ($model->store->schoolRelation->type == 2) {
+                    $store['schoolArea'] = $model->store->school;
+                    $store['school'] = $model->store->school->school;
+                }else{
+                    $store['school'] = $model->store->school;
+                }
+                $data['store'] = $store;
+            }
+
+            $orders = $model->orders;
+
+            $data['orderCount'] = $orders ? number_format(array_sum(array_column($orders, 'pay_price')), 2, '.', ''):'0.00';
+            $data['orderNum'] = $orders ? count($orders):0;
+            $last = end($orders);
+            $data['lastOrderTime'] = $last ? $last['created_at']:0;
+        }
         
         return $this->success($data);
     }

@@ -9,7 +9,7 @@ use Yii;
  *
  * @property int|null $owner_id
  * @property int|null $object_id
- * @property int|null $type 1学校
+ * @property int|null $type 1学校2校区
  */
 class StoreRelation extends \bricksasp\base\BaseActiveRecord
 {

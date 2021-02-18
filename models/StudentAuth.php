@@ -89,17 +89,52 @@ class StudentAuth extends \bricksasp\base\BaseActiveRecord
 
     public function getSchool()
     {
-        return $this->hasOne(School::className(), ['id'=>'school_id']);
+        return $this->hasOne(School::className(), ['id'=>'school_id'])->select(['id', 'name']);
     }
 
     public function getSchoolArea()
     {
-        return $this->hasOne(School::className(), ['id'=>'school_area_id']);
+        return $this->hasOne(School::className(), ['id'=>'school_area_id'])->select(['id', 'name']);
     }
 
     public function getOwner()
     {
         return $this->hasOne(StoreRelation::className(), ['object_id'=>'school_id'])->andWhere(['type'=>StoreRelation::TYPE_SCHOOL]);
+    }
+
+    public function getRealName()
+    {
+        return $this->hasOne(RealNameAuth::className(), ['user_id'=>'user_id']);
+    }
+
+    public function getUinfo()
+    {
+        return $this->hasOne(UserInfo::className(), ['user_id'=>'user_id'])->select(['user_id','avatar','nickname','openid','created_at'])->with(['file']);
+    }
+
+    public function getUser()
+    {
+        return $this->hasOne(User::className(), ['id'=>'user_id'])->select(['id','mobile']);
+    }
+
+    public function getRider()
+    {
+        return $this->hasOne(RunerrandsRider::className(), ['user_id'=>'user_id'])->select(['user_id','phone','school_id', 'school_area_id','total_amount','passa_at', 'status']);
+    }
+
+    public function getFund()
+    {
+        return $this->hasOne(UserFund::className(), ['user_id'=>'user_id'])->select(['user_id','out_amount']);
+    }
+
+    public function getOrders()
+    {
+        return $this->hasMany(Order::className(), ['user_id'=>'user_id'])->select(['user_id','pay_price','created_at'])->andWhere(['pay_status'=>Order::PAY_ALL])->orderBy('created_at asc');
+    }
+
+    public function getStore()
+    {
+        return $this->hasOne(Store::className(), ['user_id'=>'user_id'])->select(['user_id','owner_id','total_amount','out_amount', 'start_at','end_at', 'status']);
     }
 
     public function getCostSetting()
