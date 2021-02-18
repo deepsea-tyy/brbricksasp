@@ -11,7 +11,7 @@
  Target Server Version : 50731
  File Encoding         : 65001
 
- Date: 16/02/2021 15:16:14
+ Date: 18/02/2021 20:54:34
 */
 
 SET NAMES utf8mb4;
@@ -1096,6 +1096,7 @@ CREATE TABLE `basp_runerrands_rider` (
   `total_order` int(11) DEFAULT NULL COMMENT '累计单数',
   `day_money` decimal(10,2) DEFAULT '0.00',
   `total_amount` decimal(10,2) DEFAULT '0.00',
+  `passa_at` int(11) DEFAULT NULL COMMENT '审核通过时间',
   `created_at` int(11) DEFAULT NULL,
   `updated_at` int(11) DEFAULT NULL,
   PRIMARY KEY (`user_id`)
@@ -1319,6 +1320,10 @@ CREATE TABLE `basp_store` (
   `status` tinyint(1) DEFAULT NULL COMMENT '0未审核1通过2拒绝',
   `refuse_reasons` varchar(255) DEFAULT NULL COMMENT '拒绝原因',
   `is_delete` tinyint(1) DEFAULT '0',
+  `start_at` int(11) DEFAULT NULL COMMENT '开始有效时间',
+  `end_at` int(11) DEFAULT NULL COMMENT '结束有效时间',
+  `total_amount` decimal(10,2) DEFAULT NULL COMMENT '总收入',
+  `out_amount` decimal(10,2) DEFAULT NULL COMMENT '总提现',
   `created_at` int(11) DEFAULT NULL,
   `updated_at` int(11) DEFAULT NULL,
   PRIMARY KEY (`owner_id`)
