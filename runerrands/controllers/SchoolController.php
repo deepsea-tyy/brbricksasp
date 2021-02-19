@@ -32,7 +32,6 @@ class SchoolController extends \bricksasp\base\BackendController
      *   
      *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
-     *   @OA\Parameter(name="area",in="query",@OA\Schema(type="integer"),description="返回校区"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -47,24 +46,21 @@ class SchoolController extends \bricksasp\base\BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query =  School::find();
+        $query =  School::find()->select(['id','parent_id','name','address','city']);
         $query->andFilterWhere(['like', 'name', $params['name']??null]);
+        $query->andWhere(['parent_id'=>0]);
 
-        if (!empty($params['area'])) {
-            $query->with(['area']);
-        }
+        $query->with(['area']);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
         ]);
 
         $list = [];
-        if (!empty($params['area'])) {
-            foreach ($dataProvider->models as $item) {
-                $row = $item->toArray();
-                $row['area'] = $item->area;
-                $list[] = $row;
-            }
+        foreach ($dataProvider->models as $item) {
+            $row = $item->toArray();
+            $row['area'] = $item->area;
+            $list[] = $row;
         }
 
         return $this->success([
