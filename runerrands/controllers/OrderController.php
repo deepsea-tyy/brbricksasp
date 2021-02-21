@@ -12,6 +12,7 @@ use bricksasp\models\UserFundLog;
 use bricksasp\models\UserFund;
 use bricksasp\models\OrderSettle;
 use bricksasp\models\RunerrandsRider;
+use bricksasp\models\redis\Token;
 
 class OrderController extends \bricksasp\base\BackendController
 {
@@ -58,26 +59,31 @@ class OrderController extends \bricksasp\base\BackendController
         $with = ['runerrands'];
         $query->andFilterWhere($this->updateCondition(['type'=>[2,3,4,5]]));
         $query->orderBy('created_at desc');
-        if (empty($params['delivery'])) {
-            $query->andFilterWhere(['pay_status'=>$params['pay_status']??null]);
-            $query->andFilterWhere(['complete'=>empty($params['complete'])?null:explode(',',$params['complete'])]);
-            if (isset($params['complete'])||isset($params['pay_status'])) {
-                $query->andWhere(isset($params['complete'])?['not', ['receiver' => null]]:['receiver' => null]);
+        $with[] = 'shipAddress';
+        if ($this->current_login_type == Token::TOKEN_TYPE_BACKEND) {
+            $with[] = 'school';
+            $with[] = 'realName';
+        }else{
+            if (empty($params['delivery'])) {
+                $query->andFilterWhere(['pay_status'=>$params['pay_status']??null]);
+                $query->andFilterWhere(['complete'=>empty($params['complete'])?null:explode(',',$params['complete'])]);
+                if (isset($params['complete'])||isset($params['pay_status'])) {
+                    $query->andWhere(isset($params['complete'])?['not', ['receiver' => null]]:['receiver' => null]);
+                }
+            }else {//代接单
+                $with[] = 'runerrandsWeight';
+                $with[] = 'runerrandsStartPlace';
+                $map = ['pay_status'=>Order::PAY_ALL, 'receiver'=>null, 'status'=>Order::STATUS_NORMAL];
+                if ($params['delivery'] == 1) {//待抢
+                    $ods = OrderRunerrands::find()->select(['order_id'])->where(['school_id'=>$params['school_id']??Tools::breakOff(50001)])->asArray()->all();
+                    $map['id'] = array_column($ods,'order_id');
+                }else{
+                    $map['receiver'] = $this->current_user_id;
+                    $map['complete'] = empty($params['complete'])?null : explode(',',$params['complete']);
+                }
+                // var_dump($map);exit();
+                $query->andWhere($map);
             }
-        }else {//代接单
-            $with[] = 'shipAddress';
-            $with[] = 'runerrandsWeight';
-            $with[] = 'runerrandsStartPlace';
-            $map = ['pay_status'=>Order::PAY_ALL, 'receiver'=>null, 'status'=>Order::STATUS_NORMAL];
-            if ($params['delivery'] == 1) {//待抢
-                $ods = OrderRunerrands::find()->select(['order_id'])->where(['school_id'=>$params['school_id']??Tools::breakOff(50001)])->asArray()->all();
-                $map['id'] = array_column($ods,'order_id');
-            }else{
-                $map['receiver'] = $this->current_user_id;
-                $map['complete'] = empty($params['complete'])?null : explode(',',$params['complete']);
-            }
-            // var_dump($map);exit();
-            $query->andWhere($map);
         }
         $query->with($with);
 

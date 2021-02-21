@@ -214,6 +214,26 @@ class Order extends \bricksasp\base\BaseActiveRecord
         return $this->hasOne(RunerrandsRider::className(),['user_id'=>'receiver']);
     }
 
+    public function getSchoolRelation()
+    {
+        return $this->hasOne(StoreRelation::className(),['owner_id'=>'owner_id'])->andWhere(['type'=>StoreRelation::TYPE_SCHOOL]);
+    }
+
+    public function getSchool()
+    {
+        return $this->hasOne(School::className(),['id'=>'object_id'])->via('schoolRelation');
+    }
+
+    public function getRealName()
+    {
+        return $this->hasOne(RealNameAuth::className(),['user_id'=>'user_id']);
+    }
+
+    public function getUser()
+    {
+        return $this->hasOne(User::className(),['id'=>'user_id'])->select(['id','mobile']);
+    }
+
     public function getGoods()
     {
         return $this->hasMany(Goods::className(), ['id'=>'goods_id'])->via('orderItem');

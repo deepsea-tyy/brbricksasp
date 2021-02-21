@@ -46,11 +46,12 @@ class SchoolController extends \bricksasp\base\BackendController
     public function actionIndex()
     {
         $params = Yii::$app->request->get();
-        $query =  School::find()->select(['id','parent_id','name','address','city']);
+        $query =  School::find()->select(['id','parent_id','name','address','p_id','c_id','a_id',]);
         $query->andFilterWhere(['like', 'name', $params['name']??null]);
         $query->andWhere(['parent_id'=>0]);
 
-        $query->with(['area']);
+        $with = ['area','p','c','a'];
+        $query->with($with);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -59,7 +60,20 @@ class SchoolController extends \bricksasp\base\BackendController
         $list = [];
         foreach ($dataProvider->models as $item) {
             $row = $item->toArray();
-            $row['area'] = $item->area;
+            foreach ($with as $field) {
+                if ($field == 'area') {
+                    array_shift($with);
+                    foreach ($item->area as $item2) {
+                        $row2 = $item2->toArray();
+                        foreach ($with as $field2) {
+                            $row2[$field2] = $item2->$field2;
+                        }
+                        $row[$field][] = $row2;
+                    }
+                    continue;
+                }
+                $row[$field] = $item->$field;
+            }
             $list[] = $row;
         }
 

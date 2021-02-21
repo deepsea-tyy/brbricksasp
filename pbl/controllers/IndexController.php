@@ -13,6 +13,7 @@ use bricksasp\models\LogisticsCompany;
 use bricksasp\models\IndustryCategory;
 use bricksasp\models\Setting;
 use bricksasp\models\File;
+use bricksasp\models\Region;
 
 class IndexController extends \bricksasp\base\FrontendController
 {
@@ -31,6 +32,7 @@ class IndexController extends \bricksasp\base\FrontendController
             'get-logistics',
             'config',
             'file',
+            'region',
         ];
     }
 
@@ -341,5 +343,36 @@ class IndexController extends \bricksasp\base\FrontendController
             }
         }
         return $this->redirect('/default.jpeg');
+    }
+
+    /**
+     * 区域级联选择
+     * @OA\Get(path="/pbl/index/region",
+     *   summary="区域级联选择(省市区乡)",
+     *   tags={"pbl模块"},
+     *   
+     *   @OA\Parameter(name="id",in="query",@OA\Schema(type="string"),description="区域id"),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="列表结构",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(@OA\Property(property="data", type="array", description="地区id", @OA\Items(ref="#/components/schemas/region"))),
+     *     ),
+     *   ),
+     * )
+     *
+     * @OA\Schema(
+     *   schema="region",
+     *   description="地区树结构",
+     *   @OA\Property(property="id", type="integer", description="地区id"),
+     *   @OA\Property(property="code", type="integer", description="编码"),
+     *   @OA\Property( property="name", type="string", description="名称"),
+     * )
+     */
+    public function actionRegion($id=0)
+    {
+        return $this->success(Region::find()->select(['id','name'])->where(['parent_id' => $id])->all());
     }
 }
