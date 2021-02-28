@@ -99,8 +99,10 @@ class RunerrandsCost extends \bricksasp\base\BaseActiveRecord
                 RunerrandsCostWeight::deleteAll(['cost_id'=>$this->id]);
                 $weight_cost = [];
                 foreach ($data['weight_cost'] as $k => $v) {
-                    $v['cost_id'] = $this->id;
-                    $weight_cost[] = $v;
+                    $row['cost_id'] = $this->id;
+                    $row['price'] = $v['price'];
+                    $row['title'] = $v['title'];
+                    $weight_cost[] = $row;
                 }
                 Yii::$app->db->createCommand()->batchInsert(RunerrandsCostWeight::tableName(), array_keys(end($weight_cost)), $weight_cost)->execute();
             }

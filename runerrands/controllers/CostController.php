@@ -80,7 +80,7 @@ class CostController extends \bricksasp\base\BackendController
         $map = empty($params['id']) ? ['owner_id'=>$this->current_owner_id] : ['id'=>$params['id']];
         $model = $this->findModel($map);
         $data = $model->toArray();
-        $data['weithtCost'] = $model->weithtCost;
+        $data['weight_cost'] = $model->weithtCost;
         if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
             $std = StudentAuth::find()->where(['user_id'=>$this->current_user_id])->one();
             $data['setting'] = $std->costSetting??[];

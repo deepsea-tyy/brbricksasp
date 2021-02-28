@@ -21,6 +21,7 @@ class PromotionController extends BackendController
     {
         return [
             'index',
+            'coupon',
             'view'
         ];
     }
@@ -50,7 +51,7 @@ class PromotionController extends BackendController
      *     description="返回数据",
      *     @OA\MediaType(
      *         mediaType="application/json",
-     *         @OA\Schema(ref="#/components/schemas/goodsAttrUpdate"),
+     *         @OA\Schema(ref="#/components/schemas/response"),
      *     ),
      *   ),
      * )
@@ -59,7 +60,7 @@ class PromotionController extends BackendController
     {
         if ($this->current_login_type == Token::TOKEN_TYPE_FRONTEND) {
             $with = ['condition'];
-            $fields = ['id', 'name', 'instruction', 'num', 'participant_num', 'code', 'start_at', 'end_at','receive_num','status'];
+            $fields = ['id', 'name', 'instruction', 'num', 'type', 'participant_num', 'code', 'start_at', 'end_at','receive_num','status'];
         }else{
             $with=$fields=[];
         }
@@ -87,10 +88,62 @@ class PromotionController extends BackendController
             }
             if ($with) {
                 if($r['condition']){
-                    $r['condition']['condition_type_name'] = PromotionCondition::TYPE_NAME[$r['condition']['condition_type']]??'';
-                    $r['condition']['result_type_name'] = PromotionCondition::RESULT_TYPE_NAME[$r['condition']['result_type']]??'';
+                    $r['condition']['condition_type_name'] = PromotionCondition::CONDITION_NAME[$r['condition']['condition_type']]??'';
+                    $r['condition']['result_type_name'] = PromotionCondition::RESULT_NAME[$r['condition']['result_type']]??'';
                 }
 
+            }
+            $list[] = $r;
+        }
+
+        return $this->success([
+          'list' => $list,
+          'pageCount' => $dataProvider->pagination->pageCount,
+          'totalCount' => $dataProvider->pagination->totalCount,
+          'page' => $dataProvider->pagination->page + 1,
+          'pageSize' => $dataProvider->pagination->limit,
+        ]);
+    }
+
+    /**
+     * @OA\Get(path="/promotion/promotion/coupon",
+     *   summary="促销优惠券列表",
+     *   tags={"促销模块"},
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token"),
+     *   
+     *   @OA\Parameter(name="page",in="query",@OA\Schema(type="integer"),description="当前叶数"),
+     *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
+     *   @OA\Parameter(name="status",in="query",@OA\Schema(type="integer"),description="0未使用1已使用"),
+     *   @OA\Parameter(name="promotion_id",in="query",@OA\Schema(type="integer"),description="promotion_id"),
+     *
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionCoupon()
+    {
+        $with[] = 'promotion';
+        $with[] = 'condition';
+
+        $params = Yii::$app->request->get();
+        $query = PromotionCoupon::find()->with($with);
+        $query->andFilterWhere(['promotion_id'=> $params['promotion_id']??0]);
+
+        $dataProvider = new ActiveDataProvider([
+            'query' => $query,
+        ]);
+
+        $list = [];
+        foreach ($dataProvider->models as $item) {
+            $r = $item->toArray();
+            foreach ($with as $v) {
+                $r[$v] = $item->$v;
             }
             $list[] = $r;
         }

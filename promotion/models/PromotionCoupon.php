@@ -96,11 +96,11 @@ class PromotionCoupon extends \bricksasp\base\BaseActiveRecord
 
     public function getPromotion()
     {
-        return $this->hasOne(Promotion::className(), ['id' => 'promotion_id']);
+        return $this->hasOne(Promotion::className(), ['id' => 'promotion_id'])->select(['id','name']);
     }
 
     public function getCondition(){
-        return $this->hasOne(PromotionCondition::className(),['promotion_id'=>'id'])->via('promotion');
+        return $this->hasOne(PromotionCondition::className(),['promotion_id'=>'promotion_id']);
     }
 
     /**
