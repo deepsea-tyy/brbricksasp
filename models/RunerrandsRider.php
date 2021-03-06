@@ -104,11 +104,16 @@ class RunerrandsRider extends \bricksasp\base\BaseActiveRecord
         return $this->hasOne(School::className(), ['id'=>'school_area_id'])->select(['id', 'name']);
     }
 
+    public function getRealName()
+    {
+        return $this->hasOne(RealNameAuth::className(),['user_id'=>'user_id']);
+    }
+
     public function formatData($data)
     {
         $data = parent::formatData($data);
         if ($this->isNewRecord && Token::TOKEN_TYPE_FRONTEND == $data['current_login_type']) {
-            $sc = StoreRelation::find()->where(['object_id'=>$data['school_id']??null,'type'=>StoreRelation::TYPE_SCHOOL])->one();
+            $sc = SchoolRelation::find()->where(['object_id'=>$data['school_id']??null,'type'=>SchoolRelation::TYPE_SCHOOL])->one();
             if (!$sc) {
                 Tools::breakOff('学校未开放');
             }

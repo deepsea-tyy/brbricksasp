@@ -9,6 +9,7 @@ use bricksasp\models\UserFundLog;
 use bricksasp\models\DrawMoney;
 use yii\data\ActiveDataProvider;
 use bricksasp\base\BackendController;
+use bricksasp\models\redis\Token;
 
 /**
  * UserFundController implements the CRUD actions for UserFund model.
@@ -351,6 +352,7 @@ class UserFundController extends BackendController
      *   @OA\Parameter(name="pageSize",in="query",@OA\Schema(type="integer"),description="每页行数"),
      *   @OA\Parameter(name="status",in="query",@OA\Schema(type="integer"),description="1提现成功2撤销"),
      *   @OA\Parameter(name="scene",in="query",@OA\Schema(type="integer"),description="1跑腿",example=1),
+     *   @OA\Parameter(name="type",in="query",@OA\Schema(type="integer"),description="1骑手2站长",example=1),
      *   
      *   @OA\Response(
      *     response=200,
@@ -365,12 +367,19 @@ class UserFundController extends BackendController
     public function actionDrawMoneyList()
     {
         $params = Yii::$app->request->get();
-        $query =  DrawMoney::find()->asArray();
-        $query->andFilterWhere($this->ownerCondition());
-        $query->andFilterWhere([
+        $map = [
             'status'=>$params['status']??null,
             'scene'=>$params['scene']??1,
-        ]);
+            'type' => $params['type']??1,
+        ];
+        $query =  DrawMoney::find();
+        $query->andFilterWhere($this->ownerCondition());
+        $query->andFilterWhere($map);
+
+        $with = ['rider', 'school', 'schoolArea'];
+        if (Token::TOKEN_TYPE_BACKEND == $this->current_login_type) {
+            $query->with($with)->asArray();
+        }
         
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
@@ -382,5 +391,74 @@ class UserFundController extends BackendController
           'page' => $dataProvider->pagination->page + 1,
           'pageSize' => $dataProvider->pagination->limit,
         ]);
+    }
+
+    /**
+     * @OA\Post(path="/user/user-fund/draw-money-update",
+     *   summary="创建会员资产",
+     *   tags={"user模块"},
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
+     *   
+     *   @OA\RequestBody(
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         ref="#/components/schemas/DrawMoneyCreate"
+     *       )
+     *     )
+     *   ),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionDrawMoneyUpdate()
+    {
+        $model = DrawMoney::findOne(Yii::$app->request->post('id'));
+        if ($model) {
+            $model->load(['status'=>Yii::$app->request->post('status')]);
+            return $model->save() ? $this->success():$this->fail($model->errors);
+        }
+        return $this->fail('数据不存在');
+    }
+
+    /**
+     * @OA\Post(path="/user/user-fund/draw-money-view",
+     *   summary="创建会员资产",
+     *   tags={"user模块"},
+     *   @OA\Parameter(name="access-token",in="header",@OA\Schema(type="string"),description="用户请求token",),
+     *   
+     *   @OA\RequestBody(
+     *     @OA\MediaType(
+     *       mediaType="application/json",
+     *       @OA\Schema(
+     *         ref="#/components/schemas/DrawMoneyCreate"
+     *       )
+     *     )
+     *   ),
+     *   
+     *   @OA\Response(
+     *     response=200,
+     *     description="返回数据",
+     *     @OA\MediaType(
+     *         mediaType="application/json",
+     *         @OA\Schema(ref="#/components/schemas/response"),
+     *     ),
+     *   ),
+     * )
+     */
+    public function actionDrawMoneyView()
+    {
+        $model = DrawMoney::find()->with(['rider', 'school', 'schoolArea'])->where(['id'=>Yii::$app->request->get('id')])->asArray()->one();
+        if ($model) {
+            return $this->success($model);
+        }
+        return $this->fail('数据不存在');
     }
 }

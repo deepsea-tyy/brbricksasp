@@ -5,13 +5,13 @@ namespace bricksasp\models;
 use Yii;
 
 /**
- * This is the model class for table "{{%store_relation}}".
+ * This is the model class for table "{{%school_relation}}".
  *
  * @property int|null $owner_id
  * @property int|null $object_id
  * @property int|null $type 1学校2校区
  */
-class StoreRelation extends \bricksasp\base\BaseActiveRecord
+class SchoolRelation extends \bricksasp\base\BaseActiveRecord
 {
     const TYPE_SCHOOL = 1;
     
@@ -20,7 +20,7 @@ class StoreRelation extends \bricksasp\base\BaseActiveRecord
      */
     public static function tableName()
     {
-        return '{{%store_relation}}';
+        return '{{%school_relation}}';
     }
 
     /**

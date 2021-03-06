@@ -99,7 +99,7 @@ class StudentAuth extends \bricksasp\base\BaseActiveRecord
 
     public function getOwner()
     {
-        return $this->hasOne(StoreRelation::className(), ['object_id'=>'school_id'])->andWhere(['type'=>StoreRelation::TYPE_SCHOOL]);
+        return $this->hasOne(SchoolRelation::className(), ['object_id'=>'school_id'])->andWhere(['type'=>SchoolRelation::TYPE_SCHOOL]);
     }
 
     public function getRealName()

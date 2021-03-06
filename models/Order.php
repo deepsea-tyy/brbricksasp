@@ -216,7 +216,7 @@ class Order extends \bricksasp\base\BaseActiveRecord
 
     public function getSchoolRelation()
     {
-        return $this->hasOne(StoreRelation::className(),['owner_id'=>'owner_id'])->andWhere(['type'=>StoreRelation::TYPE_SCHOOL]);
+        return $this->hasOne(SchoolRelation::className(),['owner_id'=>'owner_id'])->andWhere(['type'=>SchoolRelation::TYPE_SCHOOL]);
     }
 
     public function getSchool()
@@ -232,6 +232,11 @@ class Order extends \bricksasp\base\BaseActiveRecord
     public function getUser()
     {
         return $this->hasOne(User::className(),['id'=>'user_id'])->select(['id','mobile']);
+    }
+
+    public function getStudent()
+    {
+        return $this->hasOne(StudentAuth::className(),['user_id'=>'user_id']);
     }
 
     public function getGoods()

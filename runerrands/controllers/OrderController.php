@@ -41,6 +41,7 @@ class OrderController extends \bricksasp\base\BackendController
      *   @OA\Parameter(name="pay_status",in="query",@OA\Schema(type="integer"),description="支付状态"),
      *   @OA\Parameter(name="receiver",in="query",@OA\Schema(type="integer"),description="1待抢"),
      *   @OA\Parameter(name="delivery",in="query",@OA\Schema(type="integer"),description="接单列表"),
+     *   @OA\Parameter(name="school_id",in="query",@OA\Schema(type="integer"),description="学校id"),
      *   
      *   @OA\Response(
      *     response=200,
@@ -57,10 +58,10 @@ class OrderController extends \bricksasp\base\BackendController
         $params = Yii::$app->request->get();
         $query = Order::find();
         $with = ['runerrands'];
-        $query->andFilterWhere($this->updateCondition(['type'=>[2,3,4,5]]));
         $query->orderBy('created_at desc');
         $with[] = 'shipAddress';
         if ($this->current_login_type == Token::TOKEN_TYPE_BACKEND) {
+            $query->andFilterWhere($this->updateCondition(['type'=>[2,3,4,5]]));
             $with[] = 'school';
             $with[] = 'realName';
         }else{
@@ -81,8 +82,9 @@ class OrderController extends \bricksasp\base\BackendController
                     $map['receiver'] = $this->current_user_id;
                     $map['complete'] = empty($params['complete'])?null : explode(',',$params['complete']);
                 }
-                // var_dump($map);exit();
+
                 $query->andWhere($map);
+                $query->andFilterWhere(['type'=>[2,3,4,5]]);
             }
         }
         $query->with($with);
@@ -136,11 +138,19 @@ class OrderController extends \bricksasp\base\BackendController
         $data['runerrands'] = $model->runerrands;
         $data['shipAddress'] = $model->shipAddress;
         $data['rider'] = $model->rider;
+        $data['riderRealNmae'] = $model->rider?$model->rider->realName:null;
         $data['runerrandsWeight'] = $model->runerrandsWeight;
         $data['runerrandsStartPlace'] = $model->runerrandsStartPlace;
+        $data['student'] = $model->student;
+        $data['realName'] = $model->realName;
+        $data['user'] = $model->user;
+        $data['school'] =$model->student?$model->student->school:null;
+        $data['schoolArea'] =$model->student?$model->student->schoolArea:null;
         $cost = RunerrandsCost::findOne(['owner_id'=>$this->current_owner_id]);
 
         $platform_perc_price = $model->pay_price * ($cost->platform_perc + $cost->stationmaster_perc)/100;
+        $data['platform_price'] = $model->pay_price * $cost->platform_perc;
+        $data['stationmaster_price'] = $model->pay_price * $cost->stationmaster_perc;
         $data['platform_perc_price'] = $platform_perc_price;
         $data['getMoney'] = number_format($model->pay_price - $platform_perc_price, 2, '.', '');
 

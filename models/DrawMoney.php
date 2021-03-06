@@ -17,6 +17,7 @@ use bricksasp\base\Tools;
  * @property int|null $platform 1微信2支付宝
  * @property int|null $draw_type 1零钱
  * @property int|null $scene 1跑腿
+ * @property int|null $type 1骑手2站长
  * @property int|null $created_at
  * @property int|null $updated_at
  */
@@ -44,10 +45,10 @@ class DrawMoney extends \bricksasp\base\BaseActiveRecord
     {
         return [
             ['money', 'required'],
-            [['id', 'owner_id', 'user_id', 'status', 'draw_type', 'platform', 'scene', 'created_at', 'updated_at'], 'integer'],
+            [['owner_id', 'user_id', 'status', 'draw_type', 'platform', 'scene', 'type', 'created_at', 'updated_at'], 'integer'],
             [['money', 'commission'], 'number'],
-            [['money', 'commission','status'], 'default', 'value'=>0],
-            [['platform', 'draw_type','scene'], 'default', 'value'=>1],
+            [['money', 'commission'], 'default', 'value'=>0],
+            [['platform', 'draw_type','scene','type'], 'default', 'value'=>1],
             [['commission'], 'checkCommission'],
         ];
     }
@@ -73,6 +74,26 @@ class DrawMoney extends \bricksasp\base\BaseActiveRecord
     public function checkCommission()
     {
         
+    }
+
+    public function getRider()
+    {
+        return $this->hasOne(RunerrandsRider::className(), ['user_id'=>'user_id']);
+    }
+
+    public function getStudentAuth()
+    {
+        return $this->hasOne(StudentAuth::className(), ['user_id'=>'user_id']);
+    }
+
+    public function getSchool()
+    {
+        return $this->hasOne(School::className(), ['id'=>'parent_id'])->via('schoolArea');
+    }
+
+    public function getSchoolArea()
+    {
+        return $this->hasOne(School::className(), ['id'=>'school_id'])->via('studentAuth');
     }
 
     public function saveData($data)

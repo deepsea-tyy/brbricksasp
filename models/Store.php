@@ -115,7 +115,7 @@ class Store extends \bricksasp\base\BaseActiveRecord
 
     public function getSchoolRelation()
     {
-        return $this->hasOne(StoreRelation::className(), ['owner_id'=>'owner_id']);
+        return $this->hasOne(SchoolRelation::className(), ['owner_id'=>'owner_id']);
     }
 
     public function getSchool()
