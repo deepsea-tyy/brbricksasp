@@ -48,7 +48,7 @@ class SchoolController extends \bricksasp\base\BackendController
         $params = Yii::$app->request->get();
         $query =  School::find()->select(['id','parent_id','name','address','p_id','c_id','a_id',]);
         $query->andFilterWhere(['like', 'name', $params['name']??null]);
-        $query->andWhere(['parent_id'=>0]);
+        $query->andWhere(['parent_id'=>$params['parent_id']??0]);
 
         $with = ['area','p','c','a'];
         $query->with($with);
