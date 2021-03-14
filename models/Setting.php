@@ -234,7 +234,7 @@ class Setting extends \bricksasp\base\BaseActiveRecord
     /**
      * 保存设置
      */
-    public static function saveData($data, $owner_id, $keyPrefix)
+    public static function saveSetting($data, $owner_id, $keyPrefix)
     {
         $settings = [];
         $user = Yii::$app->getUser();

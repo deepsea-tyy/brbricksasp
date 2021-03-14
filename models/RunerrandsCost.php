@@ -97,14 +97,19 @@ class RunerrandsCost extends \bricksasp\base\BaseActiveRecord
             }
             if ($data['weight_cost']??false) {
                 RunerrandsCostWeight::deleteAll(['cost_id'=>$this->id]);
-                $weight_cost = [];
+                $weight_cost=$new=[];
                 foreach ($data['weight_cost'] as $k => $v) {
-                    $row['cost_id'] = $this->id;
-                    $row['price'] = $v['price'];
-                    $row['title'] = $v['title'];
-                    $weight_cost[] = $row;
+                    $v['cost_id'] = $this->id;
+                    if (empty($v['id'])) {
+                        $new[] = $v;
+                    }else{
+                        $weight_cost[] = $v;
+                    }
                 }
                 Yii::$app->db->createCommand()->batchInsert(RunerrandsCostWeight::tableName(), array_keys(end($weight_cost)), $weight_cost)->execute();
+                if ($new) {
+                    Yii::$app->db->createCommand()->batchInsert(RunerrandsCostWeight::tableName(), array_keys(end($new)), $new)->execute();
+                }
             }
             $transaction->commit();
             return true;

@@ -44,4 +44,9 @@ class SchoolRelation extends \bricksasp\base\BaseActiveRecord
             'type' => 'Type',
         ];
     }
+
+    public function getSchool()
+    {
+        return $this->hasOne(School::className(), ['id'=>'object_id']);
+    }
 }

@@ -7,6 +7,7 @@ use bricksasp\base\Tools;
 use bricksasp\spu\models\Goods;
 use bricksasp\base\BackendController;
 use bricksasp\models\redis\Token;
+use bricksasp\models\SchoolRelation;
 use bricksasp\promotion\models\Promotion;
 use bricksasp\promotion\models\PromotionCoupon;
 use bricksasp\promotion\models\PromotionCondition;
@@ -194,6 +195,17 @@ class PromotionController extends BackendController
         $model = $this->findModel(Yii::$app->request->get('id'));
         $data = $model->toArray();
         $data['condition'] = $model->condition;
+        $sr = SchoolRelation::find()->where(['owner_id'=>$model->owner_id])->one();
+        if ($sr) {
+            $school = $sr->school;
+            if ($school->parent_id) {
+                $data['schoolArea'] = $school;
+                $data['school'] = $school->school;
+            }else{
+                $data['school'] = $school;
+            }
+        }
+
         return $this->success($data);
     }
 
@@ -264,6 +276,13 @@ class PromotionController extends BackendController
         $params = $this->queryMapPost();
         $model = new Promotion();
 
+        if (!empty($params['school_area_id']) || !empty($params['school_id'])) {
+            $sr = SchoolRelation::find()->where(['object_id'=>$params['school_id']??$params['school_area_id']])->one();
+            if ($sr) {
+                $params['current_owner_id'] = $sr->owner_id;
+            }
+        }
+
         if ($model->saveData($params)) {
             return $this->success();
         }
@@ -313,6 +332,13 @@ class PromotionController extends BackendController
         $params = $this->queryMapPost();
         $model = $this->findModel($this->updateCondition(['id'=>$params['id'] ?? 0]));
         
+
+        if (!empty($params['school_area_id']) || !empty($params['school_id'])) {
+            $sr = SchoolRelation::find()->where(['object_id'=>$params['school_id']??$params['school_area_id']])->one();
+            if ($sr) {
+                $params['current_owner_id'] = $sr->owner_id;
+            }
+        }
         if ($model->saveData($params)) {
             return $this->success();
         }
